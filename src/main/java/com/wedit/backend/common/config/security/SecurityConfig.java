@@ -2,6 +2,10 @@ package com.wedit.backend.common.config.security;
 
 import com.wedit.backend.api.member.jwt.filter.FilterExceptionHandler;
 import com.wedit.backend.common.config.jwt.JwtConfig;
+import com.wedit.backend.common.oauth2.OAuth2AuthenticationFailureHandler;
+import com.wedit.backend.common.oauth2.OAuth2AuthenticationSuccessHandler;
+import com.wedit.backend.common.oauth2.OAuth2UserService;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +29,9 @@ public class SecurityConfig {
 
     private final JwtConfig jwtConfig;
     private final FilterExceptionHandler filterExceptionHandler;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+    private final OAuth2UserService oAuth2UserService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -83,6 +90,13 @@ public class SecurityConfig {
                         ).permitAll()   // Member 관련 허가
                         .anyRequest().authenticated()
                 )   // OAuth2 도입 시 추가
+            .oauth2Login(
+                oauth2Login -> oauth2Login
+                    .defaultSuccessUrl("/")
+                    .successHandler(oAuth2AuthenticationSuccessHandler)
+                    .failureHandler(oAuth2AuthenticationFailureHandler)
+                    .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
+                        .userService(oAuth2UserService)))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(filterExceptionHandler)   // 인증 실패 예외 핸들링
                         .accessDeniedHandler(filterExceptionHandler)        // 인가 실패 예외 핸들링
