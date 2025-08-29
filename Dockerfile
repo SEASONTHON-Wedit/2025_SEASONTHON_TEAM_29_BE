@@ -10,7 +10,7 @@ LABEL maintainer="kim hyun bin" \
 ENV TZ=Asia/Seoul
 
 # JAR 파일 경로
-ARG JAR_FILE=build/libs/wedit-0.0.1-SNAPSHOT.jar
+ARG JAR_FILE=build/libs/backend-0.0.1-SNAPSHOT.jar
 # 컨테이너 내부로 JAR 복사
 ADD ${JAR_FILE} wedit_backend.jar
 
