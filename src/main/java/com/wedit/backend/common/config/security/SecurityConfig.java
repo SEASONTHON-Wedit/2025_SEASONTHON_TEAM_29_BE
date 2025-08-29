@@ -66,13 +66,17 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
-                                "/api-doc/**",
-                                "/api/v3/api-docs/**",
-                                "/api/swagger-resources/**",
-                                "/api/swagger-ui/**",
-                                "/api/swagger-ui.html",
-                                "/actuator/health",
-                                "/actuator/info"
+                            "/api-doc/**",
+                            "/api/v3/api-docs/**",
+                            "/api/swagger-resources/**",
+                            "/api/swagger-ui/**",
+                            "/api/swagger-ui.html",
+                            "/v3/api-docs/**",
+                            "/swagger-resources/**",
+                            "/swagger-ui/**",
+                            "/swagger-ui.html",
+                            "/actuator/health",
+                            "/actuator/info"
                         ).permitAll()   // Swagger, Spring Actuator 허가
                         .requestMatchers(
                                 "/api/v1/member/**"
