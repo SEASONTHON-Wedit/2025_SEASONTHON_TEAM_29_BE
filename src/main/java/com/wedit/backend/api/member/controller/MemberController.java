@@ -108,7 +108,7 @@ public class MemberController {
         }
 
         // DB에서 리프레쉬 토큰 존재여부 및 만료 확인
-        RefreshToken savedRefreshToken = refreshTokenService.findByToken(refreshToken)
+        RefreshToken savedRefreshToken = refreshTokenService.findByToken(pureRefreshToken)
                 .orElseThrow(() -> new UnauthorizedException(ErrorStatus.UNAUTHORIZED_INVALID_TOKEN.getMessage()));
 
         if (refreshTokenService.isTokenExpired(savedRefreshToken)) {
