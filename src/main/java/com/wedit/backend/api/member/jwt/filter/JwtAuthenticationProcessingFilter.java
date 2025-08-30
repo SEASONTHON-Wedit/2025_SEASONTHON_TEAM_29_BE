@@ -91,8 +91,6 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
                 // 리프레쉬 토큰으로 새 토큰 발급 후 인증 컨텍스트 설정
                 handleRefreshToken(response, refreshToken);
 
-                // 재발급 처리 후 필터 종료
-                filterChain.doFilter(request, response);
                 return;
             }
 
