@@ -1,11 +1,14 @@
 package com.wedit.backend.api.member.jwt.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.jwt.entity.RefreshToken;
 import com.wedit.backend.api.member.jwt.repository.RefreshTokenRepository;
 import com.wedit.backend.api.member.jwt.service.JwtService;
 import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.common.config.security.entity.SecurityMember;
+import com.wedit.backend.common.response.ApiResponse;
+import com.wedit.backend.common.response.SuccessStatus;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -119,7 +122,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     }
 
     /// Refresh Token을 처리하여 Access Token 재발급 및 인증 처리
-    private void handleRefreshToken(HttpServletResponse response, String refreshToken) {
+    private void handleRefreshToken(HttpServletResponse response, String refreshToken) throws IOException {
 
         RefreshToken savedRefreshToken = refreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(() -> new JwtException("저장된 리프레쉬 토큰이 없습니다."));
@@ -134,9 +137,17 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
         // 새로운 Access, Refresh Token 생성
         Map<String, String> newTokens = jwtService.createAccessAndRefreshToken(member.getId(), member.getEmail(), member.getRole());
 
+        // 응답 코드와 컨텐츠 타입 설정
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType("application/json;charset=UTF-8");
+
         // 새로 발급한 토큰을 응답 헤더에 담아 전송
         response.setHeader(accessTokenHeader, "Bearer " + newTokens.get("accessToken"));
         response.setHeader(refreshTokenHeader, "Bearer " + newTokens.get("refreshToken"));
+
+        // 응답 바디 메시지 작성
+        String json = new ObjectMapper().writeValueAsString(ApiResponse.success(SuccessStatus.TOKEN_REISSUE_SUCCESS, newTokens));
+        response.getWriter().write(json);
 
         setAuthentication(member);
 
