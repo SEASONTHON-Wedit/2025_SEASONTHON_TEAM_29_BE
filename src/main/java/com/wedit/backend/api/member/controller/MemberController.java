@@ -14,6 +14,7 @@ import com.wedit.backend.common.response.ErrorStatus;
 import com.wedit.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -82,7 +83,10 @@ public class MemberController {
     @Operation(
             summary = "토큰 재발급 APi",
             description = "유효한 리프레시 토큰을 헤더(X-Refresh-Token)로 제공 시 새로운 액세스 토큰과 리프레쉬 토큰을 생성하여 헤더로 전송합니다. <br>"
-                + "[주의] Swagger 로 테스트 시 토큰 앞에 'Bearer ' 을 붙여야 함."
+                + "[주의] Swagger 로 테스트 시 토큰 앞에 'Bearer ' 을 붙여야 함.",
+            security = {
+                    @SecurityRequirement(name = "X-Refresh-Token")
+            }
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),
