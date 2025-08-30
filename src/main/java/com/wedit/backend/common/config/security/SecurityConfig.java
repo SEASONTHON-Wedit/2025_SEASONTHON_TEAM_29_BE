@@ -48,7 +48,7 @@ public class SecurityConfig {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(Arrays.asList(
                             "https://*.wedit.me",
-                            "https://localhost:3000"
+                            "http://localhost:3000"
                     ));
                     config.setAllowedMethods(Arrays.asList(
                             "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
