@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
@@ -18,6 +19,7 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class FilterExceptionHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
 
 
@@ -26,6 +28,8 @@ public class FilterExceptionHandler implements AuthenticationEntryPoint, AccessD
     /// 인증 실패 시 호출 (ex. 토큰이 유효하지 않거나 없는 경우)
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+        log.warn("AuthenticationEntryPoint called: {}", authException.getMessage());
+
         setErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, ErrorStatus.UNAUTHORIZED_USER.getMessage());
     }
 

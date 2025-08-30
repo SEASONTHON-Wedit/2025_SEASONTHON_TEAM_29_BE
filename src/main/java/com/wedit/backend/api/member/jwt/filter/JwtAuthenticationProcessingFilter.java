@@ -93,6 +93,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
             // 액세스 토큰 요청 헤더에서 추출 후 유효성 검사, 인증 컨텍스트 설정
             Optional<String> accessTokenOpt = extractToken(request, accessTokenHeader)
                     .filter(jwtService::isTokenValid);
+            log.info("Extracted Access Token: {}", accessTokenOpt.orElse("없음"));
 
             accessTokenOpt.ifPresent(token -> jwtService.extractEmail(token)
                     .flatMap(memberRepository::findByEmail)
