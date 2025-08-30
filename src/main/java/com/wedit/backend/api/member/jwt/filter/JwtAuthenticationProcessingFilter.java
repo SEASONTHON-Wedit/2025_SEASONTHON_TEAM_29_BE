@@ -41,16 +41,16 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     private final RefreshTokenRepository refreshTokenRepository;
 
     private static final String[] SWAGGER_URIS = {
-            "/swagger-ui",
-            "/v3/api-docs",
-            "/swagger-ui.html",
+            "/api/swagger-ui",
+            "/api/v3/api-docs",
+            "/api/swagger-ui.html",
     };
 
     /// 스웨거 관련 경로 필터링 제외
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String requestURI = request.getRequestURI();
-        
+
         for (String uri : SWAGGER_URIS) {
             if (requestURI.contains(uri)) {
                 return true;
@@ -68,7 +68,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
         try {
             // /token-reissue 로 요청했는가?
             if (requestURI.equals(TOKEN_REISSUE_URL)) {
-                
+
                 // 리프레쉬 토큰 요청 헤더에서 추출 후 유효성 검사
                 Optional<String> refreshTokenOpt = extractToken(request, refreshTokenHeader)
                         .filter(jwtService::isTokenValid);
@@ -147,7 +147,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return Optional.of(bearerToken.substring(7));
         }
-        
+
         return Optional.empty();
     }
 
