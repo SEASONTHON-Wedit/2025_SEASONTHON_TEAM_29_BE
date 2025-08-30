@@ -72,6 +72,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
                 // 리프레쉬 토큰 요청 헤더에서 추출 후 유효성 검사
                 Optional<String> refreshTokenOpt = extractToken(request, refreshTokenHeader)
                         .filter(jwtService::isTokenValid);
+                log.info("Extracted Refresh Token: {}", refreshTokenOpt.orElse("없음"));
 
                 // 리프레쉬 토큰이 비어있다면 예외
                 if (refreshTokenOpt.isEmpty()) {
@@ -79,6 +80,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
                 }
 
                 String refreshToken = refreshTokenOpt.get();
+                log.info("Refresh Token to find in DB: {}", refreshToken);
 
                 // 리프레쉬 토큰으로 새 토큰 발급 후 인증 컨텍스트 설정
                 handleRefreshToken(response, refreshToken);
@@ -114,6 +116,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
 
     /// Refresh Token을 처리하여 Access Token 재발급 및 인증 처리
     private void handleRefreshToken(HttpServletResponse response, String refreshToken) {
+
         RefreshToken savedRefreshToken = refreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(() -> new JwtException("저장된 리프레쉬 토큰이 없습니다."));
 
