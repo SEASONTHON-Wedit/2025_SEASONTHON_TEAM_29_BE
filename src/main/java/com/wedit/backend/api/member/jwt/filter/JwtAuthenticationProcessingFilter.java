@@ -44,6 +44,9 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
             "/api/swagger-ui",
             "/api/v3/api-docs",
             "/api/swagger-ui.html",
+            "/swagger-ui",
+            "/v3/api-docs",
+            "/swagger-ui.html",
     };
 
     /// 스웨거 관련 경로 필터링 제외
