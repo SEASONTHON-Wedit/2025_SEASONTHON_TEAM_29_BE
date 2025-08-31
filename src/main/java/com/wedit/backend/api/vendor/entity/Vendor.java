@@ -2,7 +2,7 @@ package com.wedit.backend.api.vendor.entity;
 
 import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.review.entity.Review;
-import com.wedit.backend.common.entity.Category;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
