@@ -21,4 +21,7 @@ public class MemberSignupRequestDTO {
     private LocalDate weddingDate;
 
     private Type type;
+
+    private boolean marketingAgreed;
+    private boolean privateInfoAgreed;
 }
