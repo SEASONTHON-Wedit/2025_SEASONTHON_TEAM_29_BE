@@ -26,6 +26,9 @@ public enum ErrorStatus {
     BAD_REQUEST_FAILED_SMS_VERIFICATION_CODE(HttpStatus.BAD_REQUEST, "SMS 인증코드가 올바르지 않습니다."),
     BAD_REQUEST_VALIDATION_PHONE_FORMAT(HttpStatus.BAD_REQUEST, "핸드폰 번호 형식이 올바르지 않습니다."),
     BAD_REQUEST_MISSING_PHONE_NUMBER_VERIFICATION(HttpStatus.BAD_REQUEST, "전화번호 인증을 진행해주세요."),
+    BAD_REQUEST_INVALID_COUPLE_CODE(HttpStatus.BAD_REQUEST, "올바르지 않은 커플 코드입니다."),
+    BAD_REQUEST_ALREADY_REGISTRATION_GROOM(HttpStatus.BAD_REQUEST, "이미 다른 신랑이 등록된 커플입니다."),
+    BAD_REQUEST_ALREADY_REGISTRATION_BRIDE(HttpStatus.BAD_REQUEST, "이미 다른 신부가 등록된 커플입니다."),
 
     /// 401 UNAUTHORIZED
     UNAUTHORIZED_USER(HttpStatus.UNAUTHORIZED,"인증되지 않은 사용자입니다."),

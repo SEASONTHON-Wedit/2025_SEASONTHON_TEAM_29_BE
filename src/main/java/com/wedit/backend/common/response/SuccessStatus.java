@@ -26,7 +26,8 @@ public enum SuccessStatus {
     S3_PUT_URL_CREATE_SUCCESS(HttpStatus.OK, "S3 PUT URL 발급 성공"),
     S3_GET_URL_CREATE_SUCCESS(HttpStatus.OK, "S3 GET URL 발급 성공"),
     VENDOR_GET_SUCCESS(HttpStatus.OK, "업체 조회 성공"),
-  
+    COUPLE_CODE_ISSUED(HttpStatus.OK, "커플 코드 발급 성공"),
+    COUPLE_CONNECT_SUCCESS(HttpStatus.OK, "커플 연동 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),

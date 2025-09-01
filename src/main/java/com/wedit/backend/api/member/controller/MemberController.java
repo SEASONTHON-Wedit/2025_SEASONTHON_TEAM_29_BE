@@ -127,5 +127,5 @@ public class MemberController {
         return ApiResponse.success(SuccessStatus.TOKEN_REISSUE_SUCCESS, newTokens);
     }
 
-    // Member 필드 수정 엔드포인트 (이메일, 비밀번호, 이름, 결혼예정일 등)
+    
 }
