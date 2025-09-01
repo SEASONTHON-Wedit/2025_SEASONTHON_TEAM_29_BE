@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.wedit.backend.api.reservation.dto.DateAvailabilityDTO;
+import com.wedit.backend.api.reservation.dto.DateDetailDTO;
+import com.wedit.backend.api.reservation.dto.TimeSlotDTO;
 import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.reservation.repository.ReservationRepository;
 import com.wedit.backend.api.vendor.entity.Vendor;
@@ -43,7 +45,7 @@ public class ReservationService {
 
 	private static final int TOTAL_TIME_SLOTS = AVAILABLE_TIME_SLOTS.size();
 
-	public List<DateAvailabilityDTO> getVendorReservations(Long vendorId, int year, int month, Integer page, Integer size) {
+	public List<DateAvailabilityDTO> getVendorReservations(Long vendorId, int year, int month) {
 		Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(
 			() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage())
 		);
@@ -62,21 +64,60 @@ public class ReservationService {
 			));
 
 		List<DateAvailabilityDTO> result = new ArrayList<>();
-		
+
 		for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
 			LocalDate currentDate = LocalDate.of(year, month, day);
 			long reservedSlots = reservationCountByDate.getOrDefault(currentDate, 0L);
-			
+
 			DateAvailabilityDTO availability = DateAvailabilityDTO.builder()
 				.date(currentDate)
 				.totalSlots(TOTAL_TIME_SLOTS)
-				.reservedSlots((int) reservedSlots)
+				.reservedSlots((int)reservedSlots)
 				.isAvailable(reservedSlots < TOTAL_TIME_SLOTS)
 				.build();
-			
+
 			result.add(availability);
 		}
 
 		return result;
+	}
+
+	public DateDetailDTO getVendorReservationsDetail(Long vendorId, LocalDate date) {
+		Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(
+			() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage())
+		);
+
+		List<Reservation> reservations = reservationRepository.findAllByVendorAndReservationDateBetween(
+			vendor, date, date);
+
+		Map<LocalTime, Reservation> reservationByTime = reservations.stream()
+			.collect(Collectors.toMap(
+				Reservation::getReservationTime,
+				reservation -> reservation,
+				(existing, replacement) -> existing // 중복 시간대가 있으면 기존 것 유지 (데이터 무결성 문제)
+			));
+
+		List<TimeSlotDTO> timeSlots = AVAILABLE_TIME_SLOTS.stream()
+			.map(timeSlot -> {
+				Reservation reservation = reservationByTime.get(timeSlot);
+				return TimeSlotDTO.builder()
+					.time(timeSlot)
+					.timeDisplay(timeSlot.toString())
+					.isAvailable(reservation == null)
+					.reservationId(reservation != null ? reservation.getId() : null)
+					.build();
+			})
+			.collect(Collectors.toList());
+
+		int reservedCount = (int) timeSlots.stream().filter(slot -> !slot.isAvailable()).count();
+		int availableCount = TOTAL_TIME_SLOTS - reservedCount;
+
+		return DateDetailDTO.builder()
+			.date(date)
+			.timeSlots(timeSlots)
+			.totalSlots(TOTAL_TIME_SLOTS)
+			.availableSlots(availableCount)
+			.reservedSlots(reservedCount)
+			.build();
 	}
 }

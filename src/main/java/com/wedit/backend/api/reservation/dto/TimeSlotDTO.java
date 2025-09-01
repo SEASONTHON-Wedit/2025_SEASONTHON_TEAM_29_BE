@@ -5,15 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class DateAvailabilityDTO {
-    private LocalDate date;
+public class TimeSlotDTO {
+    private LocalTime time;
+    private String timeDisplay;
     private boolean isAvailable;
-    private int totalSlots;
-    private int reservedSlots;
+    private Long reservationId;
 }
