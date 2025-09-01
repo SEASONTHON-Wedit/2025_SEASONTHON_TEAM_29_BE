@@ -30,6 +30,7 @@ public enum SuccessStatus {
     REVIEW_CREATE_SUCCESS(HttpStatus.CREATED, "리뷰 작성 성공"),
     RESERVATION_CREATE_SUCCESS(HttpStatus.CREATED, "일정 등록 성공"),
     IMAGE_UPLOAD_CREATE_SUCCESS(HttpStatus.CREATED, "이미지 업로드 성공"),
+    VENDOR_CREATE_SUCCESS(HttpStatus.CREATED, "업체 등록 성공"),
 
 
     /// 204 NO CONTENT

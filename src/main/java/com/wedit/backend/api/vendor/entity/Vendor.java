@@ -2,9 +2,13 @@ package com.wedit.backend.api.vendor.entity;
 
 import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.review.entity.Review;
+import com.wedit.backend.api.vendor.entity.enums.Category;
+import com.wedit.backend.api.vendor.entity.enums.Meal;
+import com.wedit.backend.api.vendor.entity.enums.Style;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -26,9 +30,13 @@ public class Vendor {
     @Enumerated(EnumType.STRING)
     private Category category;
 
-    private String description;
+    @Enumerated(EnumType.STRING)
+    private Style style;
 
-    private boolean isClosed;
+    @Enumerated(EnumType.STRING)
+    private Meal meal;
+
+    private String description;
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VendorImage> images = new ArrayList<>();
@@ -38,4 +46,13 @@ public class Vendor {
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations = new ArrayList<>();
+
+    @Builder
+    public Vendor(String name, Category category, Style style, Meal meal, String description) {
+        this.name = name;
+        this.category = category;
+        this.style = style;
+        this.meal = meal;
+        this.description = description;
+    }
 }

@@ -1,4 +1,4 @@
-package com.wedit.backend.api.vendor.entity;
+package com.wedit.backend.api.vendor.entity.enums;
 
 public enum VendorImageType {
 	// 웨딩홀

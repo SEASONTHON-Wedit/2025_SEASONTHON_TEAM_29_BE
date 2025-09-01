@@ -87,7 +87,8 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/api/oauth2/authorization/google",
                                 "/api/oauth2/authorization/naver",
-                                "/login/oauth2/code/**"
+                                "/login/oauth2/code/**",
+                                "/api/oauth2/authorization/naver"
                         ).permitAll()   // Swagger, Spring Actuator 허가
                         .requestMatchers(
                                 "/api/v1/member/**"
