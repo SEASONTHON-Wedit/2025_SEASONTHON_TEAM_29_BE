@@ -5,6 +5,7 @@ import com.wedit.backend.api.review.entity.Review;
 import com.wedit.backend.api.vendor.entity.enums.Category;
 import com.wedit.backend.api.vendor.entity.enums.Meal;
 import com.wedit.backend.api.vendor.entity.enums.Style;
+import com.wedit.backend.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -18,8 +19,8 @@ import java.util.List;
 @Entity
 @Table(name = "vendor")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Vendor {
+@NoArgsConstructor
+public class Vendor extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

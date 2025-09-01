@@ -8,6 +8,9 @@ import org.springframework.web.multipart.MultipartFile;
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.entity.VendorImage;
 import com.wedit.backend.api.vendor.entity.dto.request.VendorCreateRequest;
+import com.wedit.backend.api.vendor.entity.dto.response.VendorImageResponse;
+import com.wedit.backend.api.vendor.entity.dto.response.VendorResponse;
+import com.wedit.backend.api.vendor.entity.enums.Category;
 import com.wedit.backend.api.vendor.entity.enums.VendorImageType;
 import com.wedit.backend.api.vendor.repository.VendorImageRepository;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
@@ -57,5 +60,29 @@ public class VendorService {
 			.sortOrder(0)
 			.vendor(saved)
 			.build());
+	}
+
+	public List<VendorResponse> getWeddingHall() {
+		List<Vendor> vendors = vendorRepository.findAllByCategory(Category.WEDDING_HALL);
+
+		return vendors.stream().map(vendor -> {
+			List<VendorImage> vendorImages = vendorImageRepository.findAllByVendor(vendor);
+			List<VendorImageResponse> vendorImageResponseList = vendorImages.stream()
+				.map(vendorImage -> VendorImageResponse.builder()
+					.id(vendorImage.getId())
+					.vendorImageType(vendorImage.getVendorImageType())
+					.sortOrder(vendorImage.getSortOrder())
+					.imageUrl(vendorImage.getImageUrl())
+					.build())
+				.toList();
+			return VendorResponse.builder()
+				.id(vendor.getId())
+				.category(vendor.getCategory())
+				.meal(vendor.getMeal())
+				.style(vendor.getStyle())
+				.description(vendor.getDescription())
+				.vendorImageResponses(vendorImageResponseList).build();
+		}).toList();
+
 	}
 }

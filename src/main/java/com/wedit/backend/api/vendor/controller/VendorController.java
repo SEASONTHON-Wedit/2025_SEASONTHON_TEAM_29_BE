@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.wedit.backend.api.vendor.entity.dto.request.VendorCreateRequest;
+import com.wedit.backend.api.vendor.entity.dto.response.VendorResponse;
 import com.wedit.backend.api.vendor.entity.enums.Category;
 import com.wedit.backend.api.vendor.entity.enums.Meal;
 import com.wedit.backend.api.vendor.entity.enums.Style;
@@ -52,5 +54,11 @@ public class VendorController {
 		vendorService.createWeddingHall(request, weddingHallImages, bridalRoomImages, buffetImages);
 
 		return ApiResponse.successOnly(SuccessStatus.VENDOR_CREATE_SUCCESS);
+	}
+
+	@GetMapping("/wedding_hall")
+	public ResponseEntity<ApiResponse<List<VendorResponse>>> getWeddingHall() {
+		List<VendorResponse> weddingHall = vendorService.getWeddingHall();
+		return ApiResponse.success(SuccessStatus.VENDOR_GET_SUCCESS, weddingHall);
 	}
 }

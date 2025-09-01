@@ -1,0 +1,21 @@
+package com.wedit.backend.api.vendor.entity.dto.response;
+
+import java.util.List;
+
+import com.wedit.backend.api.vendor.entity.enums.Category;
+import com.wedit.backend.api.vendor.entity.enums.Meal;
+import com.wedit.backend.api.vendor.entity.enums.Style;
+
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class VendorResponse {
+	private Long id;
+	private Category category;
+	private Style style;
+	private Meal meal;
+	private String description;
+	private List<VendorImageResponse> vendorImageResponses;
+}
