@@ -102,7 +102,7 @@ public class S3Controller {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
     @PutMapping("/download-url")
-    public ResponseEntity<ApiResponse<String>> getPresignedGetUrl(
+    public ResponseEntity<ApiResponse<Void>> getPresignedGetUrl(
             @RequestParam("key") String key,
             @RequestHeader("Authorization") String reqToken) {
 
@@ -111,8 +111,8 @@ public class S3Controller {
         Long memberId = jwtService.extractMemberId(token)
                 .orElseThrow(() -> new UnauthorizedException(ErrorStatus.NOT_FOUND_USER.getMessage()));
 
+        // 추후 후기 기능 추가 시 String url 반환해야 함.
 
-
-        return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, url);
+        return ApiResponse.successOnly(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS);
     }
 }
