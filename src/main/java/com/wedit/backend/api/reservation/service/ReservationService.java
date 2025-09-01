@@ -17,6 +17,7 @@ import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.reservation.entity.dto.request.MakeReservationRequestDTO;
 import com.wedit.backend.api.reservation.entity.dto.response.DateAvailabilityDTO;
 import com.wedit.backend.api.reservation.entity.dto.response.DateDetailDTO;
+import com.wedit.backend.api.reservation.entity.dto.response.ReservationResponseDTO;
 import com.wedit.backend.api.reservation.entity.dto.response.TimeSlotDTO;
 import com.wedit.backend.api.reservation.repository.ReservationRepository;
 import com.wedit.backend.api.vendor.entity.Vendor;
@@ -126,7 +127,8 @@ public class ReservationService {
 			.build();
 	}
 
-	public Reservation makeReservation(String userEmail, Long vendorId, MakeReservationRequestDTO makeReservationRequestDTO) {
+	public Reservation makeReservation(String userEmail, Long vendorId,
+		MakeReservationRequestDTO makeReservationRequestDTO) {
 		Member member = memberRepository.findByEmail(userEmail)
 			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
 
@@ -146,5 +148,22 @@ public class ReservationService {
 			.member(member).build();
 
 		return reservationRepository.save(reservation);
+	}
+
+	public List<ReservationResponseDTO> getMyReservations(String userEmail) {
+		Member member = memberRepository.findByEmail(userEmail)
+			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+
+		return reservationRepository.findAllByMember(member).stream().map(
+			reservation -> ReservationResponseDTO.builder()
+				.id(reservation.getId())
+				.reservationTime(reservation.getReservationTime())
+				.reservationDate(reservation.getReservationDate())
+				.vendorId(reservation.getVendor().getId())
+				.createdAt(reservation.getCreatedAt())
+				.updatedAt(reservation.getUpdatedAt())
+				.build()
+		).toList();
+
 	}
 }

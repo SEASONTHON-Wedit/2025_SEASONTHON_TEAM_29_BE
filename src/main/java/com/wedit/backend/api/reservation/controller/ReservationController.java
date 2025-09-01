@@ -18,6 +18,7 @@ import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.reservation.entity.dto.request.MakeReservationRequestDTO;
 import com.wedit.backend.api.reservation.entity.dto.response.DateAvailabilityDTO;
 import com.wedit.backend.api.reservation.entity.dto.response.DateDetailDTO;
+import com.wedit.backend.api.reservation.entity.dto.response.ReservationResponseDTO;
 import com.wedit.backend.api.reservation.service.ReservationService;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
@@ -63,5 +64,13 @@ public class ReservationController {
 		Reservation reservation = reservationService.makeReservation(userDetails.getUsername(), vendorId,
 			makeReservationRequestDTO);
 		return ApiResponse.success(SuccessStatus.RESERVATION_CREATE_SUCCESS, reservation.getId());
+	}
+
+	@GetMapping("/")
+	public ResponseEntity<ApiResponse<List<ReservationResponseDTO>>> getMyReservation(
+		@AuthenticationPrincipal UserDetails userDetails
+	) {
+		List<ReservationResponseDTO> myReservations = reservationService.getMyReservations(userDetails.getUsername());
+		return ApiResponse.success(SuccessStatus.RESERVATION_GET_SUCCESS, myReservations);
 	}
 }

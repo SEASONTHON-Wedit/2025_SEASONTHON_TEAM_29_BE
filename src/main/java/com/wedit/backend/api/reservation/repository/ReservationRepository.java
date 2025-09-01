@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.vendor.entity.Vendor;
 
@@ -28,4 +29,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 	List<Reservation> findAllByVendorAndReservationDate(Vendor vendor, LocalDate reservationDate);
 
 	boolean existsByReservationDateAndReservationTime(LocalDate reservationDate, LocalTime reservationTime);
+
+	List<Reservation> findAllByMember(Member member);
 }
