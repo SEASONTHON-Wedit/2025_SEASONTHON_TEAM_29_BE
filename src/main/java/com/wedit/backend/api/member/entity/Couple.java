@@ -24,6 +24,9 @@ public class Couple extends BaseTimeEntity {
     @JoinColumn(name = "bride_id", nullable = false)
     private Member bride;
 
+    @Column(unique = true, length = 10)
+    private String coupleCode;
+
     // 신랑 변경
     public void updateGroom(Member groom) {
         this.groom = groom;
