@@ -3,6 +3,7 @@ package com.wedit.backend.api.member.controller;
 import com.wedit.backend.api.member.dto.MemberLoginRequestDTO;
 import com.wedit.backend.api.member.dto.MemberLoginResponseDTO;
 import com.wedit.backend.api.member.dto.MemberSignupRequestDTO;
+import com.wedit.backend.api.member.dto.SocialMemberAdditionalRequestDTO;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.jwt.entity.RefreshToken;
 import com.wedit.backend.api.member.jwt.service.JwtService;
@@ -18,6 +19,8 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -127,5 +130,13 @@ public class MemberController {
         return ApiResponse.success(SuccessStatus.TOKEN_REISSUE_SUCCESS, newTokens);
     }
 
-    
+    // Member 필드 수정 엔드포인트 (이메일, 비밀번호, 이름, 결혼예정일 등)
+    @PostMapping("/social_login/additional_info")
+    public ResponseEntity<ApiResponse<Void>> socialLogin(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @RequestBody SocialMemberAdditionalRequestDTO socialMemberAdditionalRequestDTO
+    ) {
+        memberService.socialLogin(userDetails.getUsername(), socialMemberAdditionalRequestDTO);
+        return ApiResponse.successOnly(SuccessStatus.MEMBER_SIGNUP_SUCCESS);
+    }
 }
