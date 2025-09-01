@@ -28,6 +28,7 @@ public enum SuccessStatus {
     VENDOR_GET_SUCCESS(HttpStatus.OK, "업체 조회 성공"),
     COUPLE_CODE_ISSUED(HttpStatus.OK, "커플 코드 발급 성공"),
     COUPLE_CONNECT_SUCCESS(HttpStatus.OK, "커플 연동 성공"),
+    COUPLE_DISCONNECT_SUCCESS(HttpStatus.OK, "커플 해제 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),

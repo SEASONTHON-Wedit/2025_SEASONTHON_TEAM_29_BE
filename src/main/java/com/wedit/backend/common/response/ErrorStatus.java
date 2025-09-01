@@ -29,6 +29,7 @@ public enum ErrorStatus {
     BAD_REQUEST_INVALID_COUPLE_CODE(HttpStatus.BAD_REQUEST, "올바르지 않은 커플 코드입니다."),
     BAD_REQUEST_ALREADY_REGISTRATION_GROOM(HttpStatus.BAD_REQUEST, "이미 다른 신랑이 등록된 커플입니다."),
     BAD_REQUEST_ALREADY_REGISTRATION_BRIDE(HttpStatus.BAD_REQUEST, "이미 다른 신부가 등록된 커플입니다."),
+    BAD_REQUEST_ALREADY_DISCONNECT_COUPLE(HttpStatus.BAD_REQUEST, "이미 커플이 아니거나 해제된 상태입니다."),
 
     /// 401 UNAUTHORIZED
     UNAUTHORIZED_USER(HttpStatus.UNAUTHORIZED,"인증되지 않은 사용자입니다."),

@@ -48,4 +48,17 @@ public class CoupleController {
 
         return ApiResponse.successOnly(SuccessStatus.COUPLE_CONNECT_SUCCESS);
     }
+
+    @DeleteMapping("/disconnect")
+    public ResponseEntity<ApiResponse<Void>> disconnectCouple(
+            @RequestHeader("Authorization") String reqToken) {
+
+        String token =  reqToken.replace("Bearer ", "");
+        Long memberId = jwtService.extractMemberId(token)
+                .orElseThrow(() -> new UnauthorizedException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+
+        coupleService.disconnectCouple(memberId);
+
+        return ApiResponse.successOnly(SuccessStatus.COUPLE_DISCONNECT_SUCCESS);
+    }
 }

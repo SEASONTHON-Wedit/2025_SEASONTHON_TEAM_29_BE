@@ -77,6 +77,27 @@ public class CoupleService {
         coupleRepository.save(couple);
     }
 
+    public void disconnectCouple(Long memberId) {
+
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+
+        Couple couple = member.getAsGroom() != null ? member.getAsGroom() : member.getAsBride();
+        if (couple == null) {
+            throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_DISCONNECT_COUPLE.getMessage());
+        }
+
+        if (couple.getGroom() != null) {
+            couple.getGroom().setAsGroom(null);
+        }
+        if (couple.getBride() != null) {
+            couple.getBride().setAsBride(null);
+        }
+        couple.dissociate();
+
+        coupleRepository.delete(couple);
+    }
+
     // UUID, 영문+숫자 10자리
     private String generateRandomCode() {
         return java.util.UUID.randomUUID().toString().substring(0, 10).toUpperCase();
