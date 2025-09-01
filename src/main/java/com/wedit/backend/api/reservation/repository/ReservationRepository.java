@@ -1,6 +1,7 @@
 package com.wedit.backend.api.reservation.repository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -25,4 +26,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 			Pageable pageable);
 
 	List<Reservation> findAllByVendorAndReservationDate(Vendor vendor, LocalDate reservationDate);
+
+	boolean existsByReservationDateAndReservationTime(LocalDate reservationDate, LocalTime reservationTime);
 }

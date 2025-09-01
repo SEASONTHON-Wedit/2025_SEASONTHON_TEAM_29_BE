@@ -1,4 +1,4 @@
-package com.wedit.backend.api.reservation.dto;
+package com.wedit.backend.api.reservation.entity.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

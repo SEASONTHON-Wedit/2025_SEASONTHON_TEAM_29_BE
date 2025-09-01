@@ -11,13 +11,17 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.wedit.backend.api.reservation.dto.DateAvailabilityDTO;
-import com.wedit.backend.api.reservation.dto.DateDetailDTO;
-import com.wedit.backend.api.reservation.dto.TimeSlotDTO;
+import com.wedit.backend.api.member.entity.Member;
+import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.api.reservation.entity.Reservation;
+import com.wedit.backend.api.reservation.entity.dto.request.MakeReservationRequestDTO;
+import com.wedit.backend.api.reservation.entity.dto.response.DateAvailabilityDTO;
+import com.wedit.backend.api.reservation.entity.dto.response.DateDetailDTO;
+import com.wedit.backend.api.reservation.entity.dto.response.TimeSlotDTO;
 import com.wedit.backend.api.reservation.repository.ReservationRepository;
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
+import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.response.ErrorStatus;
 
@@ -30,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ReservationService {
 	private final ReservationRepository reservationRepository;
 	private final VendorRepository vendorRepository;
+	private final MemberRepository memberRepository;
 
 	private static final List<LocalTime> AVAILABLE_TIME_SLOTS = Arrays.asList(
 		LocalTime.of(10, 0),
@@ -109,7 +114,7 @@ public class ReservationService {
 			})
 			.collect(Collectors.toList());
 
-		int reservedCount = (int) timeSlots.stream().filter(slot -> !slot.isAvailable()).count();
+		int reservedCount = (int)timeSlots.stream().filter(slot -> !slot.isAvailable()).count();
 		int availableCount = TOTAL_TIME_SLOTS - reservedCount;
 
 		return DateDetailDTO.builder()
@@ -119,5 +124,27 @@ public class ReservationService {
 			.availableSlots(availableCount)
 			.reservedSlots(reservedCount)
 			.build();
+	}
+
+	public Reservation makeReservation(String userEmail, Long vendorId, MakeReservationRequestDTO makeReservationRequestDTO) {
+		Member member = memberRepository.findByEmail(userEmail)
+			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+
+		Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(
+			() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage())
+		);
+
+		if (reservationRepository.existsByReservationDateAndReservationTime(makeReservationRequestDTO.getDate(),
+			makeReservationRequestDTO.getTime())) {
+			throw new BadRequestException(ErrorStatus.BAD_REQUEST_RESERVATION_CONFLICT.getMessage());
+		}
+
+		Reservation reservation = Reservation.builder()
+			.reservationDate(makeReservationRequestDTO.getDate())
+			.reservationTime(makeReservationRequestDTO.getTime())
+			.vendor(vendor)
+			.member(member).build();
+
+		return reservationRepository.save(reservation);
 	}
 }

@@ -147,4 +147,15 @@ public class JwtService {
             return Optional.empty();
         }
     }
+
+    // 토큰에서 회원 ID 추출
+    public Optional<Long> extractMemberId(String accessToken) {
+        try {
+            String memberId = getClaimsFromToken(accessToken).getSubject();
+            return Optional.ofNullable(Long.valueOf(memberId));
+        } catch (Exception e) {
+            log.error("토큰에서 회원 ID 추출 실패 : {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
 }
