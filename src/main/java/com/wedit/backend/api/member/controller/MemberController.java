@@ -59,7 +59,7 @@ public class MemberController {
 
     // 로그인
     @Operation(
-            summary = "로그인 APi",
+            summary = "로그인 API",
             description = "Email 과 Password 를 통해 사용자를 인증하고 토큰을 발급합니다. <br>"
                 + "<p>"
                 + "호출 필드 정보) <br>"
