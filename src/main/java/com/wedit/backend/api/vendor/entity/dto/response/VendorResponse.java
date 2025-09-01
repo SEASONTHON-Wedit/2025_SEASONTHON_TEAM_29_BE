@@ -13,9 +13,12 @@ import lombok.Data;
 @Builder
 public class VendorResponse {
 	private Long id;
+	private String name;
 	private Category category;
 	private Style style;
 	private Meal meal;
 	private String description;
+	private Integer minimumAmount;
+	private Integer maximumGuest;
 	private List<VendorImageResponse> vendorImageResponses;
 }

@@ -39,6 +39,9 @@ public class Vendor extends BaseTimeEntity {
 
     private String description;
 
+    private Integer minimumAmount;
+    private Integer maximumGuest;
+
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VendorImage> images = new ArrayList<>();
 
@@ -49,11 +52,13 @@ public class Vendor extends BaseTimeEntity {
     private List<Reservation> reservations = new ArrayList<>();
 
     @Builder
-    public Vendor(String name, Category category, Style style, Meal meal, String description) {
+    public Vendor(String name, Category category, Style style, Meal meal, String description, Integer minimumAmount, Integer maximumGuest) {
         this.name = name;
         this.category = category;
         this.style = style;
         this.meal = meal;
         this.description = description;
+        this.minimumAmount = minimumAmount;
+        this.maximumGuest = maximumGuest;
     }
 }
