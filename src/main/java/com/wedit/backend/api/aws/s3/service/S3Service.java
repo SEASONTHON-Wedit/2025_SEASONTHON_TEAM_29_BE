@@ -1,8 +1,6 @@
 package com.wedit.backend.api.aws.s3.service;
 
-import com.wedit.backend.api.aws.s3.dto.ImageGetResponseDTO;
 import com.wedit.backend.api.aws.s3.dto.ImagePutRequestDTO;
-import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +28,7 @@ public class S3Service {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
-    @Value("${cloud.aws.s3.presigned.expiration-minutes}")
+    @Value("${cloud.aws.s3.presign.expiration-minutes}")
     private Integer durationMinutes;
 
 
