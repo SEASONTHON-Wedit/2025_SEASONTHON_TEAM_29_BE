@@ -43,12 +43,12 @@ public class SwaggerConfig {
         // Refresh Token 은 글로벌이 아닌 필요 API 메서드에만 적용
 
         // 개발 환경에서 사용
-//        Server server = new Server()
-//                .url("http://localhost:8080");
+       Server server = new Server()
+               .url("http://localhost:8080");
 
         // 운영 환경
-        Server server = new Server()
-                .url("https://wedit.me");
+        // Server server = new Server()
+        //         .url("https://wedit.me");
 
         return new OpenAPI()
                 .info(new Info()

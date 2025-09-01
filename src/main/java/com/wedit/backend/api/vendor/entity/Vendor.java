@@ -2,9 +2,14 @@ package com.wedit.backend.api.vendor.entity;
 
 import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.review.entity.Review;
-import com.wedit.backend.common.entity.Category;
+import com.wedit.backend.api.vendor.entity.enums.Category;
+import com.wedit.backend.api.vendor.entity.enums.Meal;
+import com.wedit.backend.api.vendor.entity.enums.Style;
+import com.wedit.backend.common.entity.BaseTimeEntity;
+
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -14,8 +19,8 @@ import java.util.List;
 @Entity
 @Table(name = "vendor")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Vendor {
+@NoArgsConstructor
+public class Vendor extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,9 +31,16 @@ public class Vendor {
     @Enumerated(EnumType.STRING)
     private Category category;
 
+    @Enumerated(EnumType.STRING)
+    private Style style;
+
+    @Enumerated(EnumType.STRING)
+    private Meal meal;
+
     private String description;
 
-    private boolean isClosed;
+    private Integer minimumAmount;
+    private Integer maximumGuest;
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VendorImage> images = new ArrayList<>();
@@ -38,4 +50,15 @@ public class Vendor {
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations = new ArrayList<>();
+
+    @Builder
+    public Vendor(String name, Category category, Style style, Meal meal, String description, Integer minimumAmount, Integer maximumGuest) {
+        this.name = name;
+        this.category = category;
+        this.style = style;
+        this.meal = meal;
+        this.description = description;
+        this.minimumAmount = minimumAmount;
+        this.maximumGuest = maximumGuest;
+    }
 }

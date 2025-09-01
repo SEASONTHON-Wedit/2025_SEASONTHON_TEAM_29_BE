@@ -23,6 +23,7 @@ public enum SuccessStatus {
     TOKEN_REISSUE_SUCCESS(HttpStatus.OK, "액세스/리프레쉬 토큰 재발급 성공"),
     SEND_SMS_VERIFICATION_CODE(HttpStatus.OK, "SMS 인증코드 발송 성공"),
     SEND_VERIFY_SMS_CODE(HttpStatus.OK, "SMS 인증코드 인증 성공"),
+    VENDOR_GET_SUCCESS(HttpStatus.OK, "업체 조회 성공"),
 
 
     /// 201 CREATED
@@ -30,6 +31,7 @@ public enum SuccessStatus {
     REVIEW_CREATE_SUCCESS(HttpStatus.CREATED, "리뷰 작성 성공"),
     RESERVATION_CREATE_SUCCESS(HttpStatus.CREATED, "일정 등록 성공"),
     IMAGE_UPLOAD_CREATE_SUCCESS(HttpStatus.CREATED, "이미지 업로드 성공"),
+    VENDOR_CREATE_SUCCESS(HttpStatus.CREATED, "업체 등록 성공"),
 
 
     /// 204 NO CONTENT
