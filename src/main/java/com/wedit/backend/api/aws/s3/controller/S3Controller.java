@@ -87,14 +87,7 @@ public class S3Controller {
     @Operation(
             summary = "S3 다운로드용 PreSigned URL 발급 API",
             description = "클라이언트가 S3에 직접 파일을 다운로드할 수 있도록 다운로드용 PreSigned URL을 반환합니다. <br>"
-                    + "액세스 토큰을 통해 사용자를 식별하며, 파일 크기와 타입에 대한 검증을 수행합니다. <br>"
-                    + "<p>"
-                    + "호출 필드 정보) <br>"
-                    + "String domain : 도메인(review, vendor, etc.) <br>"
-                    + "String filename : 파일 이름 <br>"
-                    + "String contentType : image/jpeg, jpg, png, gif, webp 혹은 video/mp4, quicktime, x-matroska, webm <br>"
-                    + "Long contentLength : 파일 크기 <br>"
-                    + "Long entityId : 이미지가 필요한 엔티티 ID"
+                    + "액세스 토큰을 통해 사용자를 식별하며, 파일 크기와 타입에 대한 검증을 수행합니다."
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "PreSigned GET URL 발급 성공"),

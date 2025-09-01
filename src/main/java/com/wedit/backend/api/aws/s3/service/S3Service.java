@@ -67,6 +67,8 @@ public class S3Service {
                 .signatureDuration(Duration.ofMinutes(durationMinutes))
                 .build();
 
+        // 추후 GET URL도 같이 반환해야 함.
+
         return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 
