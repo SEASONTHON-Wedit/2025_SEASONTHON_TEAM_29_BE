@@ -5,6 +5,7 @@ import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -30,4 +31,12 @@ public class Reservation extends BaseTimeEntity {
 
     @ManyToOne
     private Vendor vendor;
+
+    @Builder
+    public Reservation(LocalDate reservationDate, LocalTime reservationTime, Member member, Vendor vendor) {
+        this.reservationDate = reservationDate;
+        this.reservationTime = reservationTime;
+        this.member = member;
+        this.vendor = vendor;
+    }
 }
