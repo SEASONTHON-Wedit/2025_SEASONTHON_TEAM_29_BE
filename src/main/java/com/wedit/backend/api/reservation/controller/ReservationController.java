@@ -23,6 +23,8 @@ import com.wedit.backend.api.reservation.service.ReservationService;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +35,13 @@ import lombok.RequiredArgsConstructor;
 public class ReservationController {
 	private final ReservationService reservationService;
 
+	@Operation(
+		summary = "예약 하기 위한 날짜 조회 API"
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예약 날짜 조회 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+	})
 	@GetMapping("/{vendorId}")
 	public ResponseEntity<ApiResponse<List<DateAvailabilityDTO>>> getVendorReservation(
 		@PathVariable Long vendorId,
@@ -43,6 +52,13 @@ public class ReservationController {
 		return ApiResponse.success(SuccessStatus.RESERVATION_GET_SUCCESS, vendorReservations);
 	}
 
+	@Operation(
+		summary = "예약 하기 위한 특정 날짜 시간 조회 API"
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "특정 날짜 예약 조회 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+	})
 	@GetMapping("/{vendorId}/detail")
 	public ResponseEntity<ApiResponse<DateDetailDTO>> getVendorReservationDetail(
 		@PathVariable Long vendorId,
@@ -55,6 +71,13 @@ public class ReservationController {
 		return ApiResponse.success(SuccessStatus.RESERVATION_GET_SUCCESS, vendorReservationsDetail);
 	}
 
+	@Operation(
+		summary = "예약 생성 API"
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예약 생성 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+	})
 	@PostMapping("/{vendorId}")
 	public ResponseEntity<ApiResponse<Long>> makeReservation(
 		@AuthenticationPrincipal UserDetails userDetails,
@@ -66,6 +89,13 @@ public class ReservationController {
 		return ApiResponse.success(SuccessStatus.RESERVATION_CREATE_SUCCESS, reservation.getId());
 	}
 
+	@Operation(
+		summary = "나의 예약 조회 API"
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예약 조회 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+	})
 	@GetMapping("/")
 	public ResponseEntity<ApiResponse<List<ReservationResponseDTO>>> getMyReservation(
 		@AuthenticationPrincipal UserDetails userDetails
