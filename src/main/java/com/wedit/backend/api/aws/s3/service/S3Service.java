@@ -1,5 +1,7 @@
 package com.wedit.backend.api.aws.s3.service;
 
+import com.wedit.backend.api.aws.s3.dto.ImageGetResponseDTO;
+import com.wedit.backend.api.aws.s3.dto.ImagePutRequestDTO;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +16,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -55,6 +58,19 @@ public class S3Service {
         return s3Presigner.presignPutObject(presignRequest).url().toString();
     }
 
+    public List<String> generatePresignedPutUrls(List<ImagePutRequestDTO> requestDTOs, Long memberId) {
+
+        return requestDTOs.stream()
+                .map(dto -> generatePresignedPutUrl(
+                        dto.getDomain(),
+                        dto.getFilename(),
+                        dto.getContentType(),
+                        dto.getContentLength(),
+                        memberId,
+                        dto.getEntityId()
+                )).toList();
+    }
+
     public String generatePresignedGetUrl(String key) {
 
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
@@ -71,6 +87,11 @@ public class S3Service {
 
         return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
+
+//    public List<ImageGetResponseDTO> generatePresignedGetUrls(String domain, Long memberId, Long entityId) {
+//
+//      // 도메인 별 레포지토리에서 여러 이미지 조회 후 반환
+//    }
 
     // DELETE Logic
     // 프론트가 준 파일 경로(키)를 기반으로 DB 조회 후 DB와 S3 모두에서 삭제
