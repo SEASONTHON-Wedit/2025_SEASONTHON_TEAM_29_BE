@@ -127,7 +127,7 @@ public class S3Controller {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
-    @PutMapping("/download-url")
+    @GetMapping("/download-url")
     public ResponseEntity<ApiResponse<Void>> getPresignedGetUrl(
             @RequestParam String domain,
             @RequestParam Long entityId,
@@ -151,7 +151,7 @@ public class S3Controller {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
-    @PutMapping("/download-url")
+    @GetMapping("/download-urls")
     public ResponseEntity<ApiResponse<Void>> getPresignedGetMultipleUrls(
             @RequestParam String domain,
             @RequestParam Long entityId,
