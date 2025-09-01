@@ -26,6 +26,7 @@ public enum SuccessStatus {
     S3_PUT_URL_CREATE_SUCCESS(HttpStatus.OK, "S3 PUT URL 발급 성공"),
     S3_GET_URL_CREATE_SUCCESS(HttpStatus.OK, "S3 GET URL 발급 성공"),
     VENDOR_GET_SUCCESS(HttpStatus.OK, "업체 조회 성공"),
+  
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),
@@ -33,6 +34,7 @@ public enum SuccessStatus {
     RESERVATION_CREATE_SUCCESS(HttpStatus.CREATED, "일정 등록 성공"),
     IMAGE_UPLOAD_CREATE_SUCCESS(HttpStatus.CREATED, "이미지 업로드 성공"),
     VENDOR_CREATE_SUCCESS(HttpStatus.CREATED, "업체 등록 성공"),
+  
 
     /// 204 NO CONTENT
     SCHEDULE_DELETE_SUCCESS(HttpStatus.NO_CONTENT,"캘린더 일정 삭제 성공"),
