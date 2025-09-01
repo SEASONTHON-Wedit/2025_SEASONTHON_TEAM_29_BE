@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PutFileRequestDTO {
+public class ImagePutRequestDTO {
 
     private String domain;
     private String filename;

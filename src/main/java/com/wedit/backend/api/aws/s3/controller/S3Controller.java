@@ -1,6 +1,6 @@
 package com.wedit.backend.api.aws.s3.controller;
 
-import com.wedit.backend.api.aws.s3.dto.PutFileRequestDTO;
+import com.wedit.backend.api.aws.s3.dto.ImagePutRequestDTO;
 import com.wedit.backend.api.aws.s3.service.S3Service;
 import com.wedit.backend.api.aws.s3.util.ImageUtil;
 import com.wedit.backend.api.member.jwt.service.JwtService;
@@ -45,39 +45,26 @@ public class S3Controller {
     })
     @PutMapping("/upload-url")
     public ResponseEntity<ApiResponse<String>> getPresignedPutUrls(
-            @RequestBody PutFileRequestDTO requestDTO,
+            @RequestBody ImagePutRequestDTO requestDTO,
             @RequestHeader("Authorization") String reqToken) {
 
         // 1. 액세스 토큰 추출 및 MemberId 추출, 없다면 예외
-        String token = reqToken.replace("Bearer ", "");
-        Long memberId = jwtService.extractMemberId(token)
-                .orElseThrow(() -> new UnauthorizedException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+        Long memberId = extractMemberId(reqToken);
 
         // 2. 파일 타입 및 사이즈 검증
-        String contentType = requestDTO.getContentType();
-        Long contentLength = requestDTO.getContentLength();
-
-        if (ImageUtil.isValidImageType(contentType)) {
-            if (!ImageUtil.isValidImageSize(contentLength)) {
-                throw new BadRequestException(ErrorStatus.BAD_REQUEST_INVALID_IMAGE_SIZE.getMessage());
-            }
-        } else if (ImageUtil.isValidVideoType(contentType)) {
-            if (!ImageUtil.isValidVideoSize(contentLength)) {
-                throw new BadRequestException(ErrorStatus.BAD_REQUEST_INVALID_VIDEO_SIZE.getMessage());
-            }
-        } else {
-            throw new BadRequestException(ErrorStatus.BAD_REQUEST_NOT_SUPPORTED_MEDIA_TYPE.getMessage());
-        }
+        validateFile(requestDTO.getContentType(), requestDTO.getContentLength());
 
         // 3. PreSigned URL 발급
         String url = s3Service.generatePresignedPutUrl(
                 requestDTO.getDomain(),
                 requestDTO.getFilename(),
-                contentType,
-                contentLength,
+                requestDTO.getContentType(),
+                requestDTO.getContentLength(),
                 memberId,
                 requestDTO.getEntityId()
         );
+        
+        // 추후 도메인별 이미지 메타 저장 혹은 서비스에 위임
 
         // 4. 성공 응답과 PreSigned URL 반환
         return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, url);
@@ -96,16 +83,36 @@ public class S3Controller {
     })
     @PutMapping("/download-url")
     public ResponseEntity<ApiResponse<Void>> getPresignedGetUrl(
-            @RequestParam("key") String key,
+            @RequestParam String domain,
+            @RequestParam Long entityId,
             @RequestHeader("Authorization") String reqToken) {
 
         // 1. 액세스 토큰 추출 및 MemberId 추출, 없다면 예외
-        String token = reqToken.replace("Bearer ", "");
-        Long memberId = jwtService.extractMemberId(token)
-                .orElseThrow(() -> new UnauthorizedException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+        Long memberId = extractMemberId(reqToken);
 
         // 추후 후기 기능 추가 시 String url 반환해야 함.
 
         return ApiResponse.successOnly(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS);
+    }
+
+    private Long extractMemberId(String reqToken) {
+        String token =  reqToken.replace("Bearer ", "");
+        return jwtService.extractMemberId(token)
+                .orElseThrow(() -> new UnauthorizedException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+    }
+
+    private void validateFile(String contentType, Long contentLength) {
+
+        if (ImageUtil.isValidImageType(contentType)) {
+            if (!ImageUtil.isValidImageSize(contentLength)) {
+                throw new BadRequestException(ErrorStatus.BAD_REQUEST_INVALID_IMAGE_SIZE.getMessage());
+            }
+        } else if (ImageUtil.isValidVideoType(contentType)) {
+            if (!ImageUtil.isValidVideoSize(contentLength)) {
+                throw new BadRequestException(ErrorStatus.BAD_REQUEST_INVALID_VIDEO_SIZE.getMessage());
+            }
+        } else {
+            throw new BadRequestException(ErrorStatus.BAD_REQUEST_NOT_SUPPORTED_MEDIA_TYPE.getMessage());
+        }
     }
 }
