@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import javax.swing.text.html.Option;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Map;
@@ -144,6 +145,17 @@ public class JwtService {
             return Optional.ofNullable(getClaimsFromToken(accessToken).get("role", String.class));
         } catch (Exception e) {
             log.error("토큰에서 권한 추출 실패 : {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public Optional<Long> extractMemberId(String accessToken) {
+        try {
+            String sub = getClaimsFromToken(accessToken).getSubject();
+            return Optional.ofNullable(sub)
+                    .map(Long::valueOf);
+        } catch (Exception e) {
+            log.error("토큰에서 MemberId 추출 실패: {}", e.getMessage());
             return Optional.empty();
         }
     }
