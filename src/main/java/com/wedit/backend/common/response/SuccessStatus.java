@@ -30,6 +30,11 @@ public enum SuccessStatus {
     COUPLE_CONNECT_SUCCESS(HttpStatus.OK, "커플 연동 성공"),
     COUPLE_DISCONNECT_SUCCESS(HttpStatus.OK, "커플 해제 성공"),
     TOUR_GET_SUCCESS(HttpStatus.OK, "투어일지 조회 성공"),
+    REVIEW_UPDATE_SUCCESS(HttpStatus.OK, "후기 수정 성공"),
+    REVIEW_DETAIL_GET_SUCCESS(HttpStatus.OK, "후기 상세 조회 성공"),
+    MY_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "내 후기 리스팅 조회 성공"),
+    ALL_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "전체 후기 리스팅 조회 성공"),
+    VENDOR_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "업체 후기 리스팅 조회 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),
@@ -44,7 +49,8 @@ public enum SuccessStatus {
     /// 204 NO CONTENT
     SCHEDULE_DELETE_SUCCESS(HttpStatus.NO_CONTENT,"캘린더 일정 삭제 성공"),
     IMAGE_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "이미지 삭제 성공"),
-    RESERVATION_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "일정 삭제 성공")
+    RESERVATION_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "일정 삭제 성공"),
+    REVIEW_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "리뷰 삭제 성공"),
 
 
     ;
