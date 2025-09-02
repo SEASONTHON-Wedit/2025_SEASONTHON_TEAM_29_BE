@@ -2,6 +2,7 @@ package com.wedit.backend.api.vendor.entity;
 
 import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.review.entity.Review;
+import com.wedit.backend.api.tour.entity.Tour;
 import com.wedit.backend.api.vendor.entity.enums.Category;
 import com.wedit.backend.api.vendor.entity.enums.Meal;
 import com.wedit.backend.api.vendor.entity.enums.Style;
@@ -50,6 +51,9 @@ public class Vendor extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Tour> tours = new ArrayList<>();
 
     @Builder
     public Vendor(String name, Category category, Style style, Meal meal, String description, Integer minimumAmount, Integer maximumGuest) {

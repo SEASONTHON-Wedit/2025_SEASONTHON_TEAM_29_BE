@@ -29,6 +29,7 @@ public enum SuccessStatus {
     COUPLE_CODE_ISSUED(HttpStatus.OK, "커플 코드 발급 성공"),
     COUPLE_CONNECT_SUCCESS(HttpStatus.OK, "커플 연동 성공"),
     COUPLE_DISCONNECT_SUCCESS(HttpStatus.OK, "커플 해제 성공"),
+    TOUR_GET_SUCCESS(HttpStatus.OK, "투어일지 조회 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),
@@ -36,6 +37,7 @@ public enum SuccessStatus {
     RESERVATION_CREATE_SUCCESS(HttpStatus.CREATED, "일정 등록 성공"),
     IMAGE_UPLOAD_CREATE_SUCCESS(HttpStatus.CREATED, "이미지 업로드 성공"),
     VENDOR_CREATE_SUCCESS(HttpStatus.CREATED, "업체 등록 성공"),
+    TOUR_CREATE_SUCCESS(HttpStatus.CREATED, "투어일지 생성 성공"),
   
 
     /// 204 NO CONTENT

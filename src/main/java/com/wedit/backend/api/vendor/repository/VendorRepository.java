@@ -1,6 +1,7 @@
 package com.wedit.backend.api.vendor.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,4 +33,5 @@ public interface VendorRepository extends JpaRepository<Vendor, Long> {
 			Pageable pageable
 	);
 
+	Optional<Vendor> findByName(String name);
 }
