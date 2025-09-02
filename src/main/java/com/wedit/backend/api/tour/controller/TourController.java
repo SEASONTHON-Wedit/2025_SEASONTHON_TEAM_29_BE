@@ -17,6 +17,8 @@ import com.wedit.backend.api.tour.service.TourService;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +29,13 @@ import lombok.RequiredArgsConstructor;
 public class TourController {
 	private final TourService tourService;
 
+	@Operation(
+		summary = "투어일지 생성 API"
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투어일지 생성 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+	})
 	@PostMapping("/")
 	public ResponseEntity<ApiResponse<Void>> createTour(
 		@AuthenticationPrincipal UserDetails userDetails,
@@ -36,6 +45,13 @@ public class TourController {
 		return ApiResponse.successOnly(SuccessStatus.TOUR_CREATE_SUCCESS);
 	}
 
+	@Operation(
+		summary = "투어일지 조회 API"
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투어일지 조회 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+	})
 	@GetMapping("/")
 	public ResponseEntity<ApiResponse<List<TourResponseDTO>>> getMyTourList(
 		@AuthenticationPrincipal UserDetails userDetails
