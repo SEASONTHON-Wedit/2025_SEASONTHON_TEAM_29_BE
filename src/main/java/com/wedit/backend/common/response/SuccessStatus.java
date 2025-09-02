@@ -35,6 +35,7 @@ public enum SuccessStatus {
     MY_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "내 후기 리스팅 조회 성공"),
     ALL_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "전체 후기 리스팅 조회 성공"),
     VENDOR_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "업체 후기 리스팅 조회 성공"),
+    MAIN_BANNER_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "메인 배너 후기 리스팅 조회 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),
@@ -51,6 +52,7 @@ public enum SuccessStatus {
     IMAGE_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "이미지 삭제 성공"),
     RESERVATION_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "일정 삭제 성공"),
     REVIEW_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "리뷰 삭제 성공"),
+    S3_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "이미지 혹은 동영상 삭제 성공"),
 
 
     ;

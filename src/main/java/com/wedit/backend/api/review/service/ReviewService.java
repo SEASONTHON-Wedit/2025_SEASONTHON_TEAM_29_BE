@@ -1,5 +1,6 @@
 package com.wedit.backend.api.review.service;
 
+import com.wedit.backend.api.aws.s3.service.S3Service;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.api.review.dto.*;
@@ -22,7 +23,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,6 +33,7 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final VendorRepository vendorRepository;
     private final MemberRepository memberRepository;
+    private final S3Service s3Service;
 
     
     // 후기 작성
@@ -52,14 +53,21 @@ public class ReviewService {
                 .vendor(vendor)
                 .build();
 
-        if (dto.getImageUrls() != null) {
+        if (dto.getImageUrls() != null && !dto.getImageUrls().isEmpty()) {
+            int sortOrder = 1;
             for (String url : dto.getImageUrls()) {
                 ReviewImage img = new ReviewImage(url, review);
+                img.setSortOrder(sortOrder++);
                 review.addImage(img);
             }
         }
 
         Review savedReview = reviewRepository.save(review);
+
+        // GET URL 발급
+        List<String> presignedUrls = savedReview.getImages().stream()
+                .map(image -> s3Service.generatePresignedGetUrl(image.getImageUrl()))
+                .collect(Collectors.toList());
 
         return ReviewCreateResponseDTO.builder()
                 .reviewId(savedReview.getId())
@@ -68,7 +76,7 @@ public class ReviewService {
                 .rating(savedReview.getRating())
                 .contentBest(savedReview.getContentBest())
                 .contentWorst(savedReview.getContentWorst())
-                .imageUrls(savedReview.getImages().stream().map(ReviewImage::getImageUrl).toList())
+                .imageUrls(presignedUrls)
                 .createdAt(savedReview.getCreatedAt())
                 .build();
     }
@@ -84,19 +92,31 @@ public class ReviewService {
         }
 
         // 수정한 리뷰 생성
-        review.update(dto.getRating(), dto.getContentWorst(), dto.getContentBest());
+        review.update(dto.getRating(), dto.getContentBest(), dto.getContentWorst());
+
+        review.getImages().forEach(image -> s3Service.deleteFile(image.getImageUrl()));
 
         // 기존 리뷰 이미지 리셋 및 새롭게 추가
         review.getImages().clear();
+
         if (dto.getImageUrls() != null) {
+            int sortOrder = 1;
             for (String url : dto.getImageUrls()) {
                 ReviewImage img = new ReviewImage(url, review);
-                review.getImages().add(img);
+                img.setSortOrder(sortOrder++);
+                review.addImage(img);
             }
         }
+        
+        // S3 에서 이미지 삭제 로직 필요
 
         // 수정한 리뷰 저장
         Review savedReview = reviewRepository.save(review);
+
+        // GET URL 발급
+        List<String> presignedUrls = savedReview.getImages().stream()
+                .map(image -> s3Service.generatePresignedGetUrl(image.getImageUrl()))
+                .collect(Collectors.toList());
 
         // 수정한 리뷰 응답
         return ReviewUpdateResponseDTO.builder()
@@ -106,7 +126,7 @@ public class ReviewService {
                 .rating(savedReview.getRating())
                 .contentBest(savedReview.getContentBest())
                 .contentWorst(savedReview.getContentWorst())
-                .imageUrls(savedReview.getImages().stream().map(ReviewImage::getImageUrl).toList())
+                .imageUrls(presignedUrls)
                 .updatedAt(savedReview.getUpdatedAt())
                 .build();
     }
@@ -120,6 +140,8 @@ public class ReviewService {
         if (!review.getMember().getId().equals(memberId)) {
             throw new UnauthorizedException(ErrorStatus.UNAUTHORIZED_WRITER_NOT_SAME_USER.getMessage());
         }
+
+        review.getImages().forEach(image -> s3Service.deleteFile(image.getImageUrl()));
         
         reviewRepository.delete(review);
     }
@@ -144,31 +166,84 @@ public class ReviewService {
                 .build();
     }
 
-    // 마이페이지 내 후기 페이징 조회
+//    // 마이페이지 내 후기 페이징 조회
+//    @Transactional(readOnly = true)
+//    public Page<ReviewSimpleResponseDTO> getMyReviewList(Long memberId, Pageable pageable) {
+//
+//        Page<Review> page = reviewRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable);
+//
+//        return mapToSimpleResponsePage(page);
+//    }
+//
+//    // 업체별 후기 페이징 조회
+//    @Transactional(readOnly = true)
+//    public Page<ReviewSimpleResponseDTO> getVendorReviewList(Long vendorId, Pageable pageable) {
+//
+//        Page<Review> page = reviewRepository.findByVendorIdOrderByCreatedAtDesc(vendorId, pageable);
+//
+//        return mapToSimpleResponsePage(page);
+//    }
+//
+//    // 전체 후기 페이징 조회 (업체 썸네일)
+//    @Transactional(readOnly = true)
+//    public Page<ReviewSimpleResponseDTO> getAllReviewList(Pageable pageable) {
+//
+//        Page<Review> page = reviewRepository.findAllByOrderByCreatedAtDesc(pageable);
+//
+//        return mapToSimpleResponsePage(page);
+//    }
+
+
+    // 메인 배너 후기 페이징 조회
     @Transactional(readOnly = true)
-    public Page<ReviewSimpleResponseDTO> getMyReviewList(Long memberId, Pageable pageable) {
-
-        Page<Review> page = reviewRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable);
-
-        return mapToSimpleResponsePage(page);
-    }
-
-    // 업체별 후기 페이징 조회
-    @Transactional(readOnly = true)
-    public Page<ReviewSimpleResponseDTO> getVendorReviewList(Long vendorId, Pageable pageable) {
-
-        Page<Review> page = reviewRepository.findByVendorIdOrderByCreatedAtDesc(vendorId, pageable);
-
-        return mapToSimpleResponsePage(page);
-    }
-
-    // 전체 후기 페이징 조회
-    @Transactional(readOnly = true)
-    public Page<ReviewSimpleResponseDTO> getAllReviewList(Pageable pageable) {
+    public Page<ReviewMainBannerResponseDTO> getMainBannerReviewList(Pageable pageable) {
 
         Page<Review> page = reviewRepository.findAllByOrderByCreatedAtDesc(pageable);
 
-        return mapToSimpleResponsePage(page);
+        return page.map(review -> {
+            String mainImageUrl = review.getImages().stream()
+                    .sorted(Comparator.comparing(ReviewImage::getSortOrder))
+                    .map(ReviewImage::getImageUrl)
+                    .findFirst()
+                    .orElse(null);
+
+            String content = (review.getContentBest() != null && !review.getContentBest().isEmpty())
+                    ? review.getContentBest()
+                    : review.getContentWorst();
+
+            return ReviewMainBannerResponseDTO.builder()
+                    .reviewId(review.getId())
+                    .reviewImageUrl(mainImageUrl)
+                    .content(content)
+                    .rating(review.getRating())
+                    .writerName(review.getMember().getName())
+                    .createdAt(review.getCreatedAt())
+                    .build();
+        });
+    }
+
+
+    // 작성한 내 후기 페이징 조회
+    @Transactional(readOnly = true)
+    public Page<MyReviewResponseDTO> getMyReviewList(Long memberId, Pageable pageable) {
+
+        Page<Review> page = reviewRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable);
+
+        return page.map(review -> {
+            Vendor vendor = review.getVendor();
+            String imageUrl = vendor.getImages().stream()
+                    .sorted(Comparator.comparing(VendorImage::getSortOrder))
+                    .map(VendorImage::getImageUrl)
+                    .findFirst()
+                    .orElse(null);
+
+            return MyReviewResponseDTO.builder()
+                    .reviewId(review.getId())
+                    .vendorName(vendor.getName())
+                    .vendorImageUrl(imageUrl)
+                    .myRating(review.getRating())
+                    .build();
+        });
     }
 
 

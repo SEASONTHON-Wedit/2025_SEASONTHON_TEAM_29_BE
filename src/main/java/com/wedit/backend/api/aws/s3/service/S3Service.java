@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -81,18 +82,16 @@ public class S3Service {
                 .signatureDuration(Duration.ofMinutes(durationMinutes))
                 .build();
 
-        // 추후 GET URL도 같이 반환해야 함.
-
         return s3Presigner.presignGetObject(presignRequest).url().toString();
     }
 
-//    public List<ImageGetResponseDTO> generatePresignedGetUrls(String domain, Long memberId, Long entityId) {
-//
-//      // 도메인 별 레포지토리에서 여러 이미지 조회 후 반환
-//    }
+    public List<String> generatePresignedGetUrls(List<String> keys) {
+        return keys.stream()
+                .map(this::generatePresignedGetUrl)
+                .collect(Collectors.toList());
+    }
 
-    // DELETE Logic
-    // 프론트가 준 파일 경로(키)를 기반으로 DB 조회 후 DB와 S3 모두에서 삭제
+
 
     // URL Generator
     private String createS3Key(String domain, Long memberId, Long entityId, String contentType, String originalFileName) {
@@ -115,6 +114,4 @@ public class S3Service {
         // {domain}/{memberId}/{entityId}/{mediaType}/{uuid}_{currentDateTime}_{originalFileName}
         return String.format("%s/%d/%s/%s/%s", domain, memberId, entityPart, mediaType, fileName);
     }
-
-    // 파일 누락, 중복 업로드, 미완료 파일 예외 유의
 }

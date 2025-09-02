@@ -25,6 +25,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // 모든 후기 최신순 페이징 조회
     Page<Review> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
+
     // 업체별 집계값 일괄 조회
     @Query("""
         SELECT r.vendor.id as vendorId, COUNT(r) as totalCount, COALESCE(AVG(r.rating), 0) as avgRating
@@ -34,6 +35,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     """)
     List<VendorReviewStats> findByReviewStatsByVendorIds(@Param("vendorIds") List<Long> vendorIds);
 
+    Long memberId(Long memberId);
     interface VendorReviewStats {
         Long getVendorId();
         Long getTotalCount();
