@@ -30,6 +30,7 @@ public enum ErrorStatus {
     BAD_REQUEST_ALREADY_REGISTRATION_GROOM(HttpStatus.BAD_REQUEST, "이미 다른 신랑이 등록된 커플입니다."),
     BAD_REQUEST_ALREADY_REGISTRATION_BRIDE(HttpStatus.BAD_REQUEST, "이미 다른 신부가 등록된 커플입니다."),
     BAD_REQUEST_ALREADY_DISCONNECT_COUPLE(HttpStatus.BAD_REQUEST, "이미 커플이 아니거나 해제된 상태입니다."),
+    BAD_REQUEST_MEMBER_TOUR_ACCESS(HttpStatus.BAD_REQUEST, "해당 유저만 투어일지를 작성할 수 있습니다."),
 
     /// 401 UNAUTHORIZED
     UNAUTHORIZED_USER(HttpStatus.UNAUTHORIZED,"인증되지 않은 사용자입니다."),
@@ -51,6 +52,7 @@ public enum ErrorStatus {
     NOT_FOUND_RESOURCE(HttpStatus.NOT_FOUND, "요청한 리소스를 찾을 수 없습니다."),
     NOT_FOUND_EMAIL(HttpStatus.NOT_FOUND, "해당 이메일을 찾을 수 없습니다."),
     NOT_FOUND_VENDOR(HttpStatus.NOT_FOUND, "해당 업체를 찾을 수 없습니다."),
+    NOT_FOUND_TOUR(HttpStatus.NOT_FOUND, "해당 투어를 찾을 수 없습니다."),
 
     /// 409 CONFLICT
     CONFLICT_DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "중복된 리소스가 존재합니다."),

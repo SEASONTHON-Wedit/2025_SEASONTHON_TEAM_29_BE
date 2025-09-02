@@ -6,12 +6,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.wedit.backend.api.tour.dto.TourCreateRequestDTO;
+import com.wedit.backend.api.tour.dto.TourDetailResponseDTO;
+import com.wedit.backend.api.tour.dto.TourDressCreateRequestDTO;
 import com.wedit.backend.api.tour.dto.TourResponseDTO;
 import com.wedit.backend.api.tour.service.TourService;
 import com.wedit.backend.common.response.ApiResponse;
@@ -59,4 +62,37 @@ public class TourController {
 		List<TourResponseDTO> myTourList = tourService.getMyTourList(userDetails.getUsername());
 		return ApiResponse.success(SuccessStatus.TOUR_GET_SUCCESS, myTourList);
 	}
+
+	@Operation(
+		summary = "투어일지 드레스 저장 API"
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투어일지 드레스 저장 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+	})
+	@PostMapping("/save_dress")
+	public ResponseEntity<ApiResponse<Void>> saveDressDrawing(
+		@AuthenticationPrincipal UserDetails userDetails,
+		@RequestBody TourDressCreateRequestDTO tourDressCreateRequestDTO
+	) {
+		tourService.saveDress(userDetails.getUsername(), tourDressCreateRequestDTO);
+		return ApiResponse.successOnly(SuccessStatus.TOUR_DRESS_CREATE_SUCCESS);
+	}
+
+	@Operation(
+		summary = "투어일지 상세 조회 API"
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투어일지 상세 조회 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+	})
+	@GetMapping("/{tourId}/detail")
+	public ResponseEntity<ApiResponse<TourDetailResponseDTO>> getTourDetail(
+		@PathVariable Long tourId,
+		@AuthenticationPrincipal UserDetails userDetails
+	) {
+		TourDetailResponseDTO tourDetail = tourService.getTourDetail(userDetails.getUsername(), tourId);
+		return ApiResponse.success(SuccessStatus.TOUR_GET_SUCCESS, tourDetail);
+	}
+
 }
