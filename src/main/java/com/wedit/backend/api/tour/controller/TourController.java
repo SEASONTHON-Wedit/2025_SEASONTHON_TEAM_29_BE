@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Tour", description = "Tour 관련 API 입니다.")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/Tour")
+@RequestMapping("/api/v1/tour")
 public class TourController {
 	private final TourService tourService;
 
