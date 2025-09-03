@@ -1,12 +1,13 @@
 package com.wedit.backend.api.aws.s3.service;
 
-import com.wedit.backend.api.aws.s3.dto.ImagePutRequestDTO;
+import com.wedit.backend.api.aws.s3.dto.PresignedUrlRequestDTO;
+import com.wedit.backend.api.aws.s3.dto.PresignedUrlResponseDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -24,28 +25,29 @@ import java.util.UUID;
 public class S3Service {
 
     private final S3Presigner s3Presigner;
+    private final S3Client s3Client;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
-    @Value("${cloud.aws.s3.presign.expiration-minutes}")
+    @Value("${cloud.aws.s3.presigned.expiration-minutes}")
     private Integer durationMinutes;
 
 
-    public String generatePresignedPutUrl(
-            String domain, String filename,
-            String contentType, Long contentLength,
-            Long memberId, Long entityId) {
+    public PresignedUrlResponseDTO  generatePresignedPutUrl(
+            PresignedUrlRequestDTO reqDto,
+            String domain,
+            Long memberId) {
 
         // S3 객체 키 생성
-        String key = createS3Key(domain, memberId, entityId, contentType, filename);
+        String key = createS3Key(domain, memberId, reqDto.getDomainId(), reqDto.getContentType(), reqDto.getFilename());
 
         // PreSigned URL 생성
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
-                .contentType(contentType)
-                .contentLength(contentLength)
+                .contentType(reqDto.getContentType())
+                .contentLength(reqDto.getContentLength())
                 .build();
 
         PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
@@ -53,23 +55,15 @@ public class S3Service {
                 .signatureDuration(Duration.ofMinutes(durationMinutes))
                 .build();
 
-        return s3Presigner.presignPutObject(presignRequest).url().toString();
+        String url = s3Presigner.presignPutObject(presignRequest).url().toString();
+
+        return PresignedUrlResponseDTO.builder()
+                .s3Key(key)
+                .presignedUrl(url)
+                .build();
     }
 
-    public List<String> generatePresignedPutUrls(List<ImagePutRequestDTO> requestDTOs, Long memberId) {
-
-        return requestDTOs.stream()
-                .map(dto -> generatePresignedPutUrl(
-                        dto.getDomain(),
-                        dto.getFilename(),
-                        dto.getContentType(),
-                        dto.getContentLength(),
-                        memberId,
-                        dto.getEntityId()
-                )).toList();
-    }
-
-    public String generatePresignedGetUrl(String key) {
+    public PresignedUrlResponseDTO  generatePresignedGetUrl(String key) {
 
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
@@ -81,21 +75,44 @@ public class S3Service {
                 .signatureDuration(Duration.ofMinutes(durationMinutes))
                 .build();
 
-        // 추후 GET URL도 같이 반환해야 함.
+        String url = s3Presigner.presignGetObject(presignRequest).url().toString();
 
-        return s3Presigner.presignGetObject(presignRequest).url().toString();
+        return PresignedUrlResponseDTO.builder()
+                .s3Key(key)
+                .presignedUrl(url)
+                .build();
     }
 
-//    public List<ImageGetResponseDTO> generatePresignedGetUrls(String domain, Long memberId, Long entityId) {
-//
-//      // 도메인 별 레포지토리에서 여러 이미지 조회 후 반환
-//    }
+    public void deleteFile(String key) {
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
 
-    // DELETE Logic
-    // 프론트가 준 파일 경로(키)를 기반으로 DB 조회 후 DB와 S3 모두에서 삭제
+        s3Client.deleteObject(deleteObjectRequest);
+        log.info("S3 file deleted : {}", key);
+    }
+
+    public void deleteFiles(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+
+        List<ObjectIdentifier> toDelete = keys.stream()
+                .map(key -> ObjectIdentifier.builder().key(key).build())
+                .toList();
+
+        DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
+                .bucket(bucketName)
+                .delete(Delete.builder().objects(toDelete).build())
+                .build();
+
+        s3Client.deleteObjects(deleteObjectsRequest);
+        log.info("S3 file deleted : {} items", keys.size());
+    }
 
     // URL Generator
-    private String createS3Key(String domain, Long memberId, Long entityId, String contentType, String originalFileName) {
+    private String createS3Key(String domain, Long memberId, Long domainId, String contentType, String originalFileName) {
 
         // 미디어 타입 분류
         String mediaType = contentType.toLowerCase().startsWith("image/") ? "images" : "videos";
@@ -108,13 +125,8 @@ public class S3Service {
         String uuid = UUID.randomUUID().toString();
         String fileName = uuid + "_" + currentDateTime + "_" + safeFileName;
 
-        // entityId 없다면 null
-        String entityPart = (entityId == null) ? "null" : entityId.toString();
-
         // 최종 PreSigned URL 발급 후 반환
-        // {domain}/{memberId}/{entityId}/{mediaType}/{uuid}_{currentDateTime}_{originalFileName}
-        return String.format("%s/%d/%s/%s/%s", domain, memberId, entityPart, mediaType, fileName);
+        // {domain}/{memberId}/{mediaType}/{domainId}/{uuid}_{currentDateTime}_{originalFileName}
+        return String.format("%s/%d/%s/%d/%s", domain, memberId, mediaType, domainId, fileName);
     }
-
-    // 파일 누락, 중복 업로드, 미완료 파일 예외 유의
 }

@@ -2,7 +2,10 @@ package com.wedit.backend.api.vendor.controller;
 
 import java.util.List;
 
+import com.wedit.backend.api.vendor.entity.dto.response.VendorSimpleResponseDTO;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -124,6 +127,18 @@ public class VendorController {
 		Page<VendorResponse> weddingHalls = vendorService.searchWeddingHalls(searchRequest);
 		return ApiResponse.success(SuccessStatus.VENDOR_GET_SUCCESS, weddingHalls);
 	}
+  
+//    @GetMapping("/main/vendors")
+//    public ResponseEntity<ApiResponse<List<VendorSimpleResponseDTO>>> getMainBannerVendors(
+//            @RequestParam Category category,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "5") int size) {
+//
+//        Pageable pageable = PageRequest.of(page, size);
+//        List<VendorSimpleResponseDTO> dtos = vendorService.getVendorsByCategoryWithStats(category, pageable);
+//
+//        return ApiResponse.success(SuccessStatus.MAIN_BANNER_VENDOR_LIST_GET_SUCCESS, dtos);
+//    }
 
 	@Operation(
 		summary = "웨딩홀 상세 조회 API"
