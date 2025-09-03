@@ -40,7 +40,11 @@ public class VendorService {
 			.style(vendorCreateRequest.getStyle())
 			.meal(vendorCreateRequest.getMeal())
 			.category(vendorCreateRequest.getCategory())
-			.description(vendorCreateRequest.getDescription()).build();
+			.description(vendorCreateRequest.getDescription())
+			.minimumAmount(vendorCreateRequest.getMinimumAmount())
+			.maximumGuest(vendorCreateRequest.getMaximumGuest())
+			.build();
+
 		Vendor saved = vendorRepository.save(vendor);
 		// TODO 이미지 업로드 후 저장
 		// 지금은 임의로
