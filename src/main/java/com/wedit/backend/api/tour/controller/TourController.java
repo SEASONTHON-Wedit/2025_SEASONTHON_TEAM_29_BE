@@ -55,7 +55,7 @@ public class TourController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투어일지 조회 성공"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
-	@GetMapping("/")
+	@GetMapping
 	public ResponseEntity<ApiResponse<List<TourResponseDTO>>> getMyTourList(
 		@AuthenticationPrincipal UserDetails userDetails
 	) {
