@@ -3,15 +3,16 @@ package com.wedit.backend.api.estimate.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.wedit.backend.api.estimate.dto.EstimateResponseDTO;
 import com.wedit.backend.api.estimate.entity.Estimate;
 import com.wedit.backend.api.estimate.service.EstimateService;
-import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.reservation.entity.dto.request.MakeReservationRequestDTO;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
@@ -31,10 +32,10 @@ public class EstimateController {
 	private final EstimateService estimateService;
 
 	@Operation(
-		summary = "예약 생성 API"
+		summary = "견적서 생성 API"
 	)
 	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예약 생성 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "견적서 생성 성공"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
 	@PostMapping("/{vendorId}")
@@ -47,4 +48,20 @@ public class EstimateController {
 			makeReservationRequestDTO);
 		return ApiResponse.success(SuccessStatus.RESERVATION_CREATE_SUCCESS, estimate.getId());
 	}
+
+	@Operation(
+			summary = "견적서 조회 API"
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "견적서 조회 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+	})
+	@GetMapping("/")
+	public ResponseEntity<ApiResponse<EstimateResponseDTO>> getEstimates(
+		@AuthenticationPrincipal UserDetails userDetails
+	) {
+		EstimateResponseDTO estimates = estimateService.getEstimates(userDetails.getUsername());
+		return ApiResponse.success(SuccessStatus.ESTIMATE_GET_SUCCESS, estimates);
+	}
+
 }

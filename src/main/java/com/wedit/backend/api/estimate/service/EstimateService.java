@@ -1,13 +1,19 @@
 package com.wedit.backend.api.estimate.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
+import com.wedit.backend.api.estimate.dto.EstimateResponseDTO;
 import com.wedit.backend.api.estimate.entity.Estimate;
 import com.wedit.backend.api.estimate.repository.EstimateRepository;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.api.reservation.entity.dto.request.MakeReservationRequestDTO;
 import com.wedit.backend.api.vendor.entity.Vendor;
+import com.wedit.backend.api.vendor.entity.dto.response.VendorResponse;
+import com.wedit.backend.api.vendor.entity.enums.Category;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
 import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.NotFoundException;
@@ -45,5 +51,39 @@ public class EstimateService {
 			.member(member).build();
 
 		return estimateRepository.save(estimate);
+	}
+
+	public EstimateResponseDTO getEstimates(String memberEmail) {
+		Member member = memberRepository.findByEmail(memberEmail)
+			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+
+		List<VendorResponse> weddingHall = new ArrayList<>();
+		List<VendorResponse> dressShop = new ArrayList<>();
+		List<VendorResponse> makeUpShop = new ArrayList<>();
+		List<VendorResponse> studio = new ArrayList<>();
+
+		estimateRepository.findAllByMember(member).forEach(estimate -> {
+			switch (estimate.getVendor().getCategory()) {
+				case Category.WEDDING_HALL:
+					weddingHall.add(VendorResponse.of(estimate.getVendor()));
+					break;
+				case Category.DRESS_SHOP:
+					dressShop.add(VendorResponse.of(estimate.getVendor()));
+					break;
+				case Category.MAKEUP:
+					makeUpShop.add(VendorResponse.of(estimate.getVendor()));
+					break;
+				case Category.STUDIO:
+					studio.add(VendorResponse.of(estimate.getVendor()));
+					break;
+			}
+		});
+
+		return EstimateResponseDTO.builder()
+			.weddingHall(weddingHall)
+			.dress(dressShop)
+			.makeUp(makeUpShop)
+			.studio(studio)
+			.build();
 	}
 }

@@ -2,6 +2,7 @@ package com.wedit.backend.api.vendor.entity.dto.response;
 
 import java.util.List;
 
+import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.entity.enums.Category;
 import com.wedit.backend.api.vendor.entity.enums.Meal;
 import com.wedit.backend.api.vendor.entity.enums.Style;
@@ -21,4 +22,17 @@ public class VendorResponse {
 	private Integer minimumAmount;
 	private Integer maximumGuest;
 	private List<VendorImageResponse> vendorImageResponses;
+
+	public static VendorResponse of(Vendor vendor) {
+		return VendorResponse.builder()
+			.id(vendor.getId())
+			.name(vendor.getName())
+			.category(vendor.getCategory())
+			.style(vendor.getStyle())
+			.meal(vendor.getMeal())
+			.description(vendor.getDescription())
+			.minimumAmount(vendor.getMinimumAmount())
+			.maximumGuest(vendor.getMaximumGuest())
+			.build();
+	}
 }
