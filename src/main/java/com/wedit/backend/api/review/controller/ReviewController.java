@@ -51,6 +51,9 @@ public class ReviewController {
     }
 
     // 내 리뷰 수정
+    @Operation(
+            summary = "내 후기 수정 API"
+    )
     @PutMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<ReviewUpdateResponseDTO>> updateReview(
             @RequestHeader("Authorization") String reqToken,
@@ -67,6 +70,9 @@ public class ReviewController {
     }
 
     // 특정 리뷰 단건 상세 조회
+    @Operation(
+            summary = "특정 후기 상세 조회 API"
+    )
     @GetMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<ReviewDetailResponseDTO>> getReviewDetail(
             @PathVariable Long reviewId) {
@@ -77,6 +83,10 @@ public class ReviewController {
     }
 
     // 메인 배너 리뷰 페이징 조회
+    @Operation(
+            summary = "메인 배너 후기 리스트 페이징 조회 API",
+            description = "전체 후기 중 최근 후기를 5개씩 조회합니다."
+    )
     @GetMapping("/all-reviews")
     public ResponseEntity<ApiResponse<Page<ReviewMainBannerResponseDTO>>> getAllReviewList(
             @RequestParam(defaultValue = "0") int page,
@@ -89,6 +99,10 @@ public class ReviewController {
     }
 
     // 내 후기 페이징 조회
+    @Operation(
+            summary = "내 후기 리스트 페이징 조회 API (미완성, 업체 대표이미지 필요)",
+            description = "5개씩 작성한 내 후기 리스트를 조회합니다."
+    )
     @GetMapping("/my-reviews")
     public ResponseEntity<ApiResponse<Page<MyReviewResponseDTO>>> getMyReviewList(
             @RequestHeader("Authorization") String reqToken,
@@ -106,6 +120,9 @@ public class ReviewController {
     }
 
     // 리뷰 삭제
+    @Operation(
+            summary = "내 후기 삭제 API"
+    )
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(
             @PathVariable Long reviewId,
