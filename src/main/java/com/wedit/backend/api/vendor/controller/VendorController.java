@@ -2,30 +2,19 @@ package com.wedit.backend.api.vendor.controller;
 
 import java.util.List;
 
-import com.wedit.backend.api.vendor.entity.dto.response.VendorSimpleResponseDTO;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
-import com.wedit.backend.api.vendor.entity.dto.request.VendorCreateRequest;
-import com.wedit.backend.api.vendor.entity.dto.request.VendorSearchRequest;
-import com.wedit.backend.api.vendor.entity.dto.response.VendorResponse;
-import com.wedit.backend.api.vendor.entity.enums.Category;
-import com.wedit.backend.api.vendor.entity.enums.Meal;
-import com.wedit.backend.api.vendor.entity.enums.Style;
+import com.wedit.backend.api.vendor.entity.dto.request.VendorCreateRequestDTO;
+import com.wedit.backend.api.vendor.entity.dto.request.VendorSearchRequestDTO;
+import com.wedit.backend.api.vendor.entity.dto.response.VendorResponseDTO;
 import com.wedit.backend.api.vendor.service.VendorService;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
@@ -51,29 +40,11 @@ public class VendorController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "웨딩홀 생성 성공"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
-	@PostMapping(value = "/wedding_hall", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	@PostMapping(value = "/wedding_hall")
 	public ResponseEntity<ApiResponse<Void>> createWeddingHall(
-		@RequestParam("name") String name,
-		@RequestParam("category") Category category,
-		@RequestParam("style") Style style,
-		@RequestParam("meal") Meal meal,
-		@RequestParam("description") String description,
-		@RequestParam("minimumAmount") Integer minimumAmount,
-		@RequestParam("maximumGuest") Integer maximumGuest,
-		@RequestPart(value = "wedding_hall_images", required = false) List<MultipartFile> weddingHallImages,
-		@RequestPart(value = "bridal_room_images", required = false) List<MultipartFile> bridalRoomImages,
-		@RequestPart(value = "buffet_images", required = false) List<MultipartFile> buffetImages
-	) {
-		VendorCreateRequest request = new VendorCreateRequest();
-		request.setName(name);
-		request.setCategory(category);
-		request.setStyle(style);
-		request.setMeal(meal);
-		request.setDescription(description);
-		request.setMinimumAmount(minimumAmount);
-		request.setMaximumGuest(maximumGuest);
+		@RequestBody VendorCreateRequestDTO requestDTO) {
 
-		vendorService.createWeddingHall(request, weddingHallImages, bridalRoomImages, buffetImages);
+		vendorService.createWeddingHall(requestDTO);
 
 		return ApiResponse.successOnly(SuccessStatus.VENDOR_CREATE_SUCCESS);
 	}
@@ -86,8 +57,8 @@ public class VendorController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
 	@GetMapping("/wedding_hall")
-	public ResponseEntity<ApiResponse<List<VendorResponse>>> getWeddingHall() {
-		List<VendorResponse> weddingHall = vendorService.getWeddingHall();
+	public ResponseEntity<ApiResponse<List<VendorResponseDTO>>> getWeddingHall() {
+		List<VendorResponseDTO> weddingHall = vendorService.getWeddingHall();
 		return ApiResponse.success(SuccessStatus.VENDOR_GET_SUCCESS, weddingHall);
 	}
 
@@ -121,24 +92,12 @@ public class VendorController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
 	@PostMapping("/wedding_hall/search")
-	public ResponseEntity<ApiResponse<Page<VendorResponse>>> searchWeddingHalls(
-		@RequestBody VendorSearchRequest searchRequest) {
+	public ResponseEntity<ApiResponse<Page<VendorResponseDTO>>> searchWeddingHalls(
+		@RequestBody VendorSearchRequestDTO searchRequest) {
 
-		Page<VendorResponse> weddingHalls = vendorService.searchWeddingHalls(searchRequest);
+		Page<VendorResponseDTO> weddingHalls = vendorService.searchWeddingHalls(searchRequest);
 		return ApiResponse.success(SuccessStatus.VENDOR_GET_SUCCESS, weddingHalls);
 	}
-  
-//    @GetMapping("/main/vendors")
-//    public ResponseEntity<ApiResponse<List<VendorSimpleResponseDTO>>> getMainBannerVendors(
-//            @RequestParam Category category,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "5") int size) {
-//
-//        Pageable pageable = PageRequest.of(page, size);
-//        List<VendorSimpleResponseDTO> dtos = vendorService.getVendorsByCategoryWithStats(category, pageable);
-//
-//        return ApiResponse.success(SuccessStatus.MAIN_BANNER_VENDOR_LIST_GET_SUCCESS, dtos);
-//    }
 
 	@Operation(
 		summary = "웨딩홀 상세 조회 API"
@@ -148,10 +107,10 @@ public class VendorController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
 	@GetMapping("/{vendorId}")
-	public ResponseEntity<ApiResponse<VendorResponse>> getWeddingHallDetail(
+	public ResponseEntity<ApiResponse<VendorResponseDTO>> getWeddingHallDetail(
 		@PathVariable Long vendorId
 	) {
-		VendorResponse vendorDetail = vendorService.getVendorDetail(vendorId);
+		VendorResponseDTO vendorDetail = vendorService.getVendorDetail(vendorId);
 		return ApiResponse.success(SuccessStatus.VENDOR_GET_SUCCESS, vendorDetail);
 	}
 }

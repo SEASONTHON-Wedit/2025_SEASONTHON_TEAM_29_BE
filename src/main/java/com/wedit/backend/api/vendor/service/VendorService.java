@@ -1,5 +1,6 @@
 package com.wedit.backend.api.vendor.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -11,10 +12,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.entity.VendorImage;
-import com.wedit.backend.api.vendor.entity.dto.request.VendorCreateRequest;
-import com.wedit.backend.api.vendor.entity.dto.request.VendorSearchRequest;
-import com.wedit.backend.api.vendor.entity.dto.response.VendorImageResponse;
-import com.wedit.backend.api.vendor.entity.dto.response.VendorResponse;
+import com.wedit.backend.api.vendor.entity.dto.request.VendorCreateRequestDTO;
+import com.wedit.backend.api.vendor.entity.dto.request.VendorSearchRequestDTO;
+import com.wedit.backend.api.vendor.entity.dto.response.VendorImageResponseDTO;
+import com.wedit.backend.api.vendor.entity.dto.response.VendorResponseDTO;
 import com.wedit.backend.api.vendor.entity.enums.Category;
 import com.wedit.backend.api.vendor.entity.enums.Meal;
 import com.wedit.backend.api.vendor.entity.enums.Style;
@@ -36,33 +37,25 @@ public class VendorService {
 	private final LocalFileUploadService localFileUploadService;
 
 	@Transactional
-	public void createWeddingHall(VendorCreateRequest vendorCreateRequest, List<MultipartFile> weddingHallImages,
-		List<MultipartFile> bridalRoomImages, List<MultipartFile> buffetImages) {
+	public void createWeddingHall(VendorCreateRequestDTO request) {
 
-		// 1. Vendor 엔티티 생성 및 저장
-		Vendor vendor = Vendor.builder()
-			.name(vendorCreateRequest.getName())
-			.style(vendorCreateRequest.getStyle())
-			.meal(vendorCreateRequest.getMeal())
-			.category(vendorCreateRequest.getCategory())
-			.description(vendorCreateRequest.getDescription())
-			.maximumGuest(vendorCreateRequest.getMaximumGuest())
-			.minimumAmount(vendorCreateRequest.getMinimumAmount())
-			.build();
-		Vendor savedVendor = vendorRepository.save(vendor);
+        Vendor vendor = Vendor.builder()
+                .name(request.getName())
+                .category(request.getCategory())
+                .style(request.getStyle())
+                .meal(request.getMeal())
+                .description(request.getDescription())
+                .minimumAmount(request.getMinimumAmount())
+                .maximumGuest(request.getMaximumGuest())
+                .address(request.getAddress())
+                .mainImageKey(request.getMainImageKey())   // 대표 이미지 키 저장
+                .logoImageKey(request.getLogoImageKey())   // 로고 이미지 키 저장
+                .build();
+        Vendor savedVendor = vendorRepository.save(vendor);
 
-		log.info("Created vendor with ID: {}", savedVendor.getId());
-
-		// 2. 웨딩홀 메인 이미지 업로드 및 저장
-		uploadAndSaveImages(weddingHallImages, savedVendor, VendorImageType.WEDDING_HALL_MAIN, "vendor/wedding_hall");
-
-		// 3. 신부 대기실 이미지 업로드 및 저장
-		uploadAndSaveImages(bridalRoomImages, savedVendor, VendorImageType.WEDDING_HALL_BRIDAL_ROOM, "vendor/bridal_room");
-
-		// 4. 뷔페 이미지 업로드 및 저장
-		uploadAndSaveImages(buffetImages, savedVendor, VendorImageType.WEDDING_HALL_BUFFET, "vendor/buffet");
-
-		log.info("Successfully created wedding hall with all images. Vendor ID: {}", savedVendor.getId());
+        saveImagesWithKeys(request.getWeddingHallImageKeys(), savedVendor, VendorImageType.WEDDING_HALL_MAIN);
+        saveImagesWithKeys(request.getBridalRoomImageKeys(), savedVendor, VendorImageType.WEDDING_HALL_BRIDAL_ROOM);
+        saveImagesWithKeys(request.getBuffetImageKeys(), savedVendor, VendorImageType.WEDDING_HALL_BUFFET);
 	}
 
 	/**
@@ -90,20 +83,20 @@ public class VendorService {
 		}
 	}
 
-	public List<VendorResponse> getWeddingHall() {
+	public List<VendorResponseDTO> getWeddingHall() {
 		List<Vendor> vendors = vendorRepository.findAllByCategory(Category.WEDDING_HALL);
 
 		return vendors.stream().map(vendor -> {
 			List<VendorImage> vendorImages = vendorImageRepository.findAllByVendor(vendor);
-			List<VendorImageResponse> vendorImageResponseList = vendorImages.stream()
-				.map(vendorImage -> VendorImageResponse.builder()
+			List<VendorImageResponseDTO> vendorImageResponseDTOList = vendorImages.stream()
+				.map(vendorImage -> VendorImageResponseDTO.builder()
 					.id(vendorImage.getId())
-					.vendorImageType(vendorImage.getVendorImageType())
+					.vendorImageType(vendorImage.getImageType())
 					.sortOrder(vendorImage.getSortOrder())
-					.imageUrl(vendorImage.getImageUrl())
+					.imageUrl(vendorImage.getImageKey())
 					.build())
 				.toList();
-			return VendorResponse.builder()
+			return VendorResponseDTO.builder()
 				.id(vendor.getId())
 				.name(vendor.getName())
 				.category(vendor.getCategory())
@@ -112,7 +105,7 @@ public class VendorService {
 				.description(vendor.getDescription())
 				.minimumAmount(vendor.getMinimumAmount())
 				.maximumGuest(vendor.getMaximumGuest())
-				.vendorImageResponses(vendorImageResponseList).build();
+				.vendorImageResponsDTOS(vendorImageResponseDTOList).build();
 		}).toList();
 
 	}
@@ -122,7 +115,7 @@ public class VendorService {
 	 * @param searchRequest 검색 조건
 	 * @return 검색 결과 페이지
 	 */
-	public Page<VendorResponse> searchWeddingHalls(VendorSearchRequest searchRequest) {
+	public Page<VendorResponseDTO> searchWeddingHalls(VendorSearchRequestDTO searchRequest) {
 		Pageable pageable = PageRequest.of(searchRequest.getPage(), searchRequest.getSize());
 
 		List<Style> styles = (searchRequest.getStyles() != null && !searchRequest.getStyles().isEmpty())
@@ -142,18 +135,18 @@ public class VendorService {
 		return vendorPage.map(this::convertToVendorResponse);
 	}
 
-	private VendorResponse convertToVendorResponse(Vendor vendor) {
+	private VendorResponseDTO convertToVendorResponse(Vendor vendor) {
 		List<VendorImage> vendorImages = vendorImageRepository.findAllByVendor(vendor);
-		List<VendorImageResponse> vendorImageResponseList = vendorImages.stream()
-			.map(vendorImage -> VendorImageResponse.builder()
+		List<VendorImageResponseDTO> vendorImageResponseDTOList = vendorImages.stream()
+			.map(vendorImage -> VendorImageResponseDTO.builder()
 				.id(vendorImage.getId())
-				.vendorImageType(vendorImage.getVendorImageType())
+				.vendorImageType(vendorImage.getImageType())
 				.sortOrder(vendorImage.getSortOrder())
-				.imageUrl(vendorImage.getImageUrl())
+				.imageUrl(vendorImage.getImageKey())
 				.build())
 			.toList();
 
-		return VendorResponse.builder()
+		return VendorResponseDTO.builder()
 			.id(vendor.getId())
 			.category(vendor.getCategory())
 			.name(vendor.getName())
@@ -162,15 +155,34 @@ public class VendorService {
 			.description(vendor.getDescription())
 			.minimumAmount(vendor.getMinimumAmount())
 			.maximumGuest(vendor.getMaximumGuest())
-			.vendorImageResponses(vendorImageResponseList)
+			.vendorImageResponsDTOS(vendorImageResponseDTOList)
 			.build();
 	}
 
-	public VendorResponse getVendorDetail(Long vendorId) {
+	public VendorResponseDTO getVendorDetail(Long vendorId) {
 		Vendor vendor = vendorRepository.findById(vendorId)
 			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage()));
 
 		return convertToVendorResponse(vendor);
 
 	}
+    
+    // S3 Key로 DB에 VendorImage 저장
+    private void saveImagesWithKeys(List<String> imageKeys, Vendor vendor, VendorImageType imageType) {
+
+        if (imageKeys == null || imageKeys.isEmpty()) return;
+
+        List<VendorImage> vendorImages = new ArrayList<>();
+        for (int i = 0; i < imageKeys.size(); i++) {
+            vendorImages.add(VendorImage.builder()
+                    .vendor(vendor)
+                    .imageKey(imageKeys.get(i))
+                    .imageType(imageType)
+                    .sortOrder(i)
+                    .build()
+            );
+        }
+
+        vendorImageRepository.saveAll(vendorImages);
+    }
 }

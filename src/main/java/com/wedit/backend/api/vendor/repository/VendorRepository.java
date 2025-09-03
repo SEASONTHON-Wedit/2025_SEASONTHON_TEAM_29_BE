@@ -15,6 +15,8 @@ import com.wedit.backend.api.vendor.entity.enums.Meal;
 import com.wedit.backend.api.vendor.entity.enums.Style;
 
 public interface VendorRepository extends JpaRepository<Vendor, Long> {
+
+
 	List<Vendor> findAllByCategory(Category category);
 
 	@Query("SELECT v FROM Vendor v WHERE " +
@@ -34,4 +36,8 @@ public interface VendorRepository extends JpaRepository<Vendor, Long> {
 	);
 
 	Optional<Vendor> findByName(String name);
+
+    // 여러 업체의 로고 이미지 S3 Key를 Map으로 조회
+    @Query("SELECT v.id, v.logoImageKey FROM Vendor v WHERE v.id IN :vendorIds AND v.logoImageKey IS NOT NULL")
+    List<Object[]> findLogoImageKeysByVendorIds(@Param("vendorIds") List<Long> vendorIds);
 }

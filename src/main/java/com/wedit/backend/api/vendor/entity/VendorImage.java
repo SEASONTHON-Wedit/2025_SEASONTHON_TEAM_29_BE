@@ -14,14 +14,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "vendor_image")
-@Data
-@NoArgsConstructor
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class VendorImage extends BaseTimeEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,20 +30,20 @@ public class VendorImage extends BaseTimeEntity {
 	private Vendor vendor;
 
 	@Column(nullable = false)
-	private String imageUrl;
+	private String imageKey;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private VendorImageType vendorImageType;
+	private VendorImageType imageType;
 
 	@Column(nullable = false)
 	private Integer sortOrder;
 
 	@Builder
-	public VendorImage(Vendor vendor, String imageUrl, VendorImageType vendorImageType, Integer sortOrder) {
+	public VendorImage(Vendor vendor, String imageKey, VendorImageType imageType, Integer sortOrder) {
 		this.vendor = vendor;
-		this.imageUrl = imageUrl;
-		this.vendorImageType = vendorImageType;
+		this.imageKey = imageKey;
+		this.imageType = imageType;
 		this.sortOrder = sortOrder;
 	}
 }
