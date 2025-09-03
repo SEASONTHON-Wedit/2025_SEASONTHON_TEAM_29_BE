@@ -15,7 +15,7 @@ public class ReviewCreateRequestDTO {
     private Long vendorId;
 
     @Schema(description = "별점 (1~5 사이의 정수)", example = "5")
-    private int rating;
+    private Integer rating;
 
     @Schema(description = "리뷰 내용 (좋았던 점)", example = "상담이 친절하고 드레스가 정말 예뻤어요!")
     private String contentBest;

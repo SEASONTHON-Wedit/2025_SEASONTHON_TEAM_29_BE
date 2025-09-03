@@ -12,7 +12,7 @@ import java.util.List;
 public class ReviewUpdateRequestDTO {
 
     @Schema(description = "수정할 별점 (1~5 사이의 정수)", example = "4")
-    private int rating;
+    private Integer rating;
 
     @Schema(description = "수정할 리뷰 내용 (좋았던 점)", example = "상담이 친절하고 드레스가 예뻤어요. 다시 봐도 만족스러워요.")
     private String contentBest;

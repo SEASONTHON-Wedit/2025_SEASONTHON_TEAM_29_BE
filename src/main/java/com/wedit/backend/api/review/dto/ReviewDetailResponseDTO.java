@@ -13,17 +13,12 @@ import java.util.List;
 @Schema(description = "후기 상세 정보 응답 DTO")
 public class ReviewDetailResponseDTO {
 
+    // --- Review ---
     @Schema(description = "조회한 후기의 고유 ID", example = "125")
     private Long reviewId;
 
-    @Schema(description = "후기 작성자의 이름", example = "김웨딧")
-    private String writerName;
-
-    @Schema(description = "후기가 작성된 업체의 이름", example = "로즈로사")
-    private String vendorName;
-
     @Schema(description = "사용자가 부여한 별점 (1-5)", example = "5")
-    private int rating;
+    private Integer rating;
 
     @Schema(description = "후기 내용 (좋았던 점)", example = "상담이 친절하고 드레스가 정말 예뻤어요!")
     private String contentBest;
@@ -37,15 +32,26 @@ public class ReviewDetailResponseDTO {
     @Schema(description = "후기 작성 시각", example = "2025-09-03T21:30:00")
     private LocalDateTime createdAt;
 
-    @Schema(description = "업체 ID (클릭 시 상세페이지 이동용)", example = "42")
-    private Long vendorId;
-
-    @Schema(description = "업체 대표 이미지 또는 로고 URL")
-    private String vendorLogoUrl;
+    // --- Member(작성자) ---
+    @Schema(description = "후기 작성자의 이름", example = "김웨딧")
+    private String writerName;
 
     @Schema(description = "작성자 타입 (신랑/신부)", example = "BRIDE")
     private Type writerType;
 
     @Schema(description = "결혼식 D-Day", example = "D-278")
     private String weddingDday;
+
+    // --- Vendor(리뷰가 적힌 업체) ---
+    @Schema(description = "업체 ID (클릭 시 상세페이지 이동용)", example = "42")
+    private Long vendorId;
+
+    @Schema(description = "후기가 작성된 업체의 이름", example = "로즈로사")
+    private String vendorName;
+
+    @Schema(description = "업체 대표 이미지 또는 로고 URL")
+    private String vendorLogoUrl;
+
+    @Schema(description = "업체 카테고리", example = "WEDDING_HALL")
+    private String vendorCategory;
 }

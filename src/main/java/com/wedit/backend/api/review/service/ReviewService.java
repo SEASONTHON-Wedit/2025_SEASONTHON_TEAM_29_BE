@@ -130,15 +130,20 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public ReviewDetailResponseDTO getReviewDetail(Long reviewId) {
 
-        Review review = reviewRepository.findByIdWithImages(reviewId)
+        Review review = reviewRepository.findByIdWithDetails(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW.getMessage()));
 
         Member writer = review.getMember();
         Vendor vendor = review.getVendor();
 
-        List<String> presignedUrls = review.getImages().stream()
+        List<String> reviewImageUrls = review.getImages().stream()
                 .map(image -> s3Service.generatePresignedGetUrl(image.getImageKey()).getPresignedUrl())
                 .toList();
+
+        String vendorLogoUrl = null;
+        if (vendor.getLogoImageKey() != null &&  !vendor.getLogoImageKey().isBlank()) {
+            vendorLogoUrl = s3Service.generatePresignedGetUrl(vendor.getLogoImageKey()).getPresignedUrl();
+        }
 
         // D-Day 계산
         String dDay = (writer.getWeddingDate() != null)
@@ -146,18 +151,19 @@ public class ReviewService {
                 : null;
 
         return ReviewDetailResponseDTO.builder()
-                .reviewId(reviewId)
-                .writerName(writer.getName())
-                .vendorName(vendor.getName())
+                .reviewId(review.getId())
                 .rating(review.getRating())
                 .contentBest(review.getContentBest())
                 .contentWorst(review.getContentWorst())
-                .imagesUrls(presignedUrls)
+                .imagesUrls(reviewImageUrls)
                 .createdAt(review.getCreatedAt())
-                .vendorId(vendor.getId())
-                .vendorLogoUrl(findVendorLogoUrl(vendor))
-                .writerType(writer.getType().name())
+                .writerName(writer.getName())
+                .writerType(writer.getType())
                 .weddingDday(dDay)
+                .vendorId(vendor.getId())
+                .vendorName(vendor.getName())
+                .vendorLogoUrl(vendorLogoUrl)
+                .vendorCategory(vendor.getCategory().name())
                 .build();
     }
 
@@ -166,7 +172,7 @@ public class ReviewService {
     public Page<ReviewMainBannerResponseDTO> getMainBannerReviewList(Pageable pageable) {
 
         // 리뷰 페이징 조회
-        Page<Review> page = reviewRepository.findAllByOrderByCreatedAtDesc(pageable);
+        Page<Review> page = reviewRepository.findAllWithMemberAndVendor(pageable);
         List<Review> reviews = page.getContent();
 
         // 리뷰 리스트가 비었다면 바로 반환
@@ -195,12 +201,12 @@ public class ReviewService {
                     ? review.getContentBest()
                     : review.getContentWorst();
 
-            String originalWriterName = review.getMember().getName();
-            String maskedWriterName = maskWriterName(originalWriterName);
+            String maskedWriterName = maskWriterName(review.getMember().getName());
+            String vendorName = review.getVendor().getName();
 
             return ReviewMainBannerResponseDTO.builder()
                     .reviewId(review.getId())
-                    .vendorName(review.getVendor().getName())
+                    .vendorName(vendorName)
                     .reviewImageUrl(mainImageUrl)
                     .content(content)
                     .rating(review.getRating())
@@ -214,41 +220,30 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public Page<MyReviewResponseDTO> getMyReviewList(Long memberId, Pageable pageable) {
 
-        Page<Review> page = reviewRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable);
+        // Review와 Vendor 한 번에 조회
+        Page<Review> page = reviewRepository.findByMemberIdWithVendor(memberId, pageable);
 
         if (page.isEmpty()) {
             return Page.empty();
         }
-        List<Review> reviews = page.getContent();
 
-        List<Long> vendorIds = reviews.stream()
-                .map(review -> review.getVendor().getId())
-                .distinct()
-                .toList();
-
-        Map<Long, String> vendorImageMap = findVendorImageMap(venndorIds);
-
+        // DTO로 변환
         return page.map(review -> {
             Vendor vendor = review.getVendor();
-            String vendorImageUrl = vendorImageMap.get(review.getId());
+            String logoImageKey = vendor.getLogoImageKey();
+
+            String vendorLogoUrl = null;
+            if (logoImageKey != null && !logoImageKey.isEmpty()) {
+                vendorLogoUrl = s3Service.generatePresignedGetUrl(logoImageKey).getPresignedUrl();
+            }
 
             return MyReviewResponseDTO.builder()
                     .reviewId(review.getId())
                     .vendorName(vendor.getName())
-                    .vendorImageUrl(vendorImageUrl)
+                    .vendorLogoUrl(vendorLogoUrl)
                     .myRating(review.getRating())
                     .build();
         });
-    }
-
-    private Member findMemberById(Long memberId) {
-        return memberRepository.findById(memberId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
-    }
-
-    private Vendor findVendorById(Long vendorId) {
-        return vendorRepository.findById(vendorId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage()));
     }
 
     private void validateReviewOwner(Review review, Long memberId) {

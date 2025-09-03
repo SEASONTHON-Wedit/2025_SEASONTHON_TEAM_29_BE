@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,8 +31,11 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final JwtService jwtService;
 
-    @Operation(summary = "후기 작성", description = "신규 후기를 작성합니다. JWT 토큰을 통한 사용자 인증이 필요합니다.",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+    @Operation(
+            summary = "후기 작성",
+            description = "신규 후기를 작성합니다. JWT 토큰을 통한 사용자 인증이 필요합니다.",
+            security = @SecurityRequirement(name = "Bearer Authentication")
+    )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "후기 작성 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패 (유효하지 않은 토큰)", content = @Content),
@@ -51,8 +55,11 @@ public class ReviewController {
         return ApiResponse.success(SuccessStatus.REVIEW_CREATE_SUCCESS, dto);
     }
 
-    @Operation(summary = "내 후기 수정", description = "자신이 작성한 후기의 내용을 수정합니다. JWT 토큰을 통한 사용자 인증이 필요합니다.",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+    @Operation(
+            summary = "내 후기 수정",
+            description = "자신이 작성한 후기의 내용을 수정합니다. JWT 토큰을 통한 사용자 인증이 필요합니다.",
+            security = @SecurityRequirement(name = "Bearer Authentication")
+    )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "후기 수정 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패 (유효하지 않은 토큰)", content = @Content),
@@ -74,7 +81,10 @@ public class ReviewController {
         return ApiResponse.success(SuccessStatus.REVIEW_UPDATE_SUCCESS, dto);
     }
 
-    @Operation(summary = "특정 후기 상세 조회", description = "리뷰 ID로 특정 후기의 상세 내용을 조회합니다.")
+    @Operation(
+            summary = "특정 후기 상세 조회",
+            description = "리뷰 ID로 특정 후기의 상세 내용을 조회합니다."
+    )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "후기 상세 조회 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 후기", content = @Content)
@@ -88,7 +98,10 @@ public class ReviewController {
         return ApiResponse.success(SuccessStatus.REVIEW_DETAIL_GET_SUCCESS, dto);
     }
 
-    @Operation(summary = "메인 배너 후기 목록 조회 (페이징)", description = "메인 화면에 노출될 최신 후기 목록을 페이지 단위로 조회합니다.")
+    @Operation(
+            summary = "메인 배너 후기 목록 조회 (페이징)",
+            description = "메인 화면에 노출될 최신 후기 목록을 페이지 단위로 조회합니다."
+    )
     @Parameters({
             @Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
             @Parameter(name = "size", description = "한 페이지에 보여줄 항목 수", example = "5")
@@ -98,14 +111,17 @@ public class ReviewController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<ReviewMainBannerResponseDTO> dtos = reviewService.getMainBannerReviewList(pageable);
 
         return ApiResponse.success(SuccessStatus.MAIN_BANNER_REVIEW_LIST_GET_SUCCESS, dtos);
     }
 
-    @Operation(summary = "내 후기 목록 조회 (페이징) - 미완성", description = "자신이 작성한 모든 후기 목록을 페이지 단위로 조회합니다. JWT 토큰이 필요합니다.",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+    @Operation(
+            summary = "내 후기 목록 조회 (페이징)",
+            description = "자신이 작성한 모든 후기 목록을 페이지 단위로 조회합니다. JWT 토큰이 필요합니다.",
+            security = @SecurityRequirement(name = "Bearer Authentication")
+    )
     @Parameters({
             @Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
             @Parameter(name = "size", description = "한 페이지에 보여줄 항목 수", example = "10")
@@ -114,20 +130,23 @@ public class ReviewController {
     public ResponseEntity<ApiResponse<Page<MyReviewResponseDTO>>> getMyReviewList(
             @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "5") int size) {
 
         String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
         Long memberId = jwtService.extractMemberId(token)
                 .orElseThrow(() -> new UnauthorizedException(ErrorStatus.UNAUTHORIZED_INVALID_TOKEN.getMessage()));
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<MyReviewResponseDTO> dtos = reviewService.getMyReviewList(memberId, pageable);
 
         return ApiResponse.success(SuccessStatus.MY_REVIEW_LIST_GET_SUCCESS, dtos);
     }
 
-    @Operation(summary = "내 후기 삭제", description = "자신이 작성한 후기를 삭제합니다. JWT 토큰을 통한 사용자 인증이 필요합니다.",
-            security = @SecurityRequirement(name = "Bearer Authentication"))
+    @Operation(
+            summary = "내 후기 삭제",
+            description = "자신이 작성한 후기를 삭제합니다. JWT 토큰을 통한 사용자 인증이 필요합니다.",
+            security = @SecurityRequirement(name = "Bearer Authentication")
+    )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "후기 삭제 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패 (유효하지 않은 토큰)", content = @Content),

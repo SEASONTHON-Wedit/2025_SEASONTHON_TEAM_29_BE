@@ -16,7 +16,7 @@ public class MyReviewResponseDTO {
     private String vendorName;
 
     @Schema(description = "업체의 대표 이미지 URL")
-    private String vendorImageUrl;
+    private String vendorLogoUrl;
 
     @Schema(description = "내가 부여한 별점", example = "5")
     private int myRating;

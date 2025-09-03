@@ -22,7 +22,7 @@ public class ReviewCreateResponseDTO {
     private String vendorName;
 
     @Schema(description = "사용자가 부여한 별점 (1-5)", example = "5")
-    private int rating;
+    private Integer rating;
 
     @Schema(description = "후기 내용 (좋았던 점)", example = "상담이 친절하고 드레스가 정말 예뻤어요!")
     private String contentBest;

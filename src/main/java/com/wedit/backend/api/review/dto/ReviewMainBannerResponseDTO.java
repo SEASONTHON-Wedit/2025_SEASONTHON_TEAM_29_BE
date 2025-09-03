@@ -24,7 +24,7 @@ public class ReviewMainBannerResponseDTO {
     private String content;
 
     @Schema(description = "별점", example = "5")
-    private int rating;
+    private Integer rating;
 
     @Schema(description = "작성자 이름 (마스킹 처리)", example = "김*딧")
     private String writerName;
