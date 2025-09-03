@@ -128,7 +128,7 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public ReviewDetailResponseDTO getReviewDetail(Long reviewId) {
 
-        Review review = reviewRepository.findById(reviewId)
+        Review review = reviewRepository.findByIdWithImages(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW.getMessage()));
 
         List<String> presignedUrls = review.getImages().stream()
