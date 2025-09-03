@@ -66,6 +66,7 @@ public class Member extends BaseTimeEntity {
 	private LocalDate birthDate;
 
 	// 결혼예정일
+    @Column(nullable = true)
 	private LocalDate weddingDate;
 
 	// 사용자 권한 (USER, ADMIN)
