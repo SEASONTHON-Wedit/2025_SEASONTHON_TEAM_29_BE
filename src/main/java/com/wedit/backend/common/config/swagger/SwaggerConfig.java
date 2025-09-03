@@ -47,16 +47,17 @@ public class SwaggerConfig {
 
         List<Server> serverList = new ArrayList<>();
 
+
+        // 운영 환경
+        Server operationServer = new Server()
+            .url("https://wedit.me");
+
         // 개발 환경에서 사용
        Server localServer = new Server()
                .url("http://localhost:8080");
 
-        // 운영 환경
-        Server operationServer = new Server()
-                .url("https://wedit.me");
-
-        serverList.add(localServer);
         serverList.add(operationServer);
+        serverList.add(localServer);
 
         return new OpenAPI()
                 .info(new Info()
