@@ -15,9 +15,13 @@ import com.wedit.backend.api.vendor.entity.dto.request.VendorSearchRequest;
 import com.wedit.backend.api.vendor.entity.dto.response.VendorImageResponse;
 import com.wedit.backend.api.vendor.entity.dto.response.VendorResponse;
 import com.wedit.backend.api.vendor.entity.enums.Category;
+import com.wedit.backend.api.vendor.entity.enums.Meal;
+import com.wedit.backend.api.vendor.entity.enums.Style;
 import com.wedit.backend.api.vendor.entity.enums.VendorImageType;
 import com.wedit.backend.api.vendor.repository.VendorImageRepository;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
+import com.wedit.backend.common.exception.NotFoundException;
+import com.wedit.backend.common.response.ErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -100,43 +104,53 @@ public class VendorService {
 	 */
 	public Page<VendorResponse> searchWeddingHalls(VendorSearchRequest searchRequest) {
 		Pageable pageable = PageRequest.of(searchRequest.getPage(), searchRequest.getSize());
-		
+
+		List<Style> styles = (searchRequest.getStyles() != null && !searchRequest.getStyles().isEmpty())
+			? searchRequest.getStyles() : null;
+		List<Meal> meals = (searchRequest.getMeals() != null && !searchRequest.getMeals().isEmpty())
+			? searchRequest.getMeals() : null;
+
 		Page<Vendor> vendorPage = vendorRepository.findWeddingHallsByConditions(
-				Category.WEDDING_HALL,
-				searchRequest.getStyle(),
-				searchRequest.getMeal(),
-				searchRequest.getMinGuestCount(),
-				searchRequest.getMinPrice(),
-				pageable
+			Category.WEDDING_HALL,
+			styles,
+			meals,
+			searchRequest.getMinGuestCount(),
+			searchRequest.getMinPrice(),
+			pageable
 		);
 
 		return vendorPage.map(this::convertToVendorResponse);
 	}
 
-	/**
-	 * Vendor 엔터티를 VendorResponse DTO로 변환
-	 */
 	private VendorResponse convertToVendorResponse(Vendor vendor) {
 		List<VendorImage> vendorImages = vendorImageRepository.findAllByVendor(vendor);
 		List<VendorImageResponse> vendorImageResponseList = vendorImages.stream()
-				.map(vendorImage -> VendorImageResponse.builder()
-						.id(vendorImage.getId())
-						.vendorImageType(vendorImage.getVendorImageType())
-						.sortOrder(vendorImage.getSortOrder())
-						.imageUrl(vendorImage.getImageUrl())
-						.build())
-				.toList();
+			.map(vendorImage -> VendorImageResponse.builder()
+				.id(vendorImage.getId())
+				.vendorImageType(vendorImage.getVendorImageType())
+				.sortOrder(vendorImage.getSortOrder())
+				.imageUrl(vendorImage.getImageUrl())
+				.build())
+			.toList();
 
 		return VendorResponse.builder()
-				.id(vendor.getId())
-				.category(vendor.getCategory())
-				.name(vendor.getName())
-				.meal(vendor.getMeal())
-				.style(vendor.getStyle())
-				.description(vendor.getDescription())
-				.minimumAmount(vendor.getMinimumAmount())
-				.maximumGuest(vendor.getMaximumGuest())
-				.vendorImageResponses(vendorImageResponseList)
-				.build();
+			.id(vendor.getId())
+			.category(vendor.getCategory())
+			.name(vendor.getName())
+			.meal(vendor.getMeal())
+			.style(vendor.getStyle())
+			.description(vendor.getDescription())
+			.minimumAmount(vendor.getMinimumAmount())
+			.maximumGuest(vendor.getMaximumGuest())
+			.vendorImageResponses(vendorImageResponseList)
+			.build();
+	}
+
+	public VendorResponse getVendorDetail(Long vendorId) {
+		Vendor vendor = vendorRepository.findById(vendorId)
+			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage()));
+
+		return convertToVendorResponse(vendor);
+
 	}
 }

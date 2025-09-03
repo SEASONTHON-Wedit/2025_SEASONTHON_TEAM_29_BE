@@ -5,17 +5,21 @@ import com.wedit.backend.api.vendor.entity.enums.Style;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Schema(description = "웨딩홀 검색 조건 요청 DTO")
 public class VendorSearchRequest {
 
-    @Schema(description = "웨딩홀 스타일", example = "HOTEL", 
+    @Schema(description = "웨딩홀 스타일 (복수 선택 가능)", 
+            example = "[\"HOTEL\", \"CHAPEL\"]", 
             allowableValues = {"CHAPEL", "HOTEL", "CONVENTION", "HOUSE"})
-    private Style style;
+    private List<Style> styles;
 
-    @Schema(description = "식사 타입", example = "COURSE", 
+    @Schema(description = "식사 타입 (복수 선택 가능)", 
+            example = "[\"COURSE\", \"BUFFET\"]", 
             allowableValues = {"BUFFET", "COURSE", "ONE_TABLE_SETTING"})
-    private Meal meal;
+    private List<Meal> meals;
 
     @Schema(description = "최소 하객 수 (50, 100, 150 단위)", example = "100")
     private Integer minGuestCount;
