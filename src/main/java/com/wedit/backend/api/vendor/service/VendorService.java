@@ -38,16 +38,19 @@ public class VendorService {
 	@Transactional
 	public void createWeddingHall(VendorCreateRequest vendorCreateRequest, List<MultipartFile> weddingHallImages,
 		List<MultipartFile> bridalRoomImages, List<MultipartFile> buffetImages) {
-		
+
 		// 1. Vendor 엔티티 생성 및 저장
 		Vendor vendor = Vendor.builder()
 			.name(vendorCreateRequest.getName())
 			.style(vendorCreateRequest.getStyle())
 			.meal(vendorCreateRequest.getMeal())
 			.category(vendorCreateRequest.getCategory())
-			.description(vendorCreateRequest.getDescription()).build();
+			.description(vendorCreateRequest.getDescription())
+			.maximumGuest(vendorCreateRequest.getMaximumGuest())
+			.minimumAmount(vendorCreateRequest.getMinimumAmount())
+			.build();
 		Vendor savedVendor = vendorRepository.save(vendor);
-		
+
 		log.info("Created vendor with ID: {}", savedVendor.getId());
 
 		// 2. 웨딩홀 메인 이미지 업로드 및 저장
@@ -58,7 +61,7 @@ public class VendorService {
 
 		// 4. 뷔페 이미지 업로드 및 저장
 		uploadAndSaveImages(buffetImages, savedVendor, VendorImageType.WEDDING_HALL_BUFFET, "vendor/buffet");
-		
+
 		log.info("Successfully created wedding hall with all images. Vendor ID: {}", savedVendor.getId());
 	}
 
@@ -72,7 +75,7 @@ public class VendorService {
 		}
 
 		List<String> uploadedUrls = localFileUploadService.uploadFiles(images, domain, vendor.getId());
-		
+
 		for (int i = 0; i < uploadedUrls.size(); i++) {
 			String imageUrl = uploadedUrls.get(i);
 			VendorImage vendorImage = VendorImage.builder()
@@ -81,7 +84,7 @@ public class VendorService {
 				.sortOrder(i)
 				.vendor(vendor)
 				.build();
-			
+
 			vendorImageRepository.save(vendorImage);
 			log.info("Saved vendor image: {} for vendor ID: {}", imageUrl, vendor.getId());
 		}
