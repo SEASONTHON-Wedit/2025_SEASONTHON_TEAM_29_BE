@@ -31,7 +31,7 @@ public class LocalFileUploadService {
 
     // 허용되는 파일 확장자
     private final String[] ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"};
-    
+
     // 최대 파일 크기 (10MB)
     private final long MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -49,7 +49,7 @@ public class LocalFileUploadService {
         try {
             // 디렉토리 경로 생성: uploads/{domain}/{entityId}/images/
             String directoryPath = createDirectoryPath(domain, entityId);
-            
+
             // 디렉토리 생성
             Path dirPath = Paths.get(directoryPath);
             if (!Files.exists(dirPath)) {
@@ -59,19 +59,19 @@ public class LocalFileUploadService {
 
             // 안전한 파일명 생성
             String savedFileName = generateSafeFileName(file.getOriginalFilename());
-            
+
             // 파일 저장
             Path targetLocation = Paths.get(directoryPath + savedFileName);
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
             // URL 생성
             String fileUrl = generateFileUrl(domain, entityId, savedFileName);
-            
-            log.info("파일 저장 완료: originalName={}, savedName={}, size={}, url={}", 
+
+            log.info("파일 저장 완료: originalName={}, savedName={}, size={}, url={}",
                 file.getOriginalFilename(), savedFileName, file.getSize(), fileUrl);
-            
+
             return fileUrl;
-            
+
         } catch (IOException e) {
             log.error("파일 저장 실패: fileName={}, error={}", file.getOriginalFilename(), e.getMessage(), e);
             throw new RuntimeException("파일 저장 중 오류가 발생했습니다.", e);
@@ -87,14 +87,21 @@ public class LocalFileUploadService {
         }
 
         List<String> uploadedUrls = new ArrayList<>();
-        
-        for (MultipartFile file : files) {
-            String uploadedUrl = uploadFile(file, domain, entityId);
-            if (uploadedUrl != null) {
-                uploadedUrls.add(uploadedUrl);
+        try {
+            for (MultipartFile file : files) {
+                String uploadedUrl = uploadFile(file, domain, entityId);
+                if (uploadedUrl != null) {
+                    uploadedUrls.add(uploadedUrl);
+                }
             }
+        } catch (Exception e) {
+            log.warn("파일 업로드 중 오류 발생. 업로드된 파일들을 롤백합니다. Error: {}", e.getMessage());
+            for (String url : uploadedUrls) {
+                deleteFile(url);
+            }
+            throw e;
         }
-        
+
         return uploadedUrls;
     }
 
@@ -114,11 +121,14 @@ public class LocalFileUploadService {
             throw new RuntimeException("파일명이 올바르지 않습니다.");
         }
 
-        String extension = getFileExtension(originalFileName);
+        String baseName = Paths.get(originalFileName).getFileName().toString(); // 경로 조작 방지
+        String extension = getFileExtension(baseName);
+        String fileNamePart = baseName.substring(0, baseName.lastIndexOf('.'));
+
         String currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
-        String safeFileName = originalFileName.replaceAll("[^a-zA-Z0-9.-]", "_");
+        String safeFileName = fileNamePart.replaceAll("[^a-zA-Z0-9-]", "_");
         String uuid = UUID.randomUUID().toString().substring(0, 8); // 짧은 UUID 사용
-        
+
         return String.format("%s_%s_%s%s", uuid, currentDateTime, safeFileName, extension);
     }
 
@@ -127,7 +137,7 @@ public class LocalFileUploadService {
      */
     private String generateFileUrl(String domain, Long entityId, String fileName) {
         String entityPart = (entityId == null) ? "temp" : entityId.toString();
-        
+
         // 배포 환경에서는 serverUrl 사용, 로컬에서는 localhost 사용
         String baseUrl;
         if (serverUrl != null && !serverUrl.isEmpty()) {
@@ -135,8 +145,8 @@ public class LocalFileUploadService {
         } else {
             baseUrl = String.format("http://localhost:%s", serverPort);
         }
-        
-        return String.format("%s/uploads/%s/%s/images/%s", 
+
+        return String.format("%s/uploads/%s/%s/images/%s",
             baseUrl, domain, entityPart, fileName);
     }
 
@@ -147,19 +157,19 @@ public class LocalFileUploadService {
         if (file == null || file.isEmpty()) {
             throw new RuntimeException("파일이 비어있습니다.");
         }
-        
+
         // 파일 크기 검사
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new RuntimeException(String.format("파일 크기가 너무 큽니다. 최대 크기: %dMB", 
+            throw new RuntimeException(String.format("파일 크기가 너무 큽니다. 최대 크기: %dMB",
                 MAX_FILE_SIZE / (1024 * 1024)));
         }
-        
+
         // 파일 확장자 검사
         String originalFileName = file.getOriginalFilename();
         if (originalFileName == null || originalFileName.isEmpty()) {
             throw new RuntimeException("파일명이 올바르지 않습니다.");
         }
-        
+
         String extension = getFileExtension(originalFileName).toLowerCase();
         boolean isAllowed = false;
         for (String allowedExt : ALLOWED_EXTENSIONS) {
@@ -168,12 +178,12 @@ public class LocalFileUploadService {
                 break;
             }
         }
-        
+
         if (!isAllowed) {
-            throw new RuntimeException("지원하지 않는 파일 형식입니다. 지원 형식: " + 
+            throw new RuntimeException("지원하지 않는 파일 형식입니다. 지원 형식: " +
                 String.join(", ", ALLOWED_EXTENSIONS));
         }
-        
+
         // Content Type 검사
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
@@ -188,7 +198,7 @@ public class LocalFileUploadService {
         if (fileName == null || !fileName.contains(".")) {
             throw new RuntimeException("파일 확장자가 없습니다.");
         }
-        
+
         return fileName.substring(fileName.lastIndexOf("."));
     }
 
@@ -200,20 +210,19 @@ public class LocalFileUploadService {
             log.warn("삭제할 파일 URL이 비어있음");
             return;
         }
-        
+
         try {
-            // URL에서 파일 경로 추출
-            String filePath = extractFilePathFromUrl(fileUrl);
-            Path targetPath = Paths.get(filePath);
-            
+            String relativePath = extractFilePathFromUrl(fileUrl);
+            Path targetPath = Paths.get(baseUploadDir, relativePath);
+
             boolean deleted = Files.deleteIfExists(targetPath);
-            
+
             if (deleted) {
                 log.info("파일 삭제 완료: {}", fileUrl);
             } else {
                 log.warn("삭제할 파일이 존재하지 않음: {}", fileUrl);
             }
-            
+
         } catch (IOException e) {
             log.error("파일 삭제 실패: fileUrl={}, error={}", fileUrl, e.getMessage(), e);
         }
@@ -223,11 +232,12 @@ public class LocalFileUploadService {
      * URL에서 파일 경로 추출
      */
     private String extractFilePathFromUrl(String fileUrl) {
-        // http://localhost:8080/uploads/vendor/wedding_hall/1/images/filename.jpg 
-        // -> uploads/vendor/wedding_hall/1/images/filename.jpg
-        int uploadsIndex = fileUrl.indexOf("/uploads/");
+        // http://localhost:8080/uploads/vendor/wedding_hall/1/images/filename.jpg
+        // -> vendor/wedding_hall/1/images/filename.jpg
+        final String UPLOAD_PATH_PREFIX = "/uploads/";
+        int uploadsIndex = fileUrl.indexOf(UPLOAD_PATH_PREFIX);
         if (uploadsIndex != -1) {
-            return fileUrl.substring(uploadsIndex + 1); // '/' 제거
+            return fileUrl.substring(uploadsIndex + UPLOAD_PATH_PREFIX.length());
         }
         throw new RuntimeException("올바르지 않은 파일 URL입니다: " + fileUrl);
     }
