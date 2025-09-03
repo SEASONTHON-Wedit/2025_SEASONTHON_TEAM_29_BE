@@ -135,6 +135,8 @@ public class ReviewService {
                 .map(image -> s3Service.generatePresignedGetUrl(image.getImageKey()).getPresignedUrl())
                 .toList();
 
+        // 업체ID, 업체 대표이미지, 업체 이름, 업체 타입, 후기 작성일 포함해야 함
+
         return ReviewDetailResponseDTO.builder()
                 .reviewId(reviewId)
                 .writerName(review.getMember().getName())
