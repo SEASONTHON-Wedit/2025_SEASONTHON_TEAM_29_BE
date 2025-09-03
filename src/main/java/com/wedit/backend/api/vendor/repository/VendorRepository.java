@@ -19,15 +19,15 @@ public interface VendorRepository extends JpaRepository<Vendor, Long> {
 
 	@Query("SELECT v FROM Vendor v WHERE " +
 			"v.category = :category AND " +
-			"(:style IS NULL OR v.style = :style) AND " +
-			"(:meal IS NULL OR v.meal = :meal) AND " +
+			"(:styles IS NULL OR v.style IN :styles) AND " +
+			"(:meals IS NULL OR v.meal IN :meals) AND " +
 			"(:minGuestCount IS NULL OR v.maximumGuest >= :minGuestCount) AND " +
 			"(:minPrice IS NULL OR v.minimumAmount >= :minPrice) " +
 			"ORDER BY v.createdAt DESC")
 	Page<Vendor> findWeddingHallsByConditions(
 			@Param("category") Category category,
-			@Param("style") Style style,
-			@Param("meal") Meal meal,
+			@Param("styles") List<Style> styles,
+			@Param("meals") List<Meal> meals,
 			@Param("minGuestCount") Integer minGuestCount,
 			@Param("minPrice") Integer minPrice,
 			Pageable pageable

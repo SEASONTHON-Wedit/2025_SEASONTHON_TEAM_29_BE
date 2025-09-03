@@ -8,7 +8,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,6 +44,13 @@ import lombok.extern.slf4j.Slf4j;
 public class VendorController {
 	private final VendorService vendorService;
 
+	@Operation(
+		summary = "웨딩홀 생성 API"
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "웨딩홀 생성 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+	})
 	@PostMapping(value = "/wedding_hall", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<ApiResponse<Void>> createWeddingHall(
 		@RequestParam("name") String name,
@@ -48,6 +58,8 @@ public class VendorController {
 		@RequestParam("style") Style style,
 		@RequestParam("meal") Meal meal,
 		@RequestParam("description") String description,
+		@RequestParam("minimumAmount") Integer minimumAmount,
+		@RequestParam("maximumGuest") Integer maximumGuest,
 		@RequestPart(value = "wedding_hall_images", required = false) List<MultipartFile> weddingHallImages,
 		@RequestPart(value = "bridal_room_images", required = false) List<MultipartFile> bridalRoomImages,
 		@RequestPart(value = "buffet_images", required = false) List<MultipartFile> buffetImages
@@ -58,12 +70,21 @@ public class VendorController {
 		request.setStyle(style);
 		request.setMeal(meal);
 		request.setDescription(description);
+		request.setMinimumAmount(minimumAmount);
+		request.setMaximumGuest(maximumGuest);
 
 		vendorService.createWeddingHall(request, weddingHallImages, bridalRoomImages, buffetImages);
 
 		return ApiResponse.successOnly(SuccessStatus.VENDOR_CREATE_SUCCESS);
 	}
 
+	@Operation(
+		summary = "웨딩홀 전체 조회 API"
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "웨딩홀 전체 조회 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+	})
 	@GetMapping("/wedding_hall")
 	public ResponseEntity<ApiResponse<List<VendorResponse>>> getWeddingHall() {
 		List<VendorResponse> weddingHall = vendorService.getWeddingHall();
@@ -71,31 +92,42 @@ public class VendorController {
 	}
 
 	@Operation(
-			summary = "웨딩홀 조건 검색 API",
-			description = "스타일, 식사 타입, 최소 하객 수, 최소 가격으로 웨딩홀을 검색합니다. <br>" +
-					"<p>검색 조건 정보:</p>" +
-					"<ul>" +
-					"<li>style: 웨딩홀 스타일 (CHAPEL, HOTEL, CONVENTION, HOUSE)</li>" +
-					"<li>meal: 식사 타입 (BUFFET, COURSE, ONE_TABLE_SETTING)</li>" +
-					"<li>minGuestCount: 최소 하객 수 (50, 100, 150 단위)</li>" +
-					"<li>minPrice: 최소 가격</li>" +
-					"<li>page: 페이지 번호 (기본값: 0)</li>" +
-					"<li>size: 페이지 크기 (기본값: 10)</li>" +
-					"</ul>" +
-					"<p>모든 조건은 선택사항이며, 제공되지 않은 조건은 필터링에 적용되지 않습니다.</p>"
+		summary = "웨딩홀 조건 검색 API",
+		description = "스타일, 식사 타입, 최소 하객 수, 최소 가격으로 웨딩홀을 검색합니다. <br>" +
+			"<p>검색 조건 정보:</p>" +
+			"<ul>" +
+			"<li>styles: 웨딩홀 스타일 배열 (CHAPEL, HOTEL, CONVENTION, HOUSE) - 복수 선택 가능</li>" +
+			"<li>meals: 식사 타입 배열 (BUFFET, COURSE, ONE_TABLE_SETTING) - 복수 선택 가능</li>" +
+			"<li>minGuestCount: 최소 하객 수 (50, 100, 150 단위)</li>" +
+			"<li>minPrice: 최소 가격</li>" +
+			"<li>page: 페이지 번호 (기본값: 0)</li>" +
+			"<li>size: 페이지 크기 (기본값: 10)</li>" +
+			"</ul>" +
+			"<p>모든 조건은 선택사항이며, 제공되지 않은 조건은 필터링에 적용되지 않습니다.</p>" +
+			"<p>예시 요청:</p>" +
+			"<pre>" +
+			"{\n" +
+			"  \"styles\": [\"HOTEL\", \"CHAPEL\"],\n" +
+			"  \"meals\": [\"COURSE\", \"BUFFET\"],\n" +
+			"  \"minGuestCount\": 100,\n" +
+			"  \"minPrice\": 500000,\n" +
+			"  \"page\": 0,\n" +
+			"  \"size\": 10\n" +
+			"}" +
+			"</pre>"
 	)
 	@ApiResponses({
-			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "웨딩홀 검색 성공"),
-			@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "웨딩홀 검색 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
 	@PostMapping("/wedding_hall/search")
 	public ResponseEntity<ApiResponse<Page<VendorResponse>>> searchWeddingHalls(
-			@RequestBody VendorSearchRequest searchRequest) {
-		
+		@RequestBody VendorSearchRequest searchRequest) {
+
 		Page<VendorResponse> weddingHalls = vendorService.searchWeddingHalls(searchRequest);
 		return ApiResponse.success(SuccessStatus.VENDOR_GET_SUCCESS, weddingHalls);
 	}
-
+  
 //    @GetMapping("/main/vendors")
 //    public ResponseEntity<ApiResponse<List<VendorSimpleResponseDTO>>> getMainBannerVendors(
 //            @RequestParam Category category,
@@ -107,4 +139,19 @@ public class VendorController {
 //
 //        return ApiResponse.success(SuccessStatus.MAIN_BANNER_VENDOR_LIST_GET_SUCCESS, dtos);
 //    }
+
+	@Operation(
+		summary = "웨딩홀 상세 조회 API"
+	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "웨딩홀 상세 조회 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+	})
+	@GetMapping("/{vendorId}")
+	public ResponseEntity<ApiResponse<VendorResponse>> getWeddingHallDetail(
+		@PathVariable Long vendorId
+	) {
+		VendorResponse vendorDetail = vendorService.getVendorDetail(vendorId);
+		return ApiResponse.success(SuccessStatus.VENDOR_GET_SUCCESS, vendorDetail);
+	}
 }

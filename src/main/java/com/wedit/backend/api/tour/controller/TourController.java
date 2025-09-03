@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Tour", description = "Tour 관련 API 입니다.")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/Tour")
+@RequestMapping("/api/v1/tour")
 public class TourController {
 	private final TourService tourService;
 
@@ -39,7 +39,7 @@ public class TourController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투어일지 생성 성공"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
-	@PostMapping("/")
+	@PostMapping
 	public ResponseEntity<ApiResponse<Void>> createTour(
 		@AuthenticationPrincipal UserDetails userDetails,
 		@RequestBody TourCreateRequestDTO tourCreateRequestDTO
@@ -55,7 +55,7 @@ public class TourController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투어일지 조회 성공"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
-	@GetMapping("/")
+	@GetMapping
 	public ResponseEntity<ApiResponse<List<TourResponseDTO>>> getMyTourList(
 		@AuthenticationPrincipal UserDetails userDetails
 	) {
