@@ -59,7 +59,8 @@ public class ImageUtil {
     public static boolean isValidFileSize(String contentType, Long size) {
         if (isValidContentType(contentType)) {
             return isValidImageSize(size);
-        } else if (isValidVideoType(contentType)) {
+        }
+        if (isValidVideoType(contentType)) {
             return isValidVideoSize(size);
         }
         return false;
