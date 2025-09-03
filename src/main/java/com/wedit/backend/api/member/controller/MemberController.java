@@ -131,6 +131,18 @@ public class MemberController {
     }
 
     // Member 필드 수정 엔드포인트 (이메일, 비밀번호, 이름, 결혼예정일 등)
+    @Operation(
+            summary = "소셜 로그인 추가 정보 입력 API",
+            description = "소셜 로그인 후 추가 정보를 입력합니다. <br>" +
+                    "필수 정보: 생년월일, 전화번호, 결혼예정일, 타입(신랑/신부)",
+            security = {
+                    @SecurityRequirement(name = "Authorization")
+            }
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "추가 정보 입력 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증이 필요합니다.")
+    })
     @PostMapping("/social_login/additional_info")
     public ResponseEntity<ApiResponse<Void>> socialLogin(
         @AuthenticationPrincipal UserDetails userDetails,
