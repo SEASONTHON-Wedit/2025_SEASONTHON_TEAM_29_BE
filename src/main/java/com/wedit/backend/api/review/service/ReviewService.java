@@ -9,8 +9,8 @@ import com.wedit.backend.api.review.entity.ReviewImage;
 import com.wedit.backend.api.review.repository.ReviewImageRepository;
 import com.wedit.backend.api.review.repository.ReviewRepository;
 import com.wedit.backend.api.vendor.entity.Vendor;
-import com.wedit.backend.api.vendor.entity.VendorImage;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
+import com.wedit.backend.common.exception.ForbiddenException;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.exception.UnauthorizedException;
 import com.wedit.backend.common.response.ErrorStatus;
@@ -20,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -36,7 +38,7 @@ public class ReviewService {
 
     
     // 후기 작성
-    public ReviewCreateResponseDTO createReview(ReviewCreatRequestDTO dto, Long memberId) {
+    public ReviewCreateResponseDTO createReview(ReviewCreateRequestDTO dto, Long memberId) {
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
@@ -110,7 +112,7 @@ public class ReviewService {
         Review review = reviewRepository.findByIdWithImages(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW.getMessage()));
         if (!review.getMember().getId().equals(memberId)) {
-            throw new UnauthorizedException(ErrorStatus.UNAUTHORIZED_WRITER_NOT_SAME_USER.getMessage());
+            throw new ForbiddenException(ErrorStatus.UNAUTHORIZED_WRITER_NOT_SAME_USER.getMessage());
         }
 
         List<String> imageKeys = review.getImages().stream()
@@ -131,21 +133,31 @@ public class ReviewService {
         Review review = reviewRepository.findByIdWithImages(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW.getMessage()));
 
+        Member writer = review.getMember();
+        Vendor vendor = review.getVendor();
+
         List<String> presignedUrls = review.getImages().stream()
                 .map(image -> s3Service.generatePresignedGetUrl(image.getImageKey()).getPresignedUrl())
                 .toList();
 
-        // 업체ID, 업체 대표이미지, 업체 이름, 업체 타입, 후기 작성일 포함해야 함
+        // D-Day 계산
+        String dDay = (writer.getWeddingDate() != null)
+                ? "D-" + ChronoUnit.DAYS.between(LocalDate.now(), writer.getWeddingDate())
+                : null;
 
         return ReviewDetailResponseDTO.builder()
                 .reviewId(reviewId)
-                .writerName(review.getMember().getName())
-                .vendorName(review.getVendor().getName())
+                .writerName(writer.getName())
+                .vendorName(vendor.getName())
                 .rating(review.getRating())
                 .contentBest(review.getContentBest())
                 .contentWorst(review.getContentWorst())
                 .imagesUrls(presignedUrls)
                 .createdAt(review.getCreatedAt())
+                .vendorId(vendor.getId())
+                .vendorLogoUrl(findVendorLogoUrl(vendor))
+                .writerType(writer.getType().name())
+                .weddingDday(dDay)
                 .build();
     }
 
@@ -203,31 +215,27 @@ public class ReviewService {
     public Page<MyReviewResponseDTO> getMyReviewList(Long memberId, Pageable pageable) {
 
         Page<Review> page = reviewRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable);
-        List<Review> reviews = page.getContent();
 
-        if (reviews.isEmpty()) {
+        if (page.isEmpty()) {
             return Page.empty();
         }
+        List<Review> reviews = page.getContent();
 
         List<Long> vendorIds = reviews.stream()
                 .map(review -> review.getVendor().getId())
                 .distinct()
                 .toList();
 
-
+        Map<Long, String> vendorImageMap = findVendorImageMap(venndorIds);
 
         return page.map(review -> {
             Vendor vendor = review.getVendor();
-            String imageUrl = vendor.getImages().stream()
-                    .min(Comparator.comparing(VendorImage::getSortOrder))
-                    .map(VendorImage::getImageUrl)
-                    .map(key -> s3Service.generatePresignedGetUrl(key).getPresignedUrl())
-                    .orElse(null);
+            String vendorImageUrl = vendorImageMap.get(review.getId());
 
             return MyReviewResponseDTO.builder()
                     .reviewId(review.getId())
                     .vendorName(vendor.getName())
-                    .vendorImageUrl(imageUrl)
+                    .vendorImageUrl(vendorImageUrl)
                     .myRating(review.getRating())
                     .build();
         });

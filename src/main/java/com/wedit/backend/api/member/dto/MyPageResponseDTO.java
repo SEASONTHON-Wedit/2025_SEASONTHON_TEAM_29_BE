@@ -14,7 +14,7 @@ public class MyPageResponseDTO {
     private String email;
     private String phoneNumber;
     private LocalDate birthDate;
-    private LocalDate weddingDate;
+    private LocalDate weddingDate;  // Nullable
     private String role;
     private String type;
     private Long coupleId;          // 연결 전에는 Nullable

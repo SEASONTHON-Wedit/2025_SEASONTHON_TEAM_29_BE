@@ -8,6 +8,11 @@ import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.ErrorStatus;
 import com.wedit.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,20 +30,16 @@ public class ReviewController {
     private final ReviewService reviewService;
     private final JwtService jwtService;
 
-    @Operation(
-            summary = "후기 작성 API",
-            description = "후기를 작성합니다. <br>"
-                + "<p>"
-                + "요청 필드 정보) <br>"
-                + "Long vendorId : 업체 ID"
-                + "int rating : 별점 (1 ~ 5)"
-                + "String contentBest : 좋았던 점"
-                + "String contentWorst : 아쉬웠던 점"
-                + "List<String> imageUrls : 후기 이미지 (최대 5개)"
-    )
+    @Operation(summary = "후기 작성", description = "신규 후기를 작성합니다. JWT 토큰을 통한 사용자 인증이 필요합니다.",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "후기 작성 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패 (유효하지 않은 토큰)", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 회원 또는 업체", content = @Content)
+    })
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<ReviewCreateResponseDTO>> createReview(
-            @RequestBody ReviewCreatRequestDTO requestDTO,
+            @RequestBody ReviewCreateRequestDTO requestDTO,
             @RequestHeader("Authorization") String reqToken) {
 
         String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
@@ -50,14 +51,18 @@ public class ReviewController {
         return ApiResponse.success(SuccessStatus.REVIEW_CREATE_SUCCESS, dto);
     }
 
-    // 내 리뷰 수정
-    @Operation(
-            summary = "내 후기 수정 API"
-    )
+    @Operation(summary = "내 후기 수정", description = "자신이 작성한 후기의 내용을 수정합니다. JWT 토큰을 통한 사용자 인증이 필요합니다.",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "후기 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패 (유효하지 않은 토큰)", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "수정 권한 없음 (작성자 불일치)", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 후기", content = @Content)
+    })
     @PutMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<ReviewUpdateResponseDTO>> updateReview(
-            @RequestHeader("Authorization") String reqToken,
-            @PathVariable Long reviewId,
+            @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
+            @Parameter(description = "수정할 후기의 ID", example = "12") @PathVariable Long reviewId,
             @RequestBody ReviewUpdateRequestDTO requestDTO) {
 
         String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
@@ -69,24 +74,25 @@ public class ReviewController {
         return ApiResponse.success(SuccessStatus.REVIEW_UPDATE_SUCCESS, dto);
     }
 
-    // 특정 리뷰 단건 상세 조회
-    @Operation(
-            summary = "특정 후기 상세 조회 API"
-    )
+    @Operation(summary = "특정 후기 상세 조회", description = "리뷰 ID로 특정 후기의 상세 내용을 조회합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "후기 상세 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 후기", content = @Content)
+    })
     @GetMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<ReviewDetailResponseDTO>> getReviewDetail(
-            @PathVariable Long reviewId) {
+            @Parameter(description = "조회할 후기의 ID", example = "12") @PathVariable Long reviewId) {
 
         ReviewDetailResponseDTO dto = reviewService.getReviewDetail(reviewId);
 
         return ApiResponse.success(SuccessStatus.REVIEW_DETAIL_GET_SUCCESS, dto);
     }
 
-    // 메인 배너 리뷰 페이징 조회
-    @Operation(
-            summary = "메인 배너 후기 리스트 페이징 조회 API",
-            description = "전체 후기 중 최근 후기를 5개씩 조회합니다."
-    )
+    @Operation(summary = "메인 배너 후기 목록 조회 (페이징)", description = "메인 화면에 노출될 최신 후기 목록을 페이지 단위로 조회합니다.")
+    @Parameters({
+            @Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
+            @Parameter(name = "size", description = "한 페이지에 보여줄 항목 수", example = "5")
+    })
     @GetMapping("/all-reviews")
     public ResponseEntity<ApiResponse<Page<ReviewMainBannerResponseDTO>>> getAllReviewList(
             @RequestParam(defaultValue = "0") int page,
@@ -98,16 +104,17 @@ public class ReviewController {
         return ApiResponse.success(SuccessStatus.MAIN_BANNER_REVIEW_LIST_GET_SUCCESS, dtos);
     }
 
-    // 내 후기 페이징 조회
-    @Operation(
-            summary = "내 후기 리스트 페이징 조회 API (미완성, 업체 대표이미지 필요)",
-            description = "5개씩 작성한 내 후기 리스트를 조회합니다."
-    )
+    @Operation(summary = "내 후기 목록 조회 (페이징) - 미완성", description = "자신이 작성한 모든 후기 목록을 페이지 단위로 조회합니다. JWT 토큰이 필요합니다.",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
+    @Parameters({
+            @Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
+            @Parameter(name = "size", description = "한 페이지에 보여줄 항목 수", example = "10")
+    })
     @GetMapping("/my-reviews")
     public ResponseEntity<ApiResponse<Page<MyReviewResponseDTO>>> getMyReviewList(
-            @RequestHeader("Authorization") String reqToken,
+            @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size) {
+            @RequestParam(defaultValue = "10") int size) {
 
         String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
         Long memberId = jwtService.extractMemberId(token)
@@ -119,14 +126,18 @@ public class ReviewController {
         return ApiResponse.success(SuccessStatus.MY_REVIEW_LIST_GET_SUCCESS, dtos);
     }
 
-    // 리뷰 삭제
-    @Operation(
-            summary = "내 후기 삭제 API"
-    )
+    @Operation(summary = "내 후기 삭제", description = "자신이 작성한 후기를 삭제합니다. JWT 토큰을 통한 사용자 인증이 필요합니다.",
+            security = @SecurityRequirement(name = "Bearer Authentication"))
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "후기 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패 (유효하지 않은 토큰)", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "삭제 권한 없음 (작성자 불일치)", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 후기", content = @Content)
+    })
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(
-            @PathVariable Long reviewId,
-            @RequestHeader String reqToken) {
+            @Parameter(description = "삭제할 후기의 ID", example = "12") @PathVariable Long reviewId,
+            @Parameter(hidden = true) @RequestHeader String reqToken) {
 
         String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
         Long memberId = jwtService.extractMemberId(token)
