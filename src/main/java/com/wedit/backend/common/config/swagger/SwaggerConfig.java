@@ -1,5 +1,8 @@
 package com.wedit.backend.common.config.swagger;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -42,13 +45,18 @@ public class SwaggerConfig {
 
         // Refresh Token 은 글로벌이 아닌 필요 API 메서드에만 적용
 
+        List<Server> serverList = new ArrayList<>();
+
         // 개발 환경에서 사용
-       // Server server = new Server()
-               // .url("http://localhost:8080");
+       Server localServer = new Server()
+               .url("http://localhost:8080");
 
         // 운영 환경
-        Server server = new Server()
+        Server operationServer = new Server()
                 .url("https://wedit.me");
+
+        serverList.add(localServer);
+        serverList.add(operationServer);
 
         return new OpenAPI()
                 .info(new Info()
@@ -58,7 +66,7 @@ public class SwaggerConfig {
                 .components(new Components()
                         .addSecuritySchemes(accessTokenHeader, accessTokenScheme)
                         .addSecuritySchemes(refreshTokenHeader, refreshTokenScheme))
-                .addServersItem(server)
+                .servers(serverList)
                 .addSecurityItem(accessTokenRequirement);
     }
 }

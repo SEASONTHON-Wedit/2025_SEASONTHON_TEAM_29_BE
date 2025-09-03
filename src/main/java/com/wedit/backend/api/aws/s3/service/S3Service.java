@@ -30,7 +30,7 @@ public class S3Service {
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
 
-    @Value("${cloud.aws.s3.presigned.expiration-minutes}")
+    @Value("${cloud.aws.s3.presign.expiration-minutes}")
     private Integer durationMinutes;
 
 

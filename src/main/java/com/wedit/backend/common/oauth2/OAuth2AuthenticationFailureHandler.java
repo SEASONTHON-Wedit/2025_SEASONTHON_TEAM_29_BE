@@ -2,6 +2,7 @@ package com.wedit.backend.common.oauth2;
 
 import java.io.IOException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OAuth2AuthenticationFailureHandler implements AuthenticationFailureHandler {
 
+    @Value("${app.oauth2.failure-redirect-uri:http://localhost:3000/login?error=oauth2_failure}")
+    private String failureRedirectUri;
+
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException exception) throws IOException {
@@ -25,7 +29,11 @@ public class OAuth2AuthenticationFailureHandler implements AuthenticationFailure
         log.error("Request Parameters: {}", request.getParameterMap());
         
         // 실패 시 로그인 페이지로 리다이렉트 (에러 파라미터와 함께)
-        String errorMessage = "OAuth2 인증에 실패했습니다: " + exception.getMessage();
-        response.sendRedirect("/login?error=" + java.net.URLEncoder.encode(errorMessage, "UTF-8"));
+        String errorMessage = exception.getMessage();
+        String redirectUrl = failureRedirectUri + "&message=" + 
+            java.net.URLEncoder.encode(errorMessage, "UTF-8");
+            
+        log.info("OAuth2 실패 리다이렉트: {}", redirectUrl);
+        response.sendRedirect(redirectUrl);
     }
 }
