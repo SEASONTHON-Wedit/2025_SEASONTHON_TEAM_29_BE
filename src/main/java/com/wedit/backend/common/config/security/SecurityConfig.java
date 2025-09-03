@@ -69,8 +69,8 @@ public class SecurityConfig {
                 }))
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(
+                sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/api/swagger-resources/**",
@@ -89,7 +89,7 @@ public class SecurityConfig {
                                 "/api/oauth2/authorization/**",
                                 "/login/oauth2/code/**",
                                 "/oauth/callback"
-                        ).permitAll()   // Swagger, Spring Actuator 허가
+                        ).permitAll()   // Swagger, Spring Actuator, OAuth2 Debug 허가
                         .requestMatchers(
                                 "/api/v1/member/**"
                         ).permitAll()   // Member 관련 허가
