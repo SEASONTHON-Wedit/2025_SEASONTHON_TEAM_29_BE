@@ -13,4 +13,6 @@ public class VendorCreateRequest {
 	private Style style;
 	private Meal meal;
 	private String description;
+	private Integer minimumAmount;  // 최소 금액
+	private Integer maximumGuest;   // 최대 수용 인원
 }

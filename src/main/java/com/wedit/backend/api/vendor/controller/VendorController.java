@@ -55,6 +55,8 @@ public class VendorController {
 		@RequestParam("style") Style style,
 		@RequestParam("meal") Meal meal,
 		@RequestParam("description") String description,
+		@RequestParam("minimumAmount") Integer minimumAmount,
+		@RequestParam("maximumGuest") Integer maximumGuest,
 		@RequestPart(value = "wedding_hall_images", required = false) List<MultipartFile> weddingHallImages,
 		@RequestPart(value = "bridal_room_images", required = false) List<MultipartFile> bridalRoomImages,
 		@RequestPart(value = "buffet_images", required = false) List<MultipartFile> buffetImages
@@ -65,6 +67,8 @@ public class VendorController {
 		request.setStyle(style);
 		request.setMeal(meal);
 		request.setDescription(description);
+		request.setMinimumAmount(minimumAmount);
+		request.setMaximumGuest(maximumGuest);
 
 		vendorService.createWeddingHall(request, weddingHallImages, bridalRoomImages, buffetImages);
 
