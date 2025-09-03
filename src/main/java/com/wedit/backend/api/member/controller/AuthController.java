@@ -8,6 +8,7 @@ import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.ErrorStatus;
 import com.wedit.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -29,47 +30,44 @@ public class AuthController {
     private final SmsService smsService;
 
     @Operation(
-            summary = "SMS 인증코드 발송 API",
-            description = "핸드폰 번호로 인증코드를 발송합니다.<br>"
-                + "<p>"
-                + "호출 필드 정보) <br>"
-                + "phoneNumber : 전화번호 (ex. 01012345678)"
+            summary = "SMS 인증번호 발송",
+            description = "회원가입을 위해 입력된 휴대폰 번호로 6자리 인증번호를 발송합니다. <br>" +
+                    "동일 번호로 재요청 시, 기존에 발급된 인증번호는 만료되고 새로운 인증번호가 발송됩니다."
     )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "SMS 인증코드 발송 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "휴대폰 번호 형식이 올바르지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "인증번호 발송 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "휴대폰 번호 형식이 올바르지 않거나, 이미 가입된 번호일 경우", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "SMS 발송 시스템 오류", content = @Content)
     })
     @PostMapping("/verify-phone")
     public ResponseEntity<ApiResponse<Void>> sendVerificationSms(@RequestBody SmsVerificationRequestDTO smsVerificationRequestDTO) {
 
         String phoneNumber = smsVerificationRequestDTO.getPhoneNumber();
-        LocalDateTime requestedAt = LocalDateTime.now();
 
         if (StringUtils.isBlank(phoneNumber) || !phoneNumber.matches("\\d{10,11}")) {
             throw new BadRequestException(ErrorStatus.BAD_REQUEST_VALIDATION_PHONE_FORMAT.getMessage());
         }
 
-        smsService.sendVerificationSms(phoneNumber, requestedAt);
+        smsService.sendVerificationSms(phoneNumber);
 
         return ApiResponse.successOnly(SuccessStatus.SEND_SMS_VERIFICATION_CODE);
     }
 
     @Operation(
-            summary = "SMS 인증 코드 인증 API",
-            description = "발송된 SMS 인증 코드를 검증합니다.<br>"
-                    + "<p>"
-                    + "호출 필드 정보) <br>"
-                    + "code : SMS로 발송된 인증코드 (6자리)"
+            summary = "SMS 인증번호 확인",
+            description = "발송된 6자리 인증번호를 확인하여 휴대폰 번호의 소유권을 인증합니다. <br>" +
+                    "인증 유효시간은 5분입니다."
     )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "SMS 인증코드 인증 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "SMS 인증코드가 올바르지 않습니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "인증 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "인증번호가 일치하지 않음", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증번호가 만료됨", content = @Content)
     })
     @PostMapping("/verification-phone-code")
-    public ResponseEntity<ApiResponse<Void>> verifyPSmsCode(@RequestBody SmsVerificationCodeRequestDTO smsVerificationCodeRequestDTO) {
+    public ResponseEntity<ApiResponse<Void>> verifyPSmsCode(
+            @RequestBody SmsVerificationCodeRequestDTO smsVerificationCodeRequestDTO) {
 
-        LocalDateTime requestedAt = LocalDateTime.now();
-        smsService.verifyCode(smsVerificationCodeRequestDTO.getCode(), requestedAt);
+        smsService.verifyCode(smsVerificationCodeRequestDTO.getPhoneNumber(), smsVerificationCodeRequestDTO.getCode());
 
         return ApiResponse.successOnly(SuccessStatus.SEND_SMS_VERIFICATION_CODE);
     }
