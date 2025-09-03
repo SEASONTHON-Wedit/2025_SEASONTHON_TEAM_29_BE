@@ -1,7 +1,7 @@
 package com.wedit.backend.api.aws.s3.controller;
 
-import com.wedit.backend.api.aws.s3.dto.ImagePutRequestDTO;
-import com.wedit.backend.api.aws.s3.service.MediaService;
+import com.wedit.backend.api.aws.s3.dto.PresignedUrlRequestDTO;
+import com.wedit.backend.api.aws.s3.dto.PresignedUrlResponseDTO;
 import com.wedit.backend.api.aws.s3.service.S3Service;
 import com.wedit.backend.api.aws.s3.util.ImageUtil;
 import com.wedit.backend.api.member.jwt.service.JwtService;
@@ -11,7 +11,6 @@ import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.ErrorStatus;
 import com.wedit.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "S3 PreSigne", description = "S3 PreSigned URL 이미지 관련 API 입니다.")
+@Tag(name = "S3", description = "S3 PreSigned URL 이미지 관련 API 입니다.")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/s3")
@@ -29,148 +28,99 @@ public class S3Controller {
 
     private final S3Service s3Service;
     private final JwtService jwtService;
-    private final MediaService mediaDownloadService;
+
 
     @Operation(
-            summary = "단일 S3 업로드용 PreSigned URL 발급 API",
-            description = "클라이언트가 S3에 직접 단일 파일을 업로드할 수 있도록 PreSigned URL을 반환합니다. <br>"
-                    + "액세스 토큰을 통해 사용자를 식별하며, 파일 크기와 타입에 대한 검증을 수행합니다. <br>"
+            summary = "단일 미디어 업로드용 Presigned URL 발급 API",
+            description = "단일 미디어 파일에 대한 업로드용 PreSigned URL을 발급합니다. <br>"
+                    + "액세스 토큰을 헤더(Authorization)에 보내면 사용자 인증합니다. <br>"
                     + "<p>"
                     + "호출 필드 정보) <br>"
-                    + "String domain : 도메인(review, vendor, etc.) <br>"
-                    + "String filename : 파일 이름 <br>"
+                    + "String domain : 업로드가 쓰이는 도메인 (ex. review, vendor, etc.) <br>"
+                    + "Long domainId : 엔티티 ID (PK) <br>"
+                    + "String filename : 원본 파일의 이름 (확장자 포함) <br>"
                     + "String contentType : image/jpeg, jpg, png, gif, webp 혹은 video/mp4, quicktime, x-matroska, webm <br>"
-                    + "Long contentLength : 파일 크기 <br>"
-                    + "Long entityId : 이미지 엔티티 ID"
+                    + "Long contentLength : 파일 크기 (이미지 15MB, 동영상 100MB 제한)"
     )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "PreSigned PUT URL 발급 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
-    })
-    @PutMapping("/upload-url")
-    public ResponseEntity<ApiResponse<String>> getPresignedPutUrl(
-            @RequestBody ImagePutRequestDTO requestDTO,
+    @PutMapping("/{domain}/upload-url")
+    public ResponseEntity<ApiResponse<PresignedUrlResponseDTO>> getSinglePutUrl(
+            @PathVariable String domain,
+            @RequestBody PresignedUrlRequestDTO reqDto,
             @RequestHeader("Authorization") String reqToken) {
 
-        // 1. 액세스 토큰 추출 및 MemberId 추출, 없다면 예외
         Long memberId = extractMemberId(reqToken);
 
-        // 2. 파일 타입 및 사이즈 검증
-        validateFile(requestDTO.getContentType(), requestDTO.getContentLength());
+        validateFile(reqDto.getContentType(), reqDto.getContentLength());
 
-        // 3. PreSigned URL 발급
-        String url = s3Service.generatePresignedPutUrl(
-                requestDTO.getDomain(),
-                requestDTO.getFilename(),
-                requestDTO.getContentType(),
-                requestDTO.getContentLength(),
-                memberId,
-                requestDTO.getEntityId()
-        );
+        PresignedUrlResponseDTO rspDto = s3Service.generatePresignedPutUrl(reqDto, domain, memberId);
 
-        // 4. 성공 응답과 PreSigned URL 반환
-        return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, url);
+        return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, rspDto);
     }
 
     @Operation(
-            summary = "복수 S3 업로드용 PreSigned URL 발급 API",
-            description = "클라이언트가 S3에 직접 복수 파일을 업로드할 수 있도록 PreSigned URL을 반환합니다. <br>"
-                    + "액세스 토큰을 통해 사용자를 식별하며, 파일 크기와 타입에 대한 검증을 수행합니다. <br>"
+            summary = "복수 미디어 업로드용 Presigned URL 발급 API",
+            description = "단일 미디어 파일에 대한 업로드용 PreSigned URL을 발급합니다. <br>"
+                    + "액세스 토큰을 헤더(Authorization)에 보내면 사용자 인증합니다."
                     + "<p>"
                     + "호출 필드 정보) <br>"
-                    + "String domain : 도메인(review, vendor, etc.) <br>"
-                    + "String filename : 파일 이름 <br>"
+                    + "String domain : 업로드가 쓰이는 도메인 (ex. review, vendor, etc.) <br>"
+                    + "Long domainId : 엔티티 ID (PK) <br>"
+                    + "String filename : 원본 파일의 이름 (확장자 포함) <br>"
                     + "String contentType : image/jpeg, jpg, png, gif, webp 혹은 video/mp4, quicktime, x-matroska, webm <br>"
-                    + "Long contentLength : 파일 크기 <br>"
-                    + "Long entityId : 이미지 엔티티 ID"
+                    + "Long contentLength : 파일 크기 (이미지 15MB, 동영상 100MB 제한)"
     )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "PreSigned PUT URLs 발급 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
-    })
-    @PutMapping("/upload-urls")
-    public ResponseEntity<ApiResponse<List<String>>> getPresignedPutMultipleUrls(
-            @RequestBody List<ImagePutRequestDTO> requestDTOs,
+    @PutMapping("/{domain}/upload-urls")
+    public ResponseEntity<ApiResponse<List<PresignedUrlResponseDTO>>> getMultiplePutUrl(
+            @PathVariable String domain,
+            @RequestBody List<PresignedUrlRequestDTO> reqDtos,
             @RequestHeader("Authorization") String reqToken) {
-
-        // 1. 액세스 토큰 추출 및 MemberId 추출, 없다면 예외
         Long memberId = extractMemberId(reqToken);
 
-        // 2. 각 DTO 파일 타입 및 사이즈 검증
-        requestDTOs.forEach(dto -> validateFile(dto.getContentType(), dto.getContentLength()));
+        for (var req : reqDtos) {
+            validateFile(req.getContentType(), req.getContentLength());
+        }
 
-        // 3. 각 파일마다 PreSigned URL 발급
-        List<String> urls = s3Service.generatePresignedPutUrls(requestDTOs, memberId);
+        List<PresignedUrlResponseDTO> rspDtos = reqDtos.stream()
+                .map(req -> s3Service.generatePresignedPutUrl(req, domain, memberId))
+                .toList();
 
-        // 4. 성공 응답과 PreSigned URLs 반환
-        return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, urls);
+        return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, rspDtos);
     }
 
     @Operation(
-            summary = "단일 S3 다운로드용 PreSigned URL 발급 API --- 미완성",
-            description = "클라이언트가 S3에 직접 단일 파일을 다운로드할 수 있도록 PreSigned URL을 반환합니다. <br>"
-                    + "액세스 토큰을 통해 사용자를 식별하며, 파일 크기와 타입에 대한 검증을 수행합니다."
+            summary = "복수 미디어 다운로드용 Presigned URL 발급 API"
     )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "PreSigned GET URL 발급 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
-    })
-    @GetMapping("/download-url")
-    public ResponseEntity<ApiResponse<Void>> getPresignedGetUrl(
-            @RequestParam String domain,
-            @RequestParam Long entityId,
+    @GetMapping("/{domain}/download-url")
+    public ResponseEntity<ApiResponse<PresignedUrlResponseDTO>> getSingleDownloadUrl(
+            @PathVariable String domain,
+            @RequestParam String key,
             @RequestHeader("Authorization") String reqToken) {
 
-        // 1. 액세스 토큰 추출 및 MemberId 추출, 없다면 예외
-        Long memberId = extractMemberId(reqToken);
+        extractMemberId(reqToken);
 
-        String key = mediaDownloadService.getFileKeysByDomainAndEntityId(domain, entityId, )
+        PresignedUrlResponseDTO rspDto = s3Service.generatePresignedGetUrl(key);
 
-        return ApiResponse.successOnly(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS);
+        return ApiResponse.success(SuccessStatus.S3_GET_URL_CREATE_SUCCESS, rspDto);
     }
 
     @Operation(
-            summary = "복수 S3 다운로드용 PreSigned URL 발급 API --- 미완성",
-            description = "클라이언트가 S3에 직접 복수 파일을 다운로드할 수 있도록 PreSigned URL을 반환합니다. <br>"
-                    + "액세스 토큰을 통해 사용자를 식별하며, 파일 크기와 타입에 대한 검증을 수행합니다."
+            summary = "복수 미디어 다운로드용 Presigned URL 발급 API"
     )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "PreSigned GET URLs 발급 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
-    })
-    @GetMapping("/download-urls")
-    public ResponseEntity<ApiResponse<List<String>>> getPresignedGetMultipleUrls(
-            @RequestParam String domain,
-            @RequestParam Long entityId,
+    @PostMapping("/{domain}/download-urls")
+    public ResponseEntity<ApiResponse<List<PresignedUrlResponseDTO>>> getMultipleDownloadUrl(
+            @PathVariable String domain,
+            @RequestBody List<String> keys,
             @RequestHeader("Authorization") String reqToken) {
 
-        // 1. 액세스 토큰 추출 및 MemberId 추출, 없다면 예외
-        Long memberId = extractMemberId(reqToken);
+        extractMemberId(reqToken);
 
-        // 2. 해당 도메인의 PK를 가진 엔티티에 대한 GET URL 리스트 생성
-        List<String> downloadUrls = mediaDownloadService.getFileKeysByDomainAndEntityId(domain, entityId);
+        List<PresignedUrlResponseDTO> rspDtos = keys.stream()
+                .map(s3Service::generatePresignedGetUrl)
+                .toList();
 
-        return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, downloadUrls);
+        return ApiResponse.success(SuccessStatus.S3_GET_URL_CREATE_SUCCESS, rspDtos);
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<ApiResponse<Void>> deleteFile(
-            @RequestParam String domain,
-            @RequestParam Long entityId,
-            @RequestParam Long fileId,
-            @RequestHeader("Authorization") String reqToken) {
-
-        Long memberId = extractMemberId(reqToken);
-
-
-
-
-        return ApiResponse.successOnly(SuccessStatus.S3_DELETE_SUCCESS);
-    }
 
     private Long extractMemberId(String reqToken) {
         String token =  reqToken.replace("Bearer ", "");
