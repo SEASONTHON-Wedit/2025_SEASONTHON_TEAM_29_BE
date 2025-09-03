@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.wedit.backend.api.vendor.entity.Vendor;
@@ -32,42 +33,58 @@ import lombok.extern.slf4j.Slf4j;
 public class VendorService {
 	private final VendorRepository vendorRepository;
 	private final VendorImageRepository vendorImageRepository;
+	private final LocalFileUploadService localFileUploadService;
 
+	@Transactional
 	public void createWeddingHall(VendorCreateRequest vendorCreateRequest, List<MultipartFile> weddingHallImages,
 		List<MultipartFile> bridalRoomImages, List<MultipartFile> buffetImages) {
+		
+		// 1. Vendor 엔티티 생성 및 저장
 		Vendor vendor = Vendor.builder()
 			.name(vendorCreateRequest.getName())
 			.style(vendorCreateRequest.getStyle())
 			.meal(vendorCreateRequest.getMeal())
 			.category(vendorCreateRequest.getCategory())
 			.description(vendorCreateRequest.getDescription()).build();
-		Vendor saved = vendorRepository.save(vendor);
-		// TODO 이미지 업로드 후 저장
-		// 지금은 임의로
-		String testWeddingHallImageUrl = "test_wedding_hall_image_url";
-		String testBridalRoomImageUrl = "test_bridal_room_image_url";
-		String testBuffetImageUrl = "test_buffet_image_url";
+		Vendor savedVendor = vendorRepository.save(vendor);
+		
+		log.info("Created vendor with ID: {}", savedVendor.getId());
 
-		vendorImageRepository.save(VendorImage.builder()
-			.vendorImageType(VendorImageType.WEDDING_HALL_MAIN)
-			.imageUrl(testWeddingHallImageUrl)
-			.sortOrder(0)
-			.vendor(saved)
-			.build());
+		// 2. 웨딩홀 메인 이미지 업로드 및 저장
+		uploadAndSaveImages(weddingHallImages, savedVendor, VendorImageType.WEDDING_HALL_MAIN, "vendor/wedding_hall");
 
-		vendorImageRepository.save(VendorImage.builder()
-			.vendorImageType(VendorImageType.WEDDING_HALL_BRIDAL_ROOM)
-			.imageUrl(testBridalRoomImageUrl)
-			.sortOrder(0)
-			.vendor(saved)
-			.build());
+		// 3. 신부 대기실 이미지 업로드 및 저장
+		uploadAndSaveImages(bridalRoomImages, savedVendor, VendorImageType.WEDDING_HALL_BRIDAL_ROOM, "vendor/bridal_room");
 
-		vendorImageRepository.save(VendorImage.builder()
-			.vendorImageType(VendorImageType.WEDDING_HALL_BUFFET)
-			.imageUrl(testBuffetImageUrl)
-			.sortOrder(0)
-			.vendor(saved)
-			.build());
+		// 4. 뷔페 이미지 업로드 및 저장
+		uploadAndSaveImages(buffetImages, savedVendor, VendorImageType.WEDDING_HALL_BUFFET, "vendor/buffet");
+		
+		log.info("Successfully created wedding hall with all images. Vendor ID: {}", savedVendor.getId());
+	}
+
+	/**
+	 * 이미지 업로드 및 VendorImage 엔티티 저장
+	 */
+	private void uploadAndSaveImages(List<MultipartFile> images, Vendor vendor, VendorImageType imageType, String domain) {
+		if (images == null || images.isEmpty()) {
+			log.info("No images to upload for imageType: {}", imageType);
+			return;
+		}
+
+		List<String> uploadedUrls = localFileUploadService.uploadFiles(images, domain, vendor.getId());
+		
+		for (int i = 0; i < uploadedUrls.size(); i++) {
+			String imageUrl = uploadedUrls.get(i);
+			VendorImage vendorImage = VendorImage.builder()
+				.vendorImageType(imageType)
+				.imageUrl(imageUrl)
+				.sortOrder(i)
+				.vendor(vendor)
+				.build();
+			
+			vendorImageRepository.save(vendorImage);
+			log.info("Saved vendor image: {} for vendor ID: {}", imageUrl, vendor.getId());
+		}
 	}
 
 	public List<VendorResponse> getWeddingHall() {

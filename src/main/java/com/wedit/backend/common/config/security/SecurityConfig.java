@@ -85,6 +85,7 @@ public class SecurityConfig {
                                 "/actuator/info",
                                 "/api/webjars/**",
                                 "/webjars/**",
+                                "/uploads/**",
                                 "/api/oauth2/authorization/google",
                                 "/api/oauth2/authorization/naver",
                                 "/login/oauth2/code/**",
