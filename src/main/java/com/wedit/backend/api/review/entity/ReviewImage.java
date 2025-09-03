@@ -15,7 +15,7 @@ public class ReviewImage extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String imageUrl;
+    private String imageKey;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "review_id")
@@ -24,15 +24,10 @@ public class ReviewImage extends BaseTimeEntity {
     @Column(nullable = false)
     private Integer sortOrder;
 
-    public ReviewImage(String imageUrl, Review review) {
-        this.imageUrl = imageUrl;
+    public ReviewImage(String url, Review review, int sortOrder) {
+        this.imageKey = url;
         this.review = review;
-    }
-
-    public ReviewImage(String url, Review review, int i) {
-        this.imageUrl = url;
-        this.review = review;
-        this.sortOrder = i;
+        this.sortOrder = sortOrder;
     }
 
     public void setReview(Review review) {

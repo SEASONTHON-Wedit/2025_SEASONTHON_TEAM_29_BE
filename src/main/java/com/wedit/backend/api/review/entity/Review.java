@@ -52,12 +52,8 @@ public class Review extends BaseTimeEntity {
         this.contentWorst = worst;
     }
 
-    public void clearImages() {
-        this.images.clear();
-    }
-
     public void addImage(ReviewImage reviewImage) {
         this.images.add(reviewImage);
-        images.forEach(image -> image.setReview(this));
+        reviewImage.setReview(this);
     }
 }

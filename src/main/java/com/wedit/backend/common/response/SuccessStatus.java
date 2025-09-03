@@ -35,7 +35,8 @@ public enum SuccessStatus {
     MY_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "내 후기 리스팅 조회 성공"),
     ALL_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "전체 후기 리스팅 조회 성공"),
     VENDOR_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "업체 후기 리스팅 조회 성공"),
-    MAIN_BANNER_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "메인 배너 후기 리스팅 조회 성공"),
+    MAIN_BANNER_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "메인 배너 후기 페이징 조회 성공"),
+    MAIN_BANNER_VENDOR_LIST_GET_SUCCESS(HttpStatus.OK, "메인 배너 업체 페이징 조회 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),

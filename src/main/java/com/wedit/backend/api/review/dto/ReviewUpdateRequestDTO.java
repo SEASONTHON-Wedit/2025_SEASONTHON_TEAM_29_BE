@@ -12,5 +12,5 @@ public class ReviewUpdateRequestDTO {
     private int rating;
     private String contentBest;
     private String contentWorst;
-    private List<String> imageUrls;
+    private List<String> imageKeys;
 }

@@ -76,47 +76,6 @@ public class ReviewController {
         return ApiResponse.success(SuccessStatus.REVIEW_DETAIL_GET_SUCCESS, dto);
     }
 
-//    @GetMapping("/vendor-reviews/{vendorId}")
-//    public ResponseEntity<ApiResponse<Page<ReviewSimpleResponseDTO>>> getVendorReviewList(
-//            @PathVariable Long vendorId,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "5") int size) {
-//
-//        Pageable pageable = PageRequest.of(page, size);
-//        Page<ReviewSimpleResponseDTO> dtos = reviewService.getVendorReviewList(vendorId, pageable);
-//
-//        return ApiResponse.success(SuccessStatus.VENDOR_REVIEW_LIST_GET_SUCCESS, dtos);
-//    }
-
-    // 내 리뷰 페이징 조회
-//    @GetMapping("/my")
-//    public ResponseEntity<ApiResponse<Page<ReviewSimpleResponseDTO>>> getMyReviewList(
-//            @RequestHeader("Authorization") String reqToken,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "5") int size) {
-//
-//        String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
-//        Long memberId = jwtService.extractMemberId(token)
-//                .orElseThrow(() -> new UnauthorizedException(ErrorStatus.NOT_FOUND_USER.getMessage()));
-//
-//        Pageable pageable = PageRequest.of(page, size);
-//        Page<ReviewSimpleResponseDTO> dtos = reviewService.getMyReviewList(memberId, pageable);
-//
-//        return ApiResponse.success(SuccessStatus.MY_REVIEW_LIST_GET_SUCCESS, dtos);
-//    }
-
-    // 전체 리뷰 페이징 조회
-//    @GetMapping("/main-reviews")
-//    public ResponseEntity<ApiResponse<Page<ReviewSimpleResponseDTO>>> getAllReviewList(
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "5") int size) {
-//
-//        Pageable pageable = PageRequest.of(page, size);
-//        Page<ReviewSimpleResponseDTO> dtos = reviewService.getAllReviewList(pageable);
-//
-//        return ApiResponse.success(SuccessStatus.ALL_REVIEW_LIST_GET_SUCCESS, dtos);
-//    }
-
     // 메인 배너 리뷰 페이징 조회
     @GetMapping("/all-reviews")
     public ResponseEntity<ApiResponse<Page<ReviewMainBannerResponseDTO>>> getAllReviewList(

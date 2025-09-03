@@ -13,5 +13,5 @@ public class ReviewCreatRequestDTO {
     private int rating;             // 별점 1~5
     private String contentBest;     // 종았던 점
     private String contentWorst;    // 아쉬운 점
-    private List<String> imageUrls; // S3 이미지 URL (PreSigned)
+    private List<String> imageKeys; // S3 이미지 URL (PreSigned)
 }

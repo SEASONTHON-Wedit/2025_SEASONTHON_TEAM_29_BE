@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class ReviewMainBannerResponseDTO {
 
     private Long reviewId;
+    private String vendorName;
     private String reviewImageUrl;
     private String content;
     private int rating;

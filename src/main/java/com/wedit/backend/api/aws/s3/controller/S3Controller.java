@@ -52,9 +52,9 @@ public class S3Controller {
 
         validateFile(reqDto.getContentType(), reqDto.getContentLength());
 
-        PresignedUrlResponseDTO rspDto = s3Service.generatePresignedPutUrl(reqDto, domain, memberId);
+        PresignedUrlResponseDTO dto = s3Service.generatePresignedPutUrl(reqDto, domain, memberId);
 
-        return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, rspDto);
+        return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, dto);
     }
 
     @Operation(
@@ -80,11 +80,11 @@ public class S3Controller {
             validateFile(req.getContentType(), req.getContentLength());
         }
 
-        List<PresignedUrlResponseDTO> rspDtos = reqDtos.stream()
+        List<PresignedUrlResponseDTO> dtos = reqDtos.stream()
                 .map(req -> s3Service.generatePresignedPutUrl(req, domain, memberId))
                 .toList();
 
-        return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, rspDtos);
+        return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, dtos);
     }
 
     @Operation(
@@ -98,9 +98,9 @@ public class S3Controller {
 
         extractMemberId(reqToken);
 
-        PresignedUrlResponseDTO rspDto = s3Service.generatePresignedGetUrl(key);
+        PresignedUrlResponseDTO dto = s3Service.generatePresignedGetUrl(key);
 
-        return ApiResponse.success(SuccessStatus.S3_GET_URL_CREATE_SUCCESS, rspDto);
+        return ApiResponse.success(SuccessStatus.S3_GET_URL_CREATE_SUCCESS, dto);
     }
 
     @Operation(
@@ -114,11 +114,11 @@ public class S3Controller {
 
         extractMemberId(reqToken);
 
-        List<PresignedUrlResponseDTO> rspDtos = keys.stream()
+        List<PresignedUrlResponseDTO> dtos = keys.stream()
                 .map(s3Service::generatePresignedGetUrl)
                 .toList();
 
-        return ApiResponse.success(SuccessStatus.S3_GET_URL_CREATE_SUCCESS, rspDtos);
+        return ApiResponse.success(SuccessStatus.S3_GET_URL_CREATE_SUCCESS, dtos);
     }
 
 
@@ -130,16 +130,15 @@ public class S3Controller {
 
     private void validateFile(String contentType, Long contentLength) {
 
-        if (ImageUtil.isValidImageType(contentType)) {
-            if (!ImageUtil.isValidImageSize(contentLength)) {
+        if (!ImageUtil.isValidContentType(contentType)) {
+            throw new BadRequestException(ErrorStatus.BAD_REQUEST_NOT_SUPPORTED_MEDIA_TYPE.getMessage());
+        }
+        if (!ImageUtil.isValidFileSize(contentType, contentLength)) {
+            if (ImageUtil.isValidImageType(contentType)) {
                 throw new BadRequestException(ErrorStatus.BAD_REQUEST_INVALID_IMAGE_SIZE.getMessage());
-            }
-        } else if (ImageUtil.isValidVideoType(contentType)) {
-            if (!ImageUtil.isValidVideoSize(contentLength)) {
+            } else {
                 throw new BadRequestException(ErrorStatus.BAD_REQUEST_INVALID_VIDEO_SIZE.getMessage());
             }
-        } else {
-            throw new BadRequestException(ErrorStatus.BAD_REQUEST_NOT_SUPPORTED_MEDIA_TYPE.getMessage());
         }
     }
 }

@@ -9,5 +9,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class PresignedUrlResponseDTO {
 
+    private String s3Key;
     private String presignedUrl;
 }

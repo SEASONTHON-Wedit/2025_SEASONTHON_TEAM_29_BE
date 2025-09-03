@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 
 @Service
@@ -26,6 +25,7 @@ import java.util.stream.Collectors;
 public class S3Service {
 
     private final S3Presigner s3Presigner;
+    private final S3Client s3Client;
 
     @Value("${cloud.aws.s3.bucket}")
     private String bucketName;
@@ -34,7 +34,7 @@ public class S3Service {
     private Integer durationMinutes;
 
 
-    public PresignedUrlResponseDTO generatePresignedPutUrl(
+    public PresignedUrlResponseDTO  generatePresignedPutUrl(
             PresignedUrlRequestDTO reqDto,
             String domain,
             Long memberId) {
@@ -57,10 +57,13 @@ public class S3Service {
 
         String url = s3Presigner.presignPutObject(presignRequest).url().toString();
 
-        return new PresignedUrlResponseDTO(url);
+        return PresignedUrlResponseDTO.builder()
+                .s3Key(key)
+                .presignedUrl(url)
+                .build();
     }
 
-    public PresignedUrlResponseDTO generatePresignedGetUrl(String key) {
+    public PresignedUrlResponseDTO  generatePresignedGetUrl(String key) {
 
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
@@ -74,7 +77,38 @@ public class S3Service {
 
         String url = s3Presigner.presignGetObject(presignRequest).url().toString();
 
-        return new PresignedUrlResponseDTO(url);
+        return PresignedUrlResponseDTO.builder()
+                .s3Key(key)
+                .presignedUrl(url)
+                .build();
+    }
+
+    public void deleteFile(String key) {
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+
+        s3Client.deleteObject(deleteObjectRequest);
+        log.info("S3 file deleted : {}", key);
+    }
+
+    public void deleteFiles(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+
+        List<ObjectIdentifier> toDelete = keys.stream()
+                .map(key -> ObjectIdentifier.builder().key(key).build())
+                .toList();
+
+        DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
+                .bucket(bucketName)
+                .delete(Delete.builder().objects(toDelete).build())
+                .build();
+
+        s3Client.deleteObjects(deleteObjectsRequest);
+        log.info("S3 file deleted : {} items", keys.size());
     }
 
     // URL Generator
@@ -93,6 +127,6 @@ public class S3Service {
 
         // 최종 PreSigned URL 발급 후 반환
         // {domain}/{memberId}/{mediaType}/{domainId}/{uuid}_{currentDateTime}_{originalFileName}
-        return String.format("%s/%d/%s/%s", domain, memberId, mediaType, domainId, fileName);
+        return String.format("%s/%d/%s/%d/%s", domain, memberId, mediaType, domainId, fileName);
     }
 }
