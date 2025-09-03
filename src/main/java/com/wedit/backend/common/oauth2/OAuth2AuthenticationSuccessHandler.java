@@ -60,6 +60,10 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
 		log.info("조회된 사용자 - ID: {}, Email: {}", member.getId(), member.getEmail());
 
+		// 회원가입 완료 여부 체크
+		boolean isProfileComplete = isProfileComplete(member);
+		log.info("회원가입 완료 여부: {}", isProfileComplete);
+
 		// JWT 토큰 생성
 		log.info("토큰 생성 - userId: {}, email: {}", member.getId(), member.getEmail());
 		String accessToken = jwtService.createAccessToken(member.getId(), member.getEmail(), member.getRole());
@@ -70,12 +74,24 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 		String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
 			.queryParam("token", accessToken)
 			.queryParam("refresh", refreshToken)
+			.queryParam("isNewUser", !isProfileComplete)  // 추가 정보 입력 필요 여부
 			.build().toUriString();
 
 		log.info("최종 리다이렉트 URL: {}", targetUrl);
 		response.sendRedirect(targetUrl);
 
 		log.info("=== OAuth2 인증 성공 핸들러 완료 ===");
+	}
+
+	/**
+	 * 회원가입 완료 여부 확인
+	 * 필수 정보가 모두 입력되었는지 체크
+	 */
+	private boolean isProfileComplete(Member member) {
+		return member.getPhoneNumber() != null && 
+			   member.getBirthDate() != null && 
+			   member.getWeddingDate() != null && 
+			   member.getType() != null;
 	}
 
 	private String extractRegistrationId(HttpServletRequest request) {
