@@ -41,7 +41,7 @@ public class EstimateService {
 
 		if (estimateRepository.existsByEstimateDateAndEstimateTime(makeReservationRequestDTO.getDate(),
 			makeReservationRequestDTO.getTime())) {
-			throw new BadRequestException(ErrorStatus.BAD_REQUEST_RESERVATION_CONFLICT.getMessage());
+			throw new BadRequestException(ErrorStatus.BAD_REQUEST_ESTIMATE_CONFLICT.getMessage());
 		}
 
 		Estimate estimate = Estimate.builder()

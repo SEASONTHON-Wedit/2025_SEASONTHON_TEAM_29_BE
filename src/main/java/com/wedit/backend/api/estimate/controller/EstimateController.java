@@ -39,7 +39,7 @@ public class EstimateController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
 	@PostMapping("/{vendorId}")
-	public ResponseEntity<ApiResponse<Long>> makeReservation(
+	public ResponseEntity<ApiResponse<Long>> makeEstimate(
 		@AuthenticationPrincipal UserDetails userDetails,
 		@PathVariable Long vendorId,
 		@RequestBody MakeReservationRequestDTO makeReservationRequestDTO

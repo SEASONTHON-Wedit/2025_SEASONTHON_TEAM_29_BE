@@ -18,6 +18,7 @@ public enum ErrorStatus {
     BAD_REQUEST_INVALID_EMAIL(HttpStatus.BAD_REQUEST, "잘못된 이메일입니다."),
     BAD_REQUEST_INVALID_PHONE(HttpStatus.BAD_REQUEST, "잘못된 전화번호입니다."),
     BAD_REQUEST_RESERVATION_CONFLICT(HttpStatus.BAD_REQUEST, "예약 시간이 겹칩니다."),
+    BAD_REQUEST_ESTIMATE_CONFLICT(HttpStatus.BAD_REQUEST, "견적서 시간이 겹칩니다."),
     BAD_REQUEST_VALID_FAILED(HttpStatus.BAD_REQUEST, "DTO 유효성 검증에 실패했습니다."),
     BAD_REQUEST_NOT_SUPPORTED_MEDIA_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 미디어 타입입니다."),
     BAD_REQUEST_INVALID_IMAGE_SIZE(HttpStatus.BAD_REQUEST, "이미지 파일 크기가 15MB 보다 큽니다."),
