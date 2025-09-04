@@ -1,10 +1,7 @@
 package com.wedit.backend.api.vendor.entity.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.wedit.backend.api.vendor.entity.Address;
 import com.wedit.backend.api.vendor.entity.dto.details.*;
-import com.wedit.backend.api.vendor.entity.enums.Category;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
@@ -25,10 +22,6 @@ public class VendorCreateRequestDTO {
     @NotBlank(message = "업체 이름은 필수입니다.")
 	private String name;
 
-    @Schema(description = "업체 카테고리. 이 값에 따라 'details' 필드의 구조가 결정됩니다.", example = "WEDDING_HALL")
-    @NotNull(message = "업체 카테고리는 필수입니다. (WEDDING_HALL, DRESS, STUDIO, MAKEUP")
-    private Category category;
-
     @Schema(description = "업체에 대한 상세 설명글", example = "품격 있는 채플 웨딩 스타일을 선도합니다...")
 	private String description;
 
@@ -38,22 +31,9 @@ public class VendorCreateRequestDTO {
     private AddressDTO address;
 
     // --- 카테고리별 구조 달라짐 ---
-    @Schema(description = "카테고리별 상세 정보. 'category' 필드값에 따라 허용되는 필드가 달라지는 동적 구조입니다.")
+    @Schema(description = "카테고리별 상세 정보. 내부에 'category' 필드를 포함해야 합니다.")
     @NotNull(message = "카테고리별 상세 정보(details)는 필수입니다.")
     @Valid
-    @JsonTypeInfo(
-            use = JsonTypeInfo.Id.NAME,
-            include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
-            property = "category",
-            visible = true  // 역직렬화 시 타입 정보 필드로 포함
-    )
-    @JsonSubTypes({
-            // ex. category 값이 WEDDING_HALL 이면 details 는 WeddingHallDetailsDTO 로 해석
-            @JsonSubTypes.Type(value = WeddingHallDetailsDTO.class, name = "WEDDING_HALL"),
-            @JsonSubTypes.Type(value = DressDetailsDTO.class, name = "DRESS"),
-            @JsonSubTypes.Type(value = StudioDetailsDTO.class, name = "STUDIO"),
-            @JsonSubTypes.Type(value = MakeupDetailsDTO.class, name = "MAKEUP")
-    })
     private VendorDetailsDTO details;
 
     // -- S3 Key ---

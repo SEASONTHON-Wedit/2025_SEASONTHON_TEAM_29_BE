@@ -39,7 +39,7 @@ public class VendorService {
 
     @Transactional
 	public void createVendor(VendorCreateRequestDTO request) {
-        log.info("업체 생성 시작. 이름: {}, 카테고리: {}", request.getName(), request.getCategory());
+        log.info("업체 생성 시작. 이름: {}, 카테고리: {}", request.getName(), request.getDetails().getCategory());
 
         // 카테고리별 상세 정보 직렬화
         String detailsJson = convertDetailsToJson(request.getDetails());
@@ -47,7 +47,7 @@ public class VendorService {
         // 새 Vendor 생성
         Vendor vendor = Vendor.builder()
                 .name(request.getName())
-                .category(request.getCategory())
+                .category(request.getDetails().getCategory())
                 .description(request.getDescription())
                 .address(request.getAddress() != null ? request.getAddress().toEntity() : null)
                 .details(detailsJson)

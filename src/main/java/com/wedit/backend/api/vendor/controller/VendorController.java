@@ -62,7 +62,6 @@ public class VendorController {
                                     value = """
                                     {
                                       "name": "렌느 브라이덜",
-                                      "category": "WEDDING_HALL",
                                       "description": "품격 있는 채플 웨딩 스타일을 선도합니다.",
                                       "address": {
                                         "city": "서울특별시",
@@ -72,6 +71,7 @@ public class VendorController {
                                         "longitude": 127.0489
                                       },
                                       "details": {
+                                        "category": "WEDDING_HALL",
                                         "style": "CHAPEL",
                                         "meal": "BUFFET",
                                         "minimumAmount": 80000,
