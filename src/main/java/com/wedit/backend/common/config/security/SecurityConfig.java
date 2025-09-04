@@ -114,7 +114,8 @@ public class SecurityConfig {
                                 "/oauth/callback"
                         ).permitAll()   // Swagger, Spring Actuator, OAuth2 Debug 허가
                         .requestMatchers(
-                                "/api/v1/member/**"
+                                "/api/v1/member/**",
+                                "/api/v1/vendor/**"
                         ).permitAll()   // Member 관련 허가
                         .anyRequest().authenticated()
                 )
