@@ -53,8 +53,7 @@ public class SecurityConfig {
             "/api/oauth2/authorization/**",
             "/login/oauth2/code/**",
             "/oauth/callback",
-            "/api/v1/member/**",
-            "/api/v1/vendor/**"
+            "/api/v1/member/**"
     };
 
     @Bean
@@ -115,8 +114,7 @@ public class SecurityConfig {
                                 "/oauth/callback"
                         ).permitAll()   // Swagger, Spring Actuator, OAuth2 Debug 허가
                         .requestMatchers(
-                                "/api/v1/member/**",
-                                "/api/v1/vendor/**"
+                                "/api/v1/member/**"
                         ).permitAll()   // Member 관련 허가
                         .anyRequest().authenticated()
                 )
