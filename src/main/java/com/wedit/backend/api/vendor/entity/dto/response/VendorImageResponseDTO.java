@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class VendorImageResponse {
+public class VendorImageResponseDTO {
 	private Long id;
 	private String imageUrl;
 	private VendorImageType vendorImageType;

@@ -9,7 +9,7 @@ import java.util.List;
 
 @Data
 @Schema(description = "웨딩홀 검색 조건 요청 DTO")
-public class VendorSearchRequest {
+public class VendorSearchRequestDTO {
 
     @Schema(description = "웨딩홀 스타일 (복수 선택 가능)", 
             example = "[\"HOTEL\", \"CHAPEL\"]", 

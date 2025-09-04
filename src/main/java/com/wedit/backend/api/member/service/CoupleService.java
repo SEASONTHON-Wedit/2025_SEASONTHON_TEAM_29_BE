@@ -114,7 +114,6 @@ public class CoupleService {
     private String generateUniqueRandomCode() {
         String code;
         do {
-            // 기존 generateRandomCode() 로직 사용
             code = java.util.UUID.randomUUID().toString().substring(0, 10).toUpperCase();
         } while (coupleRepository.findByCoupleCode(code).isPresent()); // 중복되지 않을 때까지 반복
 
