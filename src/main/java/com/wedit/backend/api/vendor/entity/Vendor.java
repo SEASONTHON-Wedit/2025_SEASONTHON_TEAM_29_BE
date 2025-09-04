@@ -10,6 +10,8 @@ import com.wedit.backend.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,27 +31,21 @@ public class Vendor extends BaseTimeEntity {
     private String name;            // 업체 이름
 
     @Enumerated(EnumType.STRING)
-    private Category category;      // 카테고리 (웨딩홀, 드레스, 스튜디오, 메이크업)
-
-    @Enumerated(EnumType.STRING)
-    private Style style;            // 스타일 (채플, 호텔, 컨벤션, 하우스)
-
-    @Enumerated(EnumType.STRING)
-    private Meal meal;              // 식사 (뷔페, 코스, 한상차림)
+    private Category category;      // 카테고리 (WEDDING_HALL, STUDIO, DRESS, MAKEUP)
 
     private String description;     // 업체 소개
 
-    private Integer minimumAmount;  // 최소 금액?
-    private Integer maximumGuest;   // 최대 하객 수
+    @Embedded
+    private Address address;        // 주소 임베드
 
-    private String address;         // 주소 (청담, 선릉, 논현, 대치 등)
+    @Lob
+    @Column(name = "details")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String details;
 
-    @Column(nullable = true)
-    private String logoImageKey;    // 업체 로고 이미지
-
-    private String mainImageKey;    // 업체 상세 페이지 대표 이미지
-
+    // Vendor에 속한 모든 이미지
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<VendorImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -60,8 +56,4 @@ public class Vendor extends BaseTimeEntity {
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Tour> tours = new ArrayList<>();
-
-    public void updateLogoImage(String logoImageKey) {
-        this.logoImageKey = logoImageKey;
-    }
 }

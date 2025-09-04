@@ -9,7 +9,10 @@ import com.wedit.backend.api.review.entity.ReviewImage;
 import com.wedit.backend.api.review.repository.ReviewImageRepository;
 import com.wedit.backend.api.review.repository.ReviewRepository;
 import com.wedit.backend.api.vendor.entity.Vendor;
+import com.wedit.backend.api.vendor.entity.VendorImage;
+import com.wedit.backend.api.vendor.repository.VendorImageRepository;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
+import com.wedit.backend.api.vendor.entity.enums.VendorImageType;
 import com.wedit.backend.common.exception.ForbiddenException;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.exception.UnauthorizedException;
@@ -34,6 +37,7 @@ public class ReviewService {
     private final VendorRepository vendorRepository;
     private final MemberRepository memberRepository;
     private final ReviewImageRepository reviewImageRepository;
+    private final VendorImageRepository vendorImageRepository;
     private final S3Service s3Service;
 
     
@@ -130,26 +134,29 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public ReviewDetailResponseDTO getReviewDetail(Long reviewId) {
 
+        // 1. Review, Member, Vendor, ReviewImages를 한 번의 쿼리로 조회
         Review review = reviewRepository.findByIdWithDetails(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW.getMessage()));
 
         Member writer = review.getMember();
         Vendor vendor = review.getVendor();
 
+        // 2. 후기에 첨부된 이미지들의 Presigned URL 생성
         List<String> reviewImageUrls = review.getImages().stream()
                 .map(image -> s3Service.generatePresignedGetUrl(image.getImageKey()).getPresignedUrl())
-                .toList();
+                .collect(Collectors.toList());
 
-        String vendorLogoUrl = null;
-        if (vendor.getLogoImageKey() != null &&  !vendor.getLogoImageKey().isBlank()) {
-            vendorLogoUrl = s3Service.generatePresignedGetUrl(vendor.getLogoImageKey()).getPresignedUrl();
-        }
+        // 3. 업체의 로고 이미지 Presigned URL 생성 (별도 조회)
+        String vendorLogoUrl = vendorImageRepository.findLogoByVendorId(vendor.getId())
+                .map(logoImage -> s3Service.generatePresignedGetUrl(logoImage.getImageKey()).getPresignedUrl())
+                .orElse(null); // 로고가 없으면 null
 
-        // D-Day 계산
+        // 4. D-Day 계산
         String dDay = (writer.getWeddingDate() != null)
                 ? "D-" + ChronoUnit.DAYS.between(LocalDate.now(), writer.getWeddingDate())
                 : null;
 
+        // 5. 최종 응답 DTO 조립
         return ReviewDetailResponseDTO.builder()
                 .reviewId(review.getId())
                 .rating(review.getRating())
@@ -220,22 +227,34 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public Page<MyReviewResponseDTO> getMyReviewList(Long memberId, Pageable pageable) {
 
-        // Review와 Vendor 한 번에 조회
+        // 1. Review와 연관된 Vendor를 함께 페이징 조회
         Page<Review> page = reviewRepository.findByMemberIdWithVendor(memberId, pageable);
 
         if (page.isEmpty()) {
             return Page.empty();
         }
 
-        // DTO로 변환
+        // 2. 조회된 리뷰 페이지에서 Vendor ID 목록을 추출
+        List<Long> vendorIds = page.getContent().stream()
+                .map(review -> review.getVendor().getId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 3. 추출된 Vendor ID 목록을 사용하여, 필요한 모든 로고 이미지를 한 번의 쿼리로 가져오기
+        Map<Long, VendorImage> logoImageMap = vendorImageRepository.findLogoImagesByVendorIds(vendorIds).stream()
+                .collect(Collectors.toMap(
+                        image -> image.getVendor().getId(), // Key: Vendor ID
+                        image -> image                    // Value: VendorImage 객체
+                ));
+
+        // 4. DTO로 변환. 각 리뷰에 대해 DB를 추가 조회 대신, 메모리에 있는 Map에서 로고 정보를 찾기
         return page.map(review -> {
             Vendor vendor = review.getVendor();
-            String logoImageKey = vendor.getLogoImageKey();
+            VendorImage logoImage = logoImageMap.get(vendor.getId());
 
-            String vendorLogoUrl = null;
-            if (logoImageKey != null && !logoImageKey.isEmpty()) {
-                vendorLogoUrl = s3Service.generatePresignedGetUrl(logoImageKey).getPresignedUrl();
-            }
+            String vendorLogoUrl = (logoImage != null)
+                    ? s3Service.generatePresignedGetUrl(logoImage.getImageKey()).getPresignedUrl()
+                    : null; // 로고가 없는 경우 null 처리
 
             return MyReviewResponseDTO.builder()
                     .reviewId(review.getId())

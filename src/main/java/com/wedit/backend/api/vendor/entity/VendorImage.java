@@ -19,8 +19,11 @@ import lombok.*;
 @Entity
 @Table(name = "vendor_image")
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class VendorImage extends BaseTimeEntity {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -34,16 +37,13 @@ public class VendorImage extends BaseTimeEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private VendorImageType imageType;
+	private VendorImageType imageType;  // LOGO, MAIN, GROUPED
 
-	@Column(nullable = false)
 	private Integer sortOrder;
 
-	@Builder
-	public VendorImage(Vendor vendor, String imageKey, VendorImageType imageType, Integer sortOrder) {
-		this.vendor = vendor;
-		this.imageKey = imageKey;
-		this.imageType = imageType;
-		this.sortOrder = sortOrder;
-	}
+    @Column(nullable = true)
+    private String groupTitle;
+
+    @Column(nullable = true)
+    private Integer groupSortOrder;
 }
