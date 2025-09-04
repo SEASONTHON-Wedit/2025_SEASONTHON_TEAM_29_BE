@@ -17,7 +17,6 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @Schema(description = "업체 생성 요청 DTO")
 public class VendorCreateRequestDTO {
 
@@ -53,7 +52,6 @@ public class VendorCreateRequestDTO {
     @Getter
     @Setter
     @NoArgsConstructor
-    @AllArgsConstructor
     @Schema(description = "주소 정보를 담는 DTO")
     public static class AddressDTO {
         @Schema(description = "시/도", example = "서울특별시")
@@ -80,7 +78,6 @@ public class VendorCreateRequestDTO {
     @Getter
     @Setter
     @NoArgsConstructor
-    @AllArgsConstructor
     @Schema(description = "이미지 그룹 정보를 담는 DTO")
     public static class ImageGroupDTO {
 
