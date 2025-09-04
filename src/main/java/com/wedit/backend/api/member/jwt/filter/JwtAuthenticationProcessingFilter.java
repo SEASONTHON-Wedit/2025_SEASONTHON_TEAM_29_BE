@@ -50,20 +50,15 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
 
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    /// SecurityConfig permit.All() URL 모두 필터링 제외
+    /// 엔드포인트 필터링 제외
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String requestURI = request.getRequestURI();
 
         log.info("JwtFilter shouldNotFilter 프로세싱 요청: {}", requestURI);
 
-        // 토큰 재발급 요청은 필터에서 직접 처리해야 하므로, 필터링을 건너뛰지 않음
-        if (requestURI.equals(TOKEN_REISSUE_URL)) {
-            return false;
-        }
-
         // 그 외 SecurityConfig에 정의된 모든 공개 URL(회원가입, 로그인, Swagger 등)은 필터링 건너뛰기
-        return Arrays.stream(SecurityConfig.PERMIT_URL_ARRAY)
+        return Arrays.stream(SecurityConfig.NOT_FILTER_URLS)
                 .anyMatch(pattern -> pathMatcher.match(pattern, requestURI));
     }
 

@@ -2,9 +2,6 @@ package com.wedit.backend.common.config.security;
 
 import com.wedit.backend.api.member.jwt.filter.FilterExceptionHandler;
 import com.wedit.backend.api.member.jwt.filter.JwtAuthenticationProcessingFilter;
-import com.wedit.backend.api.member.jwt.repository.RefreshTokenRepository;
-import com.wedit.backend.api.member.jwt.service.JwtService;
-import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.common.oauth2.OAuth2AuthenticationFailureHandler;
 import com.wedit.backend.common.oauth2.OAuth2AuthenticationSuccessHandler;
 import com.wedit.backend.common.oauth2.OAuth2UserService;
@@ -36,7 +33,8 @@ public class SecurityConfig {
     private final OAuth2UserService oAuth2UserService;
     private final JwtAuthenticationProcessingFilter jwtAuthenticationProcessingFilter;
 
-    public static final String[] PERMIT_URL_ARRAY = {
+    // 필터링 제외 목록
+    public static final String[] NOT_FILTER_URLS = {
             "/api/swagger-resources/**",
             "/api/swagger-ui/**",
             "/api/swagger-ui.html",
@@ -45,15 +43,8 @@ public class SecurityConfig {
             "/swagger-resources/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/actuator/health",
-            "/actuator/info",
             "/api/webjars/**",
             "/webjars/**",
-            "/uploads/**",
-            "/api/oauth2/authorization/**",
-            "/login/oauth2/code/**",
-            "/oauth/callback",
-            "/api/v1/member/**"
     };
 
     @Bean
