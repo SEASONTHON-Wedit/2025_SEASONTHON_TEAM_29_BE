@@ -54,6 +54,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String requestURI = request.getRequestURI();
+        log.info("JwtFilter shouldNotFilter 프로세싱 요청: {}", requestURI);
 
         // 토큰 재발급 요청은 필터에서 직접 처리해야 하므로, 필터링을 건너뛰지 않음
         if (requestURI.equals(TOKEN_REISSUE_URL)) {
@@ -67,6 +68,9 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+        log.info("Value of accessTokenHeader: {}", accessTokenHeader);
+        log.info("Value of refreshTokenHeader: {}", refreshTokenHeader);
 
         String requestURI = request.getRequestURI();
 
@@ -108,6 +112,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
         } catch (Exception ex) {
             // 필터단에서 발생하는 예외를 적절한 타이의 예외로 포장하여 상위로 던짐
             // -> FilterExceptionHandler
+            log.error("JwtAuthenticationProcessingFilter - Uncaught exception: [{}], a ServletException will be thrown.", ex.getClass().getName(), ex);
             if (ex instanceof ServletException) {
                 throw (ServletException) ex;
             } else if (ex instanceof IOException) {
