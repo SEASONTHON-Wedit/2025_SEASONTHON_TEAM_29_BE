@@ -54,6 +54,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String requestURI = request.getRequestURI();
+
         log.info("JwtFilter shouldNotFilter 프로세싱 요청: {}", requestURI);
 
         // 토큰 재발급 요청은 필터에서 직접 처리해야 하므로, 필터링을 건너뛰지 않음

@@ -56,26 +56,51 @@ public class VendorController {
                     mediaType = "application/json",
                     schema = @Schema(implementation = VendorCreateRequestDTO.class),
                     examples = {
-                            @ExampleObject(name = "웨딩홀 생성 예시", value = """
+                            @ExampleObject(
+                                    name = "웨딩홀 생성 예시",
+                                    summary = "Wedding Hall 생성 요청의 올바른 예시입니다.",
+                                    value = """
                                     {
-                                      "name": "아펠가모 선릉",
+                                      "name": "렌느 브라이덜",
                                       "category": "WEDDING_HALL",
                                       "description": "품격 있는 채플 웨딩 스타일을 선도합니다.",
-                                      "address": { "city": "서울특별시", "district": "강남구", "fullAddress": "서울특별시 강남구 테헤란로 123" },
+                                      "address": {
+                                        "city": "서울특별시",
+                                        "district": "강남구",
+                                        "fullAddress": "서울특별시 강남구 테헤란로 123, 르네상스 타워 5층",
+                                        "latitude": 37.50449,
+                                        "longitude": 127.0489
+                                      },
                                       "details": {
                                         "style": "CHAPEL",
                                         "meal": "BUFFET",
                                         "minimumAmount": 80000,
                                         "maximumGuest": 470
                                       },
-                                      "logoImageKey": "vendor/logo/apelgamo.png",
-                                      "mainImageKey": "vendor/main/apelgamo_main.jpg",
+                                      "logoImageKey": "VENDOR/4/images/102/logo_unique_key.png",
+                                      "mainImageKey": "VENDOR/4/images/102/main_image_unique_key.jpg",
                                       "imageGroups": [
-                                        { "groupTitle": "Wedding Hall", "sortOrder": 0, "imageKeys": ["s3_key_for_hall_1.jpg", "s3_key_for_hall_2.jpg"] },
-                                        { "groupTitle": "Bridal Room", "sortOrder": 1, "imageKeys": ["s3_key_for_bridal_1.jpg"] }
+                                        {
+                                          "groupTitle": "메인 홀",
+                                          "sortOrder": 0,
+                                          "imageKeys": [
+                                            "VENDOR/4/images/102/hall_image_1.jpg",
+                                            "VENDOR/4/images/102/hall_image_2.jpg"
+                                          ]
+                                        },
+                                        {
+                                          "groupTitle": "신부 대기실",
+                                          "sortOrder": 1,
+                                          "imageKeys": [
+                                            "VENDOR/4/images/102/bridal_room_1.jpg"
+                                          ]
+                                        }
                                       ]
                                     }"""),
-                            @ExampleObject(name = "드레스샵 생성 예시 (미구현)", value = """
+                            @ExampleObject(
+                                    name = "드레스샵 생성 예시 (미구현)",
+                                    summary = "추후 구현될 Dress 타입의 예시입니다.",
+                                    value = """
                                     {
                                       "name": "시그니처 엘리자베스",
                                       "category": "DRESS",
@@ -89,8 +114,7 @@ public class VendorController {
                                       "logoImageKey": "vendor/logo/signature.png",
                                       "mainImageKey": "vendor/main/signature_main.jpg",
                                       "imageGroups": [
-                                        { "groupTitle": "2025 F/W 신상 화보", "sortOrder": 0, "imageKeys": ["s3_key_for_dress_1.jpg", "s3_key_for_dress_2.jpg"] },
-                                        { "groupTitle": "피팅룸", "sortOrder": 1, "imageKeys": ["s3_key_for_fitting_1.jpg"] }
+                                        { "groupTitle": "2025 F/W 신상 화보", "sortOrder": 0, "imageKeys": ["s3_key_for_dress_1.jpg"] }
                                       ]
                                     }""")
                     }
