@@ -34,7 +34,4 @@ public class MemberSignupRequestDTO {
 
     @Schema(description = "회원 타입 (신랑 또는 신부)", example = "BRIDE", implementation = Type.class)
     private Type type;
-
-    private boolean marketingAgreed;
-    private boolean privateInfoAgreed;
 }
