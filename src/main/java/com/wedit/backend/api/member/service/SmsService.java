@@ -83,7 +83,7 @@ public class SmsService {
             SingleMessageSentResponse response = messageService.sendOne(new SingleMessageSendingRequest(message));
             log.info("SMS 발송 결과 : {}", response);
         } catch (Exception e) {
-            log.error("SMS 발송 실패 : {}", e.getMessage());
+            log.error("SMS 발송 실패 PhoneNumber : ", phoneNumber, e);
             throw new InternalServerException(ErrorStatus.SMS_SEND_FAILED.getMessage());
         }
     }
@@ -94,7 +94,7 @@ public class SmsService {
         int number = random.nextInt(1000000);   // 0 ~ 999999
         return String.format("%06d", number);          // 6자리 인증 코드
     }
-    
+
     // 인증 코드 검증
     public void verifyCode(String phoneNumber, String code) {
 
@@ -107,5 +107,7 @@ public class SmsService {
         }
 
         verification.verify();
+
+        phoneNumberVerificationRepository.save(verification);
     }
 }

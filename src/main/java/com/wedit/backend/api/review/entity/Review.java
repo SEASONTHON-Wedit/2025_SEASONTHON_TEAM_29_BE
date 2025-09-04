@@ -44,6 +44,7 @@ public class Review extends BaseTimeEntity {
     private Vendor vendor;
 
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<ReviewImage> images = new ArrayList<>();
 
     public void update(int rating, String best, String worst) {

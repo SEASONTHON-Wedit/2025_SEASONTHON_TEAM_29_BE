@@ -113,7 +113,6 @@ public class CoupleService {
     // UUID, 영문+숫자 10자리
     private String generateUniqueRandomCode() {
         String code;
-
         do {
             code = java.util.UUID.randomUUID().toString().substring(0, 10).toUpperCase();
         } while (coupleRepository.findByCoupleCode(code).isPresent()); // 중복되지 않을 때까지 반복

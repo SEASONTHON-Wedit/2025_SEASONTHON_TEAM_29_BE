@@ -29,17 +29,33 @@ public class Couple extends BaseTimeEntity {
     @Column(unique = true, length = 10)
     private String coupleCode;
 
+    // 커플 연동
     public void connectPartner(Member partner) {
 
+        // 1. 자기 자시과 연결 방지
+        if ((this.groom != null && this.groom.getId().equals(partner.getId()))
+                || (this.bride != null && this.bride.getId().equals(partner.getId()))) {
+
+            throw new BadRequestException(ErrorStatus.BAD_REQUEST_COUPLE_CONNECT_MYSELF.getMessage());
+        }
+
+        // 2. 파트너 타입에 따른 검증
         if (partner.getType() == Type.GROOM) {
-            if (this.groom != null && !this.groom.getId().equals(partner.getId())) {
-                throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_REGISTRATION_GROOM.getMessage());
+            // 이미 신랑이 있거나, 연결을 기다리는 신부가 없는 경우
+            if (this.groom != null || this.bride == null) {
+                throw new BadRequestException(ErrorStatus.BAD_REQUEST_CONNECT_GROOM_TO_BRIDE.getMessage());
             }
+        } else { // partner.getType() == Type.BRIDE
+            // 이미 신부가 있거나, 연결을 기다리는 신랑이 없는 경우
+            if (this.bride != null || this.groom == null) {
+                throw new BadRequestException(ErrorStatus.BAD_REQUEST_CONNECT_BRIDE_TO_GROOM.getMessage());
+            }
+        }
+
+        // 3. 커플 연동
+        if (partner.getType() == Type.GROOM) {
             this.updateGroom(partner);
-        } else { // partner 가 BRIDE(신부)
-            if (this.bride != null && !this.bride.getId().equals(partner.getId())) {
-                throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_REGISTRATION_BRIDE.getMessage());
-            }
+        } else {
             this.updateBride(partner);
         }
     }
