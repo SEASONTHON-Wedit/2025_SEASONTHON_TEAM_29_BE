@@ -74,6 +74,8 @@ public class MemberController {
     @Operation(
             summary = "액세스 토큰 재발급",
             description = "만료된 액세스 토큰을 재발급합니다. 요청 헤더에 'X-Refresh-Token'으로 유효한 리프레시 토큰을 포함해야 합니다."
+                + "[주의] Swagger 로 테스트 시 토큰 앞에 'Bearer ' 을 붙여야 함.",
+            security = @SecurityRequirement(name = "X-Refresh-Token")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),

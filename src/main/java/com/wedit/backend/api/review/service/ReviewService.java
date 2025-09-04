@@ -12,7 +12,6 @@ import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.entity.VendorImage;
 import com.wedit.backend.api.vendor.repository.VendorImageRepository;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
-import com.wedit.backend.api.vendor.entity.enums.VendorImageType;
 import com.wedit.backend.common.exception.ForbiddenException;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.exception.UnauthorizedException;

@@ -124,7 +124,7 @@ public class ReviewController {
     )
     @Parameters({
             @Parameter(name = "page", description = "페이지 번호 (0부터 시작)", example = "0"),
-            @Parameter(name = "size", description = "한 페이지에 보여줄 항목 수", example = "10")
+            @Parameter(name = "size", description = "한 페이지에 보여줄 항목 수", example = "5")
     })
     @GetMapping("/my-reviews")
     public ResponseEntity<ApiResponse<Page<MyReviewResponseDTO>>> getMyReviewList(
