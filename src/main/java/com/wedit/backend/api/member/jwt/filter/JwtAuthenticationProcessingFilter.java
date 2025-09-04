@@ -6,6 +6,7 @@ import com.wedit.backend.api.member.jwt.entity.RefreshToken;
 import com.wedit.backend.api.member.jwt.repository.RefreshTokenRepository;
 import com.wedit.backend.api.member.jwt.service.JwtService;
 import com.wedit.backend.api.member.repository.MemberRepository;
+import com.wedit.backend.common.config.security.SecurityConfig;
 import com.wedit.backend.common.config.security.entity.SecurityMember;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
@@ -20,10 +21,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
@@ -43,27 +46,21 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    private static final String[] SWAGGER_URIS = {
-            "/api/swagger-ui",
-            "/api/v3/api-docs",
-            "/api/swagger-ui.html",
-            "/swagger-ui",
-            "/v3/api-docs",
-            "/swagger-ui.html",
-    };
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    /// 스웨거 관련 경로 필터링 제외
+    /// SecurityConfig permit.All() URL 모두 필터링 제외
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String requestURI = request.getRequestURI();
 
-        for (String uri : SWAGGER_URIS) {
-            if (requestURI.contains(uri)) {
-                return true;
-            }
+        // 토큰 재발급 요청은 필터에서 직접 처리해야 하므로, 필터링을 건너뛰지 않음
+        if (requestURI.equals(TOKEN_REISSUE_URL)) {
+            return false;
         }
 
-        return false;
+        // 그 외 SecurityConfig에 정의된 모든 공개 URL(회원가입, 로그인, Swagger 등)은 필터링 건너뛰기
+        return Arrays.stream(SecurityConfig.PERMIT_URL_ARRAY)
+                .anyMatch(pattern -> pathMatcher.match(pattern, requestURI));
     }
 
     @Override

@@ -33,6 +33,27 @@ public class SecurityConfig {
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final OAuth2UserService oAuth2UserService;
 
+    public static final String[] PERMIT_URL_ARRAY = {
+            "/api/swagger-resources/**",
+            "/api/swagger-ui/**",
+            "/api/swagger-ui.html",
+            "/api/v3/api-docs/**",
+            "/v3/api-docs/**",
+            "/swagger-resources/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/actuator/health",
+            "/actuator/info",
+            "/api/webjars/**",
+            "/webjars/**",
+            "/uploads/**",
+            "/api/oauth2/authorization/**",
+            "/login/oauth2/code/**",
+            "/oauth/callback",
+            "/api/v1/member/**",
+            "/api/v1/vendor/**"
+    };
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -91,7 +112,8 @@ public class SecurityConfig {
                                 "/oauth/callback"
                         ).permitAll()   // Swagger, Spring Actuator, OAuth2 Debug 허가
                         .requestMatchers(
-                                "/api/v1/member/**"
+                                "/api/v1/member/**",
+                                "/api/v1/vendor/**"
                         ).permitAll()   // Member 관련 허가
                         .anyRequest().authenticated()
                 )
