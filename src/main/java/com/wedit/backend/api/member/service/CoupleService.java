@@ -8,9 +8,11 @@ import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.response.ErrorStatus;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,84 +24,72 @@ public class CoupleService {
 
     public String generateOrGetCoupleCode(Long memberId) {
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+        Member member = findMemberById(memberId);
 
         // 이미 커플이라면 코드 반환
-        Couple couple = member.getAsGroom() != null ? member.getAsGroom() : member.getAsBride();
-        if (couple != null && couple.getCoupleCode() != null) {
-            return couple.getCoupleCode();
+        Optional<Couple> existingCouple = coupleRepository.findByGroomOrBride(member);
+        if (existingCouple.isPresent()) {
+            return existingCouple.get().getCoupleCode();
         }
 
         // 새 코드 생성
-        String code = generateRandomCode();
+        String newCode = generateUniqueRandomCode();
         Couple newCouple;
 
         if (member.getType() == Type.GROOM) {
             newCouple = Couple.builder()
                     .groom(member)
-                    .coupleCode(code)
+                    .coupleCode(newCode)
                     .build();
             member.setAsGroom(newCouple);
         } else {
             newCouple = Couple.builder()
                     .bride(member)
-                    .coupleCode(code)
+                    .coupleCode(newCode)
                     .build();
             member.setAsBride(newCouple);
         }
 
         coupleRepository.save(newCouple);
 
-        return code;
+        return newCode;
     }
 
     public void connectWithCode(Long memberId, String coupleCode) {
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+        Member newPartner = findMemberById(memberId);
 
         Couple couple = coupleRepository.findByCoupleCode(coupleCode)
                 .orElseThrow(() -> new BadRequestException(ErrorStatus.BAD_REQUEST_INVALID_COUPLE_CODE.getMessage()));
 
-        if (member.getType() == Type.GROOM) {
-            if (couple.getGroom() != null && !couple.getGroom().getId().equals(memberId)) {
-                throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_REGISTRATION_GROOM.getMessage());
-            }
-            couple.updateGroom(member);
-        } else {
-            if (couple.getBride() != null && !couple.getBride().getId().equals(memberId)) {
-                throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_REGISTRATION_BRIDE.getMessage());
-            }
-            couple.updateBride(member);
-        }
-
-        coupleRepository.save(couple);
+        couple.connectPartner(newPartner);
     }
 
     public void disconnectCouple(Long memberId) {
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+        Member member = findMemberById(memberId);
 
-        Couple couple = member.getAsGroom() != null ? member.getAsGroom() : member.getAsBride();
-        if (couple == null) {
-            throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_DISCONNECT_COUPLE.getMessage());
-        }
+        Couple couple = coupleRepository.findByGroomOrBride(member)
+                .orElseThrow(() -> new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_DISCONNECT_COUPLE.getMessage()));
 
-        if (couple.getGroom() != null) {
-            couple.getGroom().setAsGroom(null);
-        }
-        if (couple.getBride() != null) {
-            couple.getBride().setAsBride(null);
-        }
         couple.dissociate();
 
         coupleRepository.delete(couple);
     }
 
+    private Member findMemberById(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+    }
+
     // UUID, 영문+숫자 10자리
-    private String generateRandomCode() {
-        return java.util.UUID.randomUUID().toString().substring(0, 10).toUpperCase();
+    private String generateUniqueRandomCode() {
+        String code;
+        do {
+            // 기존 generateRandomCode() 로직 사용
+            code = java.util.UUID.randomUUID().toString().substring(0, 10).toUpperCase();
+        } while (coupleRepository.findByCoupleCode(code).isPresent()); // 중복되지 않을 때까지 반복
+
+        return code;
     }
 }
