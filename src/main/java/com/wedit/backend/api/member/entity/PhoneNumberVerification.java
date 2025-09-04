@@ -29,10 +29,13 @@ public class PhoneNumberVerification extends BaseTimeEntity {
     private boolean isVerified = false;
 
     public boolean isExpired(LocalDateTime verifiedAt) {
-        return verifiedAt.isAfter(this.createdAt.plusMinutes(expirationTimeMinutes));
+        return verifiedAt.isAfter(this.getCreatedAt().plusMinutes(expirationTimeMinutes));
     }
 
-    public void setIsVerified(boolean isVerified) {
-        this.isVerified = isVerified;
+    public void verify() {
+        if (this.isVerified) {
+            return;
+        }
+        this.isVerified = true;
     }
 }

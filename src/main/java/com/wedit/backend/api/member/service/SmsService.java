@@ -7,7 +7,9 @@ import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.InternalServerException;
 import com.wedit.backend.common.exception.UnauthorizedException;
 import com.wedit.backend.common.response.ErrorStatus;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.nurigo.sdk.NurigoApp;
 import net.nurigo.sdk.message.model.Message;
 import net.nurigo.sdk.message.request.SingleMessageSendingRequest;
@@ -15,12 +17,15 @@ import net.nurigo.sdk.message.response.SingleMessageSentResponse;
 import net.nurigo.sdk.message.service.DefaultMessageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
+@Slf4j
 public class SmsService {
 
     private final PhoneNumberVerificationRepository phoneNumberVerificationRepository;
@@ -39,19 +44,17 @@ public class SmsService {
     private DefaultMessageService messageService;
 
     // coolSMS SDK 초기화
+    @PostConstruct
     public void initializeMessageService() {
         this.messageService = NurigoApp.INSTANCE.initialize(apiKey, apiSecret, "https://api.coolsms.co.kr");
     }
 
-    public void sendVerificationSms(String phoneNumber, LocalDateTime requestedAt) {
+    public void sendVerificationSms(String phoneNumber) {
 
         // 핸드폰 번호 중복 검증
         if (memberRepository.findByPhoneNumber(phoneNumber).isPresent()) {
             throw new BadRequestException(ErrorStatus.BAD_REQUEST_DUPLICATE_PHONE.getMessage());
         }
-
-        // 메시지 서비스 초기화
-        initializeMessageService();
 
         // 기존 인증코드 삭제
         phoneNumberVerificationRepository.findByPhoneNumber(phoneNumber)
@@ -78,8 +81,9 @@ public class SmsService {
         // SMS 발송
         try {
             SingleMessageSentResponse response = messageService.sendOne(new SingleMessageSendingRequest(message));
-            System.out.println(response);
+            log.info("SMS 발송 결과 : {}", response);
         } catch (Exception e) {
+            log.error("SMS 발송 실패 PhoneNumber : ", phoneNumber, e);
             throw new InternalServerException(ErrorStatus.SMS_SEND_FAILED.getMessage());
         }
     }
@@ -90,18 +94,20 @@ public class SmsService {
         int number = random.nextInt(1000000);   // 0 ~ 999999
         return String.format("%06d", number);          // 6자리 인증 코드
     }
-    
-    // 인증 코드 검증
-    public void verifyCode(String code, LocalDateTime requestedAt) {
 
-        PhoneNumberVerification verification = phoneNumberVerificationRepository.findByCode(code)
+    // 인증 코드 검증
+    public void verifyCode(String phoneNumber, String code) {
+
+        PhoneNumberVerification verification = phoneNumberVerificationRepository.findByPhoneNumberAndCode(phoneNumber, code)
                 .orElseThrow(() -> new BadRequestException(ErrorStatus.BAD_REQUEST_FAILED_SMS_VERIFICATION_CODE.getMessage()));
 
-        if (verification.isExpired(requestedAt)) {
+        if (verification.isExpired(LocalDateTime.now())) {
+            phoneNumberVerificationRepository.delete(verification);
             throw new UnauthorizedException(ErrorStatus.UNAUTHORIZED_FAILED_SMS_VERIFICATION_CODE.getMessage());
         }
 
-        verification.setIsVerified(true);
+        verification.verify();
+
         phoneNumberVerificationRepository.save(verification);
     }
 }
