@@ -7,12 +7,16 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
 @Getter
+@Setter
+@AllArgsConstructor
 @NoArgsConstructor
 @Schema(description = "업체 생성 요청 DTO")
 public class VendorCreateRequestDTO {
@@ -47,7 +51,9 @@ public class VendorCreateRequestDTO {
     private List<ImageGroupDTO> imageGroups;
 
     @Getter
+    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
     @Schema(description = "주소 정보를 담는 DTO")
     public static class AddressDTO {
         @Schema(description = "시/도", example = "서울특별시")
@@ -72,7 +78,9 @@ public class VendorCreateRequestDTO {
     }
 
     @Getter
+    @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
     @Schema(description = "이미지 그룹 정보를 담는 DTO")
     public static class ImageGroupDTO {
 
