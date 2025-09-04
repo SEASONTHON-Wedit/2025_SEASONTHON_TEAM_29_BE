@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public enum Category {
     WEDDING_HALL,
-    STUDIO,
     DRESS,
-    MAKEUP
+    STUDIO,
+    MAKEUP;
 }

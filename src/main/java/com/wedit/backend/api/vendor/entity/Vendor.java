@@ -49,11 +49,14 @@ public class Vendor extends BaseTimeEntity {
     private List<VendorImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Review> reviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Reservation> reservations = new ArrayList<>();
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Tour> tours = new ArrayList<>();
 }

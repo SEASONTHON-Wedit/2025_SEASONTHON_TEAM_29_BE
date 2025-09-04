@@ -33,19 +33,6 @@ public class SecurityConfig {
     private final OAuth2UserService oAuth2UserService;
     private final JwtAuthenticationProcessingFilter jwtAuthenticationProcessingFilter;
 
-    // 필터링 제외 목록
-    public static final String[] NOT_FILTER_URLS = {
-            "/api/swagger-resources/**",
-            "/api/swagger-ui/**",
-            "/api/swagger-ui.html",
-            "/api/v3/api-docs/**",
-            "/v3/api-docs/**",
-            "/swagger-resources/**",
-            "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/api/webjars/**",
-            "/webjars/**",
-    };
 
     @Bean
     public PasswordEncoder passwordEncoder() {

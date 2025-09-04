@@ -1,9 +1,12 @@
 package com.wedit.backend.api.vendor.entity.dto.details;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.wedit.backend.api.vendor.entity.enums.Category;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,11 +18,11 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
-        include = JsonTypeInfo.As.PROPERTY, // 1. EXTERNAL_PROPERTY 에서 PROPERTY 로 변경
-        property = "category"             // 2. 타입 결정의 기준이 될 프로퍼티 이름
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "category",
+        visible = true
 )
 @JsonSubTypes({
-        // 3. 이 설정은 그대로 유지
         @JsonSubTypes.Type(value = WeddingHallDetailsDTO.class, name = "WEDDING_HALL"),
         @JsonSubTypes.Type(value = DressDetailsDTO.class, name = "DRESS"),
         @JsonSubTypes.Type(value = StudioDetailsDTO.class, name = "STUDIO"),
@@ -27,5 +30,9 @@ import lombok.Setter;
 })
 public abstract class VendorDetailsDTO {
 
-    protected Category category;
+    @Schema(description = "업체 카테고리. 이 값을 기준으로 상세 정보의 구조가 결정됩니다.",
+            example = "WEDDING_HALL", required = true)
+    @NotNull
+    @JsonProperty("category")
+    private Category category;
 }

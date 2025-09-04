@@ -1,6 +1,9 @@
 package com.wedit.backend.api.vendor.entity.dto.details;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.wedit.backend.api.vendor.entity.enums.Category;
 import com.wedit.backend.api.vendor.entity.enums.Meal;
 import com.wedit.backend.api.vendor.entity.enums.Style;
 import jakarta.validation.constraints.NotNull;
@@ -22,4 +25,18 @@ public class WeddingHallDetailsDTO extends VendorDetailsDTO {
 
     private Integer minimumAmount;
     private Integer maximumGuest;
+
+    @JsonCreator
+    public WeddingHallDetailsDTO(
+            @JsonProperty("category") Category category,
+            @JsonProperty("style") Style style,
+            @JsonProperty("meal") Meal meal,
+            @JsonProperty("minimumAmount") Integer minimumAmount,
+            @JsonProperty("maximumGuest") Integer maximumGuest) {
+        this.setCategory(category);
+        this.style = style;
+        this.meal = meal;
+        this.minimumAmount = minimumAmount;
+        this.maximumGuest = maximumGuest;
+    }
 }

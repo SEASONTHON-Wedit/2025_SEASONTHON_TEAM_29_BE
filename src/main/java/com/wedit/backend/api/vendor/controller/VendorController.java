@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -49,7 +48,7 @@ public class VendorController {
            3. 업로드 성공 후 받은 모든 **S3 Key**들을 모아 이 API를 호출하여 최종적으로 업체 정보를 생성합니다.
            """
     )
-    @RequestBody(
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "업체 생성을 위한 요청 데이터입니다. category 값에 따라 details 구조가 달라집니다.",
             required = true,
             content = @Content(
@@ -124,9 +123,11 @@ public class VendorController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "웨딩홀 생성 성공"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
-	@PostMapping(value = "/create")
+	@PostMapping("/create")
 	public ResponseEntity<ApiResponse<Void>> createVendor(
-		@Valid @RequestBody VendorCreateRequestDTO requestDTO) {
+            @Valid @RequestBody VendorCreateRequestDTO requestDTO) {
+
+        log.info("VendorCreateRequestDTO: {}", requestDTO);
 
 		vendorService.createVendor(requestDTO);
 

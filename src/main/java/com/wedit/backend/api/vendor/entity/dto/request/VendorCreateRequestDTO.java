@@ -17,6 +17,7 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 @Schema(description = "업체 생성 요청 DTO")
 public class VendorCreateRequestDTO {
 

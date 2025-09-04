@@ -48,7 +48,19 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+    // 필터링 제외 목록
+    public static final String[] NOT_FILTER_URLS = {
+            "/api/swagger-resources/**",
+            "/api/swagger-ui/**",
+            "/api/swagger-ui.html",
+            "/api/v3/api-docs/**",
+            "/v3/api-docs/**",
+            "/swagger-resources/**",
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/api/webjars/**",
+            "/webjars/**"
+    };
 
     /// 엔드포인트 필터링 제외
     @Override
@@ -57,9 +69,13 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
 
         log.info("JwtFilter shouldNotFilter 프로세싱 요청: {}", requestURI);
 
-        // 그 외 SecurityConfig에 정의된 모든 공개 URL(회원가입, 로그인, Swagger 등)은 필터링 건너뛰기
-        return Arrays.stream(SecurityConfig.NOT_FILTER_URLS)
-                .anyMatch(pattern -> pathMatcher.match(pattern, requestURI));
+        for (String url : NOT_FILTER_URLS) {
+            if (requestURI.startsWith(url)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
