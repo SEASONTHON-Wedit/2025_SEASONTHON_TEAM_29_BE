@@ -34,10 +34,7 @@ public class SecurityConfig {
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final OAuth2UserService oAuth2UserService;
-
-    private final JwtService jwtService;
-    private final MemberRepository memberRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final JwtAuthenticationProcessingFilter jwtAuthenticationProcessingFilter;
 
     public static final String[] PERMIT_URL_ARRAY = {
             "/api/swagger-resources/**",
@@ -59,12 +56,6 @@ public class SecurityConfig {
             "/api/v1/member/**",
             "/api/v1/vendor/**"
     };
-
-
-    @Bean
-    public JwtAuthenticationProcessingFilter jwtAuthenticationProcessingFilter() {
-        return new JwtAuthenticationProcessingFilter(jwtService, memberRepository, refreshTokenRepository);
-    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -142,7 +133,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(filterExceptionHandler)        // 인가 실패 예외 핸들링
                 );
 
-        http.addFilterBefore(jwtAuthenticationProcessingFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtAuthenticationProcessingFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
