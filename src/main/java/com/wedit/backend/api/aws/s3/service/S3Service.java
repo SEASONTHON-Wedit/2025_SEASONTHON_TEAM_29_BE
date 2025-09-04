@@ -124,8 +124,8 @@ public class S3Service {
         String uuid = UUID.randomUUID().toString();
 
         // 확장자 추출
-        String extension = ";";
-        if (originalFileName.contains(".")) {
+        String extension = "";
+        if (originalFileName != null && originalFileName.contains(".")) {
             extension = originalFileName.substring(originalFileName.lastIndexOf("."));
         }
         String safeFileName = uuid + "_" + currentDateTime + extension;
