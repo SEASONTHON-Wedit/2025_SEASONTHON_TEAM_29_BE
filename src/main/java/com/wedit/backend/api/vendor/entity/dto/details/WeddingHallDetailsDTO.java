@@ -5,9 +5,11 @@ import com.wedit.backend.api.vendor.entity.enums.Meal;
 import com.wedit.backend.api.vendor.entity.enums.Style;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
+@NoArgsConstructor
 public class WeddingHallDetailsDTO extends VendorDetailsDTO {
 
     @NotNull(message = "웨딩홀 스타일은 필수입니다.")
