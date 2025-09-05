@@ -1,8 +1,8 @@
-package com.wedit.backend.api.vendor.entity.dto.response;
+package com.wedit.backend.api.vendor.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.wedit.backend.api.vendor.entity.Address;
-import com.wedit.backend.api.vendor.entity.dto.details.VendorDetailsDTO;
+import com.wedit.backend.api.vendor.dto.details.VendorDetailsDTO;
 import com.wedit.backend.api.vendor.entity.enums.Category;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;

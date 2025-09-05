@@ -1,7 +1,7 @@
-package com.wedit.backend.api.vendor.entity.dto.request;
+package com.wedit.backend.api.vendor.dto.request;
 
+import com.wedit.backend.api.vendor.dto.details.VendorDetailsDTO;
 import com.wedit.backend.api.vendor.entity.Address;
-import com.wedit.backend.api.vendor.entity.dto.details.*;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;

@@ -1,4 +1,4 @@
-package com.wedit.backend.api.vendor.entity.dto.details;
+package com.wedit.backend.api.vendor.dto.details;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
-public class StudioDetailsDTO extends VendorDetailsDTO {
+public class DressDetailsDTO extends  VendorDetailsDTO {
     private Integer minimumAmount;
 }

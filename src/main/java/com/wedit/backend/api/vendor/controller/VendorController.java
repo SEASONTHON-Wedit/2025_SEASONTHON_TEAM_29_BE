@@ -1,7 +1,9 @@
 package com.wedit.backend.api.vendor.controller;
 
 
-import com.wedit.backend.api.vendor.entity.dto.response.VendorDetailsResponseDTO;
+import com.wedit.backend.api.vendor.dto.response.VendorCreateResponseDTO;
+import com.wedit.backend.api.vendor.dto.response.VendorDetailsResponseDTO;
+import com.wedit.backend.api.vendor.entity.Vendor;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -10,7 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.wedit.backend.api.vendor.entity.dto.request.VendorCreateRequestDTO;
+import com.wedit.backend.api.vendor.dto.request.VendorCreateRequestDTO;
 import com.wedit.backend.api.vendor.service.VendorService;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
@@ -124,14 +126,16 @@ public class VendorController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
 	@PostMapping("/create")
-	public ResponseEntity<ApiResponse<Void>> createVendor(
+	public ResponseEntity<ApiResponse<VendorCreateResponseDTO>> createVendor(
             @Valid @RequestBody VendorCreateRequestDTO requestDTO) {
 
         log.info("VendorCreateRequestDTO: {}", requestDTO);
 
-		vendorService.createVendor(requestDTO);
+        Vendor createdVendor = vendorService.createVendor(requestDTO);
 
-		return ApiResponse.successOnly(SuccessStatus.VENDOR_CREATE_SUCCESS);
+        VendorCreateResponseDTO response = VendorCreateResponseDTO.of(createdVendor.getId());
+
+		return ApiResponse.success(SuccessStatus.VENDOR_CREATE_SUCCESS, response);
 	}
 
     @Operation(
@@ -152,4 +156,32 @@ public class VendorController {
 
         return ApiResponse.success(SuccessStatus.VENDOR_DETAIL_GET_SUCCESS, resp);
     }
+
+//    @Operation(
+//            summary = "카테고리별 업체 목록 페이징 조회 API (미완성)",
+//            description = """
+//               ### **선택한 카테고리에 해당하는 업체 목록을 페이징하여 조회합니다. (**
+//
+//               - `category` (WEDDING_HALL, STUDIO, DRESS, MAKEUP)를 path variable로 받습니다.
+//               - 기본 5개씩 조회하며, `page`와 `size` 파라미터로 조절할 수 있습니다. (예: `?page=1&size=5`)
+//               - 응답에는 페이징 관련 정보(총 페이지 수, 현재 페이지 등)가 포함됩니다.
+//               - 각 업체의 로고 이미지는 **S3 Presigned URL**로 제공됩니다.
+//               """
+//    )
+//    @ApiResponses({
+//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업체 목록 조회 성공"),
+//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 카테고리 요청입니다.")
+//    })
+//    @GetMapping("/list/{category}")
+//    public ResponseEntity<ApiResponse<Page<VendorListResponseDTO>>> getVendorsByCategory(
+//            @Parameter(description = "조회할 카테고리", required = true, example = "MAKEUP")
+//            @PathVariable Category category,
+//            @RequestParam(defaultValue = "0") int page,
+//            @RequestParam(defaultValue = "5") int size) {
+//
+//        Pageable pageable = PageRequest.of(page, size);
+//        Page<VendorListResponseDTO> response = vendorService.getVendorsByCategory(category, pageable);
+//
+//        return ApiResponse.success(SuccessStatus.VENDOR_LIST_GET_SUCCESS, response);
+//    }
 }

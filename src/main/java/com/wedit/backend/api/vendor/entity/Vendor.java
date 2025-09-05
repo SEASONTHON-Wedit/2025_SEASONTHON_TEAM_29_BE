@@ -4,8 +4,6 @@ import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.review.entity.Review;
 import com.wedit.backend.api.tour.entity.Tour;
 import com.wedit.backend.api.vendor.entity.enums.Category;
-import com.wedit.backend.api.vendor.entity.enums.Meal;
-import com.wedit.backend.api.vendor.entity.enums.Style;
 import com.wedit.backend.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.*;

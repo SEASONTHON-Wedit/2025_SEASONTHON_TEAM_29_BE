@@ -4,14 +4,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wedit.backend.api.aws.s3.service.S3Service;
-import com.wedit.backend.api.vendor.entity.Address;
-import com.wedit.backend.api.vendor.entity.dto.details.*;
-import com.wedit.backend.api.vendor.entity.dto.response.VendorDetailsResponseDTO;
+import com.wedit.backend.api.vendor.dto.details.*;
+import com.wedit.backend.api.vendor.dto.response.VendorDetailsResponseDTO;
 import com.wedit.backend.api.vendor.entity.enums.Category;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.response.ErrorStatus;
@@ -20,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.entity.VendorImage;
-import com.wedit.backend.api.vendor.entity.dto.request.VendorCreateRequestDTO;
+import com.wedit.backend.api.vendor.dto.request.VendorCreateRequestDTO;
 import com.wedit.backend.api.vendor.entity.enums.VendorImageType;
 import com.wedit.backend.api.vendor.repository.VendorImageRepository;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
@@ -38,7 +36,7 @@ public class VendorService {
     private final S3Service s3Service;
 
     @Transactional
-	public void createVendor(VendorCreateRequestDTO request) {
+	public Vendor createVendor(VendorCreateRequestDTO request) {
         log.info("업체 생성 시작. 이름: {}, 카테고리: {}", request.getName(), request.getDetails().getCategory());
 
         // 카테고리별 상세 정보 직렬화
@@ -92,6 +90,8 @@ public class VendorService {
         log.info("모든 이미지 저장 성공. 업체 ID: {}", savedVendor.getId());
 
         log.info("업체 생성 성공. 업체 ID: {}", savedVendor.getId());
+
+        return savedVendor;
 	}
 
     @Transactional(readOnly = true)

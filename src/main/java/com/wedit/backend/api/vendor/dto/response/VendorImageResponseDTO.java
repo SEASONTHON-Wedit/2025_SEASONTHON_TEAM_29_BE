@@ -1,4 +1,4 @@
-package com.wedit.backend.api.vendor.entity.dto.response;
+package com.wedit.backend.api.vendor.dto.response;
 
 import com.wedit.backend.api.vendor.entity.enums.VendorImageType;
 

@@ -1,4 +1,4 @@
-package com.wedit.backend.api.vendor.entity.dto.details;
+package com.wedit.backend.api.vendor.dto.details;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
