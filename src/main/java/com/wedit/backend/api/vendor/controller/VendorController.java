@@ -81,7 +81,7 @@ public class VendorController {
                                       "fullAddress": "서울특별시 강남구 언주로 508",
                                       "kakaoMapUrl": "https://map.kakao.com/link/to/아펠가모선릉,37.50449,127.0489"
                                     },
-                                    "minimumAmount": 88000,
+                                    "minimumAmount": 8800000,
                                     "details": {
                                       "category": "WEDDING_HALL",
                                       "style": "CHAPEL",
@@ -167,6 +167,10 @@ public class VendorController {
                 - 모든 이미지 URL은 일정 시간 동안만 유효한 **S3 Presigned URL**로 제공됩니다.
                 """
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업체 상세 정보 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 ID의 업체를 찾을 수 없습니다.")
+    })
     @GetMapping("/{vendorId}")
     public ResponseEntity<ApiResponse<VendorDetailsResponseDTO>> getVendorDetails(
             @Parameter(description = "조회할 업체의 고유 ID", required = true, example = "1")
@@ -178,15 +182,14 @@ public class VendorController {
     }
 
     @Operation(
-            summary = "카테고리별 업체 목록 페이징 조회 API",
+            summary = "카테고리별 업체 목록 조회 API (Read Vendor List by Category)",
             description = """
-               ### **선택한 카테고리에 해당하는 업체 목록을 페이징하여 조회합니다. (**
+               ### **선택한 카테고리에 해당하는 업체 목록을 페이징하여 조회합니다.**
 
-               - `category` (WEDDING_HALL, STUDIO, DRESS, MAKEUP)를 path variable로 받습니다.
-               - 기본 5개씩 조회하며, `page`와 `size` 파라미터로 조절할 수 있습니다. (예: `?page=1&size=5`)
-               - 응답에는 페이징 관련 정보(총 페이지 수, 현재 페이지 등)가 포함됩니다.
-               - 각 업체의 로고 이미지는 **S3 Presigned URL**로 제공됩니다.
-               - 리스트 정렬 기준은 **2주 내에 가장 많은 후기가 남겨진 업체 중 랜덤** 입니다.
+               - `category` (WEDDING_HALL, STUDIO, DRESS, MAKEUP)를 Path Variable로 받습니다.
+               - `page`와 `size` 파라미터로 페이징을 조절할 수 있습니다. (기본값: page=0, size=5)
+               - 정렬 기준: **최근 2주 내 후기가 많이 작성된 업체들 중에서 랜덤**으로 노출됩니다.
+               - 각 업체의 로고 이미지는 일정 시간 동안만 유효한 **S3 Presigned URL**로 제공됩니다.
                """
     )
     @ApiResponses({
@@ -206,14 +209,26 @@ public class VendorController {
         return ApiResponse.success(SuccessStatus.VENDOR_LIST_GET_SUCCESS, response);
     }
 
-    @Operation(summary = "웨딩홀 조건 검색 API",
-            description = "RequestBody에 웨딩홀 검색 조건을 담아 요청하면, " +
-                    "조건에 맞는 업체 목록을 **가격 내림차슌 9개씩** 페이징하여 반환합니다."
+    @Operation(summary = "웨딩홀 조건 검색 API (Search Wedding Halls)",
+            description = """
+                    ### **다양한 조건으로 웨딩홀을 검색합니다.**
+                    
+                    - Request Body에 원하는 검색 조건을 담아 요청합니다.
+                    - 조건이 없는 필드는 검색에 영향을 주지 않습니다. (예: `styles` 필드를 보내지 않으면 모든 스타일 조회)
+                    - 결과는 **가격 오름차순**으로 정렬되며, 기본 9개씩 페이징됩니다.
+                    """
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "웨딩홀 조건 검색 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 검색 조건 요청입니다.")
+    })
     @PostMapping("/search/wedding-halls")
     public ResponseEntity<ApiResponse<Page<VendorSearchResultDTO>>> searchWeddingHalls(
+            @Parameter(description = "웨딩홀 검색 조건을 담은 JSON 객체")
             @RequestBody WeddingHallSearchConditions conditions,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
             @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 당 항목 수", example = "9")
             @RequestParam(defaultValue = "9") int size) {
 
         Pageable pageable = PageRequest.of(page, size);

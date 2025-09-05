@@ -98,7 +98,7 @@ public class EstimateService {
 				.vendorDescription(vendor.getDescription())
 				.vendorCategory(vendor.getCategory())
 				.mainImageUrl(mainImageUrl)
-				.minimumAmount(vendor.getMinAmount())
+				.minimumAmount(vendor.getMinimumAmount())
 				.createdAt(estimate.getCreatedAt())
 				.build();
 
