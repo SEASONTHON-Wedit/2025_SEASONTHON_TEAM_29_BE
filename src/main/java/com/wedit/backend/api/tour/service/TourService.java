@@ -80,7 +80,7 @@ public class TourService {
 			Vendor vendor = tour.getVendor();
 			
 			// 업체의 대표 이미지 조회 (EstimateService와 동일한 방식)
-			String mainImageUrl = getVendorMainImageUrl(vendor);
+			String logoImageUrl = getVendorLogoImageUrl(vendor);
 			
 			return TourResponseDTO.builder()
 				.id(tour.getId())
@@ -90,7 +90,7 @@ public class TourService {
 				.vendorName(vendor.getName())
 				.vendorDescription(vendor.getDescription())
 				.vendorCategory(vendor.getCategory())
-				.mainImageUrl(mainImageUrl)
+				.logoImageUrl(logoImageUrl)
 				.build();
 		}).toList();
 	}
@@ -166,6 +166,24 @@ public class TourService {
 			return null;
 		} catch (Exception e) {
 			log.warn("업체 대표 이미지 조회 중 오류 발생. 업체 ID: {}", vendor.getId(), e);
+			return null;
+		}
+	}
+
+	private String getVendorLogoImageUrl(Vendor vendor) {
+		try {
+			List<VendorImage> images = vendor.getImages();
+			if (images != null) {
+				return images.stream()
+						.filter(img -> img.getImageType() == VendorImageType.LOGO)
+						.findFirst()
+						.map(img -> s3Service.generatePresignedGetUrl(img.getImageKey()).getPresignedUrl())
+						.orElse(null);
+			}
+
+			return null;
+		} catch (Exception e) {
+			log.warn("업체 로고 이미지 조회 중 오류 발생. 업체 ID: {}", vendor.getId(), e);
 			return null;
 		}
 	}

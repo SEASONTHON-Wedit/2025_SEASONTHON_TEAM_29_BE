@@ -16,5 +16,5 @@ public class TourResponseDTO {
 	private String vendorName;        // 업체 이름 추가
 	private String vendorDescription; // 업체 설명 추가
 	private Category vendorCategory;  // 업체 카테고리 추가
-	private String mainImageUrl;      // 대표 이미지 URL 추가
+	private String logoImageUrl;      // 로고 이미지 URL 추가
 }
