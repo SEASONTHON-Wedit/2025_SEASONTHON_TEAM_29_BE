@@ -79,7 +79,7 @@ public class TourService {
 		return tours.stream().map(tour -> {
 			Vendor vendor = tour.getVendor();
 			
-			// 업체의 대표 이미지 조회 (EstimateService와 동일한 방식)
+			// 업체의 로고 이미지 조회 (EstimateService와 동일한 방식)
 			String logoImageUrl = getVendorLogoImageUrl(vendor);
 			
 			return TourResponseDTO.builder()
@@ -170,8 +170,12 @@ public class TourService {
 		}
 	}
 
+	/**
+	 * 업체의 로고 이미지 URL을 조회 (EstimateService와 동일한 방식)
+	 */
 	private String getVendorLogoImageUrl(Vendor vendor) {
 		try {
+			// Vendor의 이미지 중 LOGO 타입 이미지 찾기
 			List<VendorImage> images = vendor.getImages();
 			if (images != null) {
 				return images.stream()
@@ -180,7 +184,6 @@ public class TourService {
 						.map(img -> s3Service.generatePresignedGetUrl(img.getImageKey()).getPresignedUrl())
 						.orElse(null);
 			}
-
 			return null;
 		} catch (Exception e) {
 			log.warn("업체 로고 이미지 조회 중 오류 발생. 업체 ID: {}", vendor.getId(), e);

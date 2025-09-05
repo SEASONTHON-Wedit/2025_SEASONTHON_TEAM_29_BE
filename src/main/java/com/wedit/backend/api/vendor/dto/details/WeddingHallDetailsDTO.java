@@ -23,20 +23,25 @@ public class WeddingHallDetailsDTO extends VendorDetailsDTO {
     @NotNull(message = "식사 타입은 필수입니다.")
     private Meal meal;
 
-    private Integer minimumAmount;
-    private Integer maximumGuest;
+    private Integer hallSeats;      // 웨딩홀 객석수
+    private Integer banquetSeats;   // 피로연장 객석수
+
+    private Integer maximumGuest;   // 최대 수용 인원
 
     @JsonCreator
     public WeddingHallDetailsDTO(
             @JsonProperty("category") Category category,
             @JsonProperty("style") Style style,
             @JsonProperty("meal") Meal meal,
-            @JsonProperty("minimumAmount") Integer minimumAmount,
+            @JsonProperty("hallSeats") Integer hallSeats,
+            @JsonProperty("banquetSeats") Integer banquetSeats,
             @JsonProperty("maximumGuest") Integer maximumGuest) {
+
         this.setCategory(category);
         this.style = style;
         this.meal = meal;
-        this.minimumAmount = minimumAmount;
+        this.hallSeats = hallSeats;
+        this.banquetSeats = banquetSeats;
         this.maximumGuest = maximumGuest;
     }
 }
