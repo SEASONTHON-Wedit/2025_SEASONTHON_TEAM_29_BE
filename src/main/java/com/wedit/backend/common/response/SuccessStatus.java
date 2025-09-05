@@ -41,6 +41,7 @@ public enum SuccessStatus {
     VENDOR_DETAIL_GET_SUCCESS(HttpStatus.OK, "업체 상세 조회 성공"),
     VENDOR_LIST_GET_SUCCESS(HttpStatus.OK, "업체 페이징 리스트 조회 성공"),
     CONTRACT_AVAILABILITY_GET_SUCCESS(HttpStatus.OK, "계약 가능 시간 조회 성공"),
+    VENDOR_SEARCH_SUCCESS(HttpStatus.OK, "업체 조건 검색 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),

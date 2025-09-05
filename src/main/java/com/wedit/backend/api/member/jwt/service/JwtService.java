@@ -45,7 +45,7 @@ public class JwtService {
                 .setSubject(memberId.toString())    // sub
                 .claim("email", email)
                 .claim("role", role.name())
-                .claim("type", "ACCESS")
+                .claim("type", "ACCESS")      // D-Day
                 .setIssuedAt(now)                   // iat
                 .setExpiration(expirationDate)      // exp
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -90,10 +90,6 @@ public class JwtService {
                 "accessToken", accessToken,
                 "refreshToken", refreshToken
         );
-    }
-
-    public void updateRefreshToken(Long memberId, String refreshToken) {
-
     }
 
     /***

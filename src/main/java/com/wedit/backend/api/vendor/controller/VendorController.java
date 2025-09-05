@@ -3,12 +3,21 @@ package com.wedit.backend.api.vendor.controller;
 
 import com.wedit.backend.api.vendor.dto.response.VendorCreateResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorDetailsResponseDTO;
+import com.wedit.backend.api.vendor.dto.response.VendorListResponseDTO;
+import com.wedit.backend.api.vendor.dto.response.VendorSearchResultDTO;
+import com.wedit.backend.api.vendor.dto.search.WeddingHallSearchConditions;
 import com.wedit.backend.api.vendor.entity.Vendor;
+import com.wedit.backend.api.vendor.entity.enums.Category;
+import com.wedit.backend.api.vendor.service.VendorSearchService;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,29 +38,29 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Tag(name = "Vendor", description = "Vendor 관련 API 입니다.")
 public class VendorController {
+
 	private final VendorService vendorService;
+    private final VendorSearchService vendorSearchService;
 
     @Operation(
             summary = "범용 업체 생성 API",
             description = """
-           ### **모든 종류(웨딩홀, 스튜디오, 드레스, 메이크업)의 업체를 생성하는 범용 API 입니다.**
+         ### **모든 카테고리(웨딩홀, 스튜디오, 드레스, 메이크업)의 업체를 생성하는 범용 API입니다.**
 
-           **가장 중요한 특징:** `category` 필드의 값에 따라 `details` 필드의 구조가 동적으로 변경되어야 합니다.
-           - `category`가 **WEDDING_HALL**이면, `details`는 `WeddingHallDetailsDTO`의 구조를 따라야 합니다.
-           - `category`가 **DRESS**이면, `details`는 `DressDetailsDTO`의 구조를 따라야 합니다.
-           (다른 카테고리도 동일한 규칙을 따릅니다)
-           - 현재 WEDDING_HALL 외에는 구현하지 않았습니다. 이점 유의 바랍니다!!!!
+         이 API의 핵심은 `details` 객체의 구조가 `details` 내부의 `category` 필드 값에 따라 동적으로 결정된다는 점입니다.
+         - `category`가 **"WEDDING_HALL"**이면, `details`는 웨딩홀의 상세 정보(`style`, `meal` 등)를 포함해야 합니다.
+         - `category`가 **"DRESS"**이면, `details`는 드레스샵의 상세 정보(`priceRange`, `fittingFee` 등)를 포함해야 합니다.
 
-           ---
+         ---
 
-           **이미지 처리 순서:**
-           1. 클라이언트가 업로드할 모든 이미지 파일에 대해 S3 Presigned URL 발급을 요청합니다.
-           2. 발급받은 URL을 사용해 모든 이미지를 S3에 업로드합니다.
-           3. 업로드 성공 후 받은 모든 **S3 Key**들을 모아 이 API를 호출하여 최종적으로 업체 정보를 생성합니다.
-           """
+         **이미지 처리 절차:**
+         1. 클라이언트는 이 API를 호출하기 전에, 업로드할 모든 이미지 파일에 대해 **S3 Presigned URL 발급을 먼저 요청**해야 합니다.
+         2. 발급받은 URL을 사용해 모든 이미지(로고, 대표, 그룹)를 S3에 성공적으로 업로드합니다.
+         3. 업로드 완료 후 받은 **모든 S3의 고유 Key 값**들을 수집하여, 이 API의 Body에 담아 호출함으로써 최종적으로 업체 정보를 생성합니다.
+         """
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "업체 생성을 위한 요청 데이터입니다. category 값에 따라 details 구조가 달라집니다.",
+            description = "업체 생성을 위한 요청 데이터입니다. `details` 객체 내의 `category` 값에 따라 `details` 객체의 하위 구조가 달라집니다.",
             required = true,
             content = @Content(
                     mediaType = "application/json",
@@ -59,77 +68,88 @@ public class VendorController {
                     examples = {
                             @ExampleObject(
                                     name = "웨딩홀 생성 예시",
-                                    summary = "Wedding Hall 생성 요청의 올바른 예시입니다.",
+                                    summary = "Wedding Hall 생성 요청의 표준 예시입니다.",
                                     value = """
-                                    {
-                                      "name": "렌느 브라이덜",
-                                      "description": "품격 있는 채플 웨딩 스타일을 선도합니다.",
-                                      "address": {
+                                  {
+                                    "name": "아펠가모 선릉",
+                                    "phoneNumber": "02-123-4567",
+                                    "description": "품격 있는 채플 웨딩 스타일을 선도합니다.",
+                                    "address": {
+                                      "city": "서울특별시",
+                                      "district": "강남구",
+                                      "dong": "역삼동",
+                                      "fullAddress": "서울특별시 강남구 언주로 508",
+                                      "kakaoMapUrl": "https://map.kakao.com/link/to/아펠가모선릉,37.50449,127.0489"
+                                    },
+                                    "minimumAmount": 8800000,
+                                    "details": {
+                                      "category": "WEDDING_HALL",
+                                      "style": "CHAPEL",
+                                      "meal": "BUFFET",
+                                      "hallSeats": 200,
+                                      "banquetSeats": 450,
+                                      "maximumGuest": 470
+                                    },
+                                    "logoImageKey": "vendor/1/logo/logo_key.png",
+                                    "mainImageKey": "vendor/1/main/main_image_key.jpg",
+                                    "imageGroups": [
+                                      {
+                                        "groupTitle": "채플 홀",
+                                        "groupDescription": "경건하고 아름다운 채플 홀의 모습입니다.",
+                                        "sortOrder": 0,
+                                        "imageKeys": [
+                                          "vendor/1/images/hall_image_1.jpg",
+                                          "vendor/1/images/hall_image_2.jpg"
+                                        ]
+                                      },
+                                      {
+                                        "groupTitle": "신부 대기실",
+                                        "groupDescription": "넓고 화사한 분위기의 신부 대기실입니다.",
+                                        "sortOrder": 1,
+                                        "imageKeys": [
+                                          "vendor/1/images/bridal_room_1.jpg"
+                                        ]
+                                      }
+                                    ]
+                                  }"""),
+                            @ExampleObject(
+                                    name = "드레스샵 생성 예시",
+                                    summary = "향후 확장될 Dress 타입의 예시입니다.",
+                                    value = """
+                                  {
+                                    "name": "시그니처 엘리자베스",
+                                    "phoneNumber": "02-545-2345",
+                                    "description": "클래식하고 우아한 프리미엄 드레스 샵입니다.",
+                                    "address": {
                                         "city": "서울특별시",
                                         "district": "강남구",
-                                        "fullAddress": "서울특별시 강남구 테헤란로 123, 르네상스 타워 5층",
-                                        "latitude": 37.50449,
-                                        "longitude": 127.0489
-                                      },
-                                      "details": {
-                                        "category": "WEDDING_HALL",
-                                        "style": "CHAPEL",
-                                        "meal": "BUFFET",
-                                        "minimumAmount": 80000,
-                                        "maximumGuest": 470
-                                      },
-                                      "logoImageKey": "VENDOR/4/images/102/logo_unique_key.png",
-                                      "mainImageKey": "VENDOR/4/images/102/main_image_unique_key.jpg",
-                                      "imageGroups": [
-                                        {
-                                          "groupTitle": "메인 홀",
-                                          "sortOrder": 0,
-                                          "imageKeys": [
-                                            "VENDOR/4/images/102/hall_image_1.jpg",
-                                            "VENDOR/4/images/102/hall_image_2.jpg"
-                                          ]
-                                        },
-                                        {
-                                          "groupTitle": "신부 대기실",
-                                          "sortOrder": 1,
-                                          "imageKeys": [
-                                            "VENDOR/4/images/102/bridal_room_1.jpg"
-                                          ]
-                                        }
-                                      ]
-                                    }"""),
-                            @ExampleObject(
-                                    name = "드레스샵 생성 예시 (미구현)",
-                                    summary = "추후 구현될 Dress 타입의 예시입니다.",
-                                    value = """
-                                    {
-                                      "name": "시그니처 엘리자베스",
+                                        "dong": "청담동",
+                                        "fullAddress": "서울특별시 강남구 청담동 12-34",
+                                        "kakaoMapUrl": "https://map.kakao.com/link/to/시그니처엘리자베스,37.525,127.040"
+                                    },
+                                    "minimumAmount": 3000000,
+                                    "details": {
                                       "category": "DRESS",
-                                      "description": "클래식하고 우아한 프리미엄 드레스 샵입니다.",
-                                      "address": { "city": "서울특별시", "district": "강남구", "fullAddress": "서울특별시 강남구 청담동 12-34" },
-                                      "details": {
-                                        "priceRange": "HIGH",
-                                        "importedFrom": ["USA", "ITALY"],
-                                        "fittingFee": 50000
-                                      },
-                                      "logoImageKey": "vendor/logo/signature.png",
-                                      "mainImageKey": "vendor/main/signature_main.jpg",
-                                      "imageGroups": [
-                                        { "groupTitle": "2025 F/W 신상 화보", "sortOrder": 0, "imageKeys": ["s3_key_for_dress_1.jpg"] }
-                                      ]
-                                    }""")
+                                      "priceRange": "HIGH",
+                                      "importedFrom": ["USA", "ITALY"],
+                                      "fittingFee": 50000
+                                    },
+                                    "logoImageKey": "vendor/logo/signature.png",
+                                    "mainImageKey": "vendor/main/signature_main.jpg",
+                                    "imageGroups": [
+                                      { "groupTitle": "2025 F/W 신상 화보", "groupDescription": "이번 시즌 신상 드레스 화보입니다.", "sortOrder": 0, "imageKeys": ["s3_key_for_dress_1.jpg"] }
+                                    ]
+                                  }""")
                     }
             )
     )
-	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "웨딩홀 생성 성공"),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
-	})
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "업체 생성 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "요청 데이터 유효성 검사 실패 (필수 필드 누락, 형식 오류 등)")
+    })
 	@PostMapping("/create")
 	public ResponseEntity<ApiResponse<VendorCreateResponseDTO>> createVendor(
             @Valid @RequestBody VendorCreateRequestDTO requestDTO) {
-
-        log.info("VendorCreateRequestDTO: {}", requestDTO);
 
         Vendor createdVendor = vendorService.createVendor(requestDTO);
 
@@ -147,6 +167,10 @@ public class VendorController {
                 - 모든 이미지 URL은 일정 시간 동안만 유효한 **S3 Presigned URL**로 제공됩니다.
                 """
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업체 상세 정보 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 ID의 업체를 찾을 수 없습니다.")
+    })
     @GetMapping("/{vendorId}")
     public ResponseEntity<ApiResponse<VendorDetailsResponseDTO>> getVendorDetails(
             @Parameter(description = "조회할 업체의 고유 ID", required = true, example = "1")
@@ -157,31 +181,59 @@ public class VendorController {
         return ApiResponse.success(SuccessStatus.VENDOR_DETAIL_GET_SUCCESS, resp);
     }
 
-//    @Operation(
-//            summary = "카테고리별 업체 목록 페이징 조회 API (미완성)",
-//            description = """
-//               ### **선택한 카테고리에 해당하는 업체 목록을 페이징하여 조회합니다. (**
-//
-//               - `category` (WEDDING_HALL, STUDIO, DRESS, MAKEUP)를 path variable로 받습니다.
-//               - 기본 5개씩 조회하며, `page`와 `size` 파라미터로 조절할 수 있습니다. (예: `?page=1&size=5`)
-//               - 응답에는 페이징 관련 정보(총 페이지 수, 현재 페이지 등)가 포함됩니다.
-//               - 각 업체의 로고 이미지는 **S3 Presigned URL**로 제공됩니다.
-//               """
-//    )
-//    @ApiResponses({
-//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업체 목록 조회 성공"),
-//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 카테고리 요청입니다.")
-//    })
-//    @GetMapping("/list/{category}")
-//    public ResponseEntity<ApiResponse<Page<VendorListResponseDTO>>> getVendorsByCategory(
-//            @Parameter(description = "조회할 카테고리", required = true, example = "MAKEUP")
-//            @PathVariable Category category,
-//            @RequestParam(defaultValue = "0") int page,
-//            @RequestParam(defaultValue = "5") int size) {
-//
-//        Pageable pageable = PageRequest.of(page, size);
-//        Page<VendorListResponseDTO> response = vendorService.getVendorsByCategory(category, pageable);
-//
-//        return ApiResponse.success(SuccessStatus.VENDOR_LIST_GET_SUCCESS, response);
-//    }
+    @Operation(
+            summary = "카테고리별 업체 목록 조회 API (Read Vendor List by Category)",
+            description = """
+               ### **선택한 카테고리에 해당하는 업체 목록을 페이징하여 조회합니다.**
+
+               - `category` (WEDDING_HALL, STUDIO, DRESS, MAKEUP)를 Path Variable로 받습니다.
+               - `page`와 `size` 파라미터로 페이징을 조절할 수 있습니다. (기본값: page=0, size=5)
+               - 정렬 기준: **최근 2주 내 후기가 많이 작성된 업체들 중에서 랜덤**으로 노출됩니다.
+               - 각 업체의 로고 이미지는 일정 시간 동안만 유효한 **S3 Presigned URL**로 제공됩니다.
+               """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업체 목록 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 카테고리 요청입니다.")
+    })
+    @GetMapping("/list/{category}")
+    public ResponseEntity<ApiResponse<Page<VendorListResponseDTO>>> getVendorListByCategory(
+            @Parameter(description = "조회할 카테고리", required = true, example = "MAKEUP")
+            @PathVariable Category category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<VendorListResponseDTO> response = vendorService.getVendorListByCategory(category, pageable);
+
+        return ApiResponse.success(SuccessStatus.VENDOR_LIST_GET_SUCCESS, response);
+    }
+
+    @Operation(summary = "웨딩홀 조건 검색 API (Search Wedding Halls)",
+            description = """
+                    ### **다양한 조건으로 웨딩홀을 검색합니다.**
+                    
+                    - Request Body에 원하는 검색 조건을 담아 요청합니다.
+                    - 조건이 없는 필드는 검색에 영향을 주지 않습니다. (예: `styles` 필드를 보내지 않으면 모든 스타일 조회)
+                    - 결과는 **가격 오름차순**으로 정렬되며, 기본 9개씩 페이징됩니다.
+                    """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "웨딩홀 조건 검색 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 검색 조건 요청입니다.")
+    })
+    @PostMapping("/search/wedding-halls")
+    public ResponseEntity<ApiResponse<Page<VendorSearchResultDTO>>> searchWeddingHalls(
+            @Parameter(description = "웨딩홀 검색 조건을 담은 JSON 객체")
+            @RequestBody WeddingHallSearchConditions conditions,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 당 항목 수", example = "9")
+            @RequestParam(defaultValue = "9") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<VendorSearchResultDTO> response = vendorSearchService.searchWeddingHalls(conditions, pageable);
+
+        return ApiResponse.success(SuccessStatus.VENDOR_SEARCH_SUCCESS, response);
+    }
 }

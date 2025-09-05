@@ -42,8 +42,16 @@ public class VendorImage extends BaseTimeEntity {
 	private Integer sortOrder;
 
     @Column(nullable = true)
-    private String groupTitle;
+    private String groupTitle;			// 이미지 그룹 제목
+
+	@Column(nullable = true)
+	private String groupDescription;	// 이미지 그룹 설명
 
     @Column(nullable = true)
-    private Integer groupSortOrder;
+    private Integer groupSortOrder;		// 이미지 그룹 정렬 순서
+
+	// Vendor-VendorImage 양방향 연관관계 설정
+	protected void setVendor(Vendor vendor) {
+		this.vendor = vendor;
+	}
 }
