@@ -31,4 +31,14 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 	boolean existsByReservationDateAndReservationTime(LocalDate reservationDate, LocalTime reservationTime);
 
 	List<Reservation> findAllByMember(Member member);
+	
+	/**
+	 * 회원의 예약을 업체 정보와 이미지를 함께 조회 (N+1 문제 방지)
+	 */
+	@Query("SELECT DISTINCT r FROM Reservation r " +
+		   "JOIN FETCH r.vendor v " +
+		   "LEFT JOIN FETCH v.images " +
+		   "WHERE r.member = :member " +
+		   "ORDER BY r.createdAt DESC")
+	List<Reservation> findAllByMemberWithVendorAndImages(@Param("member") Member member);
 }
