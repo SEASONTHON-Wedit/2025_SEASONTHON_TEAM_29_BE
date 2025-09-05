@@ -50,4 +50,16 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
             @Param("dates") List<LocalDate> dates,
             @Param("statuses") List<ContractStatus> statuses
     );
+    
+    /**
+     * 특정 업체의 특정 날짜의 확정된 계약 목록 조회
+     */
+    @Query("SELECT c FROM Contract c WHERE c.vendor.id = :vendorId " +
+           "AND c.contractDate = :date " +
+           "AND c.status IN (:statuses)")
+    List<Contract> findByVendorIdAndContractDateAndStatusIn(
+            @Param("vendorId") Long vendorId,
+            @Param("date") LocalDate date,
+            @Param("statuses") List<ContractStatus> statuses
+    );
 }
