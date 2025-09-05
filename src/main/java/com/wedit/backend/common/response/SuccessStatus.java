@@ -48,6 +48,7 @@ public enum SuccessStatus {
     VENDOR_CREATE_SUCCESS(HttpStatus.CREATED, "업체 등록 성공"),
     TOUR_CREATE_SUCCESS(HttpStatus.CREATED, "투어일지 생성 성공"),
     TOUR_DRESS_CREATE_SUCCESS(HttpStatus.CREATED, "투어일지 드레스 저장 성공"),
+    ESTIMATE_CREATE_SUCCESS(HttpStatus.CREATED, "견적서 생성 성공"),
 
 
     /// 204 NO CONTENT
