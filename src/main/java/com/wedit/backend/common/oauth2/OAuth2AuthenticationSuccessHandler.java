@@ -66,7 +66,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 
 		// JWT 토큰 생성
 		log.info("토큰 생성 - userId: {}, email: {}", member.getId(), member.getEmail());
-		String accessToken = jwtService.createAccessToken(member.getId(), member.getEmail(), member.getRole());
+		String accessToken = jwtService.createAccessToken(member);
 		String refreshToken = jwtService.createRefreshToken(member.getId());
 
 		log.info("생성된 AccessToken: {}...", accessToken.substring(0, Math.min(50, accessToken.length())));

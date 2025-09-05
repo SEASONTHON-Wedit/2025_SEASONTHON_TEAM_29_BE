@@ -1,6 +1,6 @@
 package com.wedit.backend.api.member.jwt.service;
 
-import com.wedit.backend.api.member.entity.Role;
+import com.wedit.backend.api.member.entity.Member;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import javax.swing.text.html.Option;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.Map;
@@ -36,16 +36,21 @@ public class JwtService {
     }
 
     // Access Token 발급
-    public String createAccessToken(Long memberId, String email, Role role) {
+    public String createAccessToken(Member member) {
 
         Date now = new Date();
         Date expirationDate = new Date(now.getTime() + accessTokenExpirePeriod);
 
+        String weddingDateStr = Optional.ofNullable(member.getWeddingDate())
+                .map(LocalDate::toString)
+                .orElse(null);
+
         return Jwts.builder()
-                .setSubject(memberId.toString())    // sub
-                .claim("email", email)
-                .claim("role", role.name())
-                .claim("type", "ACCESS")      // D-Day
+                .setSubject(member.getId().toString())    // sub
+                .claim("email", member.getEmail())
+                .claim("role", member.getRole().name())
+                .claim("weddingDate", weddingDateStr) // 결혼예정일
+                .claim("type", "ACCESS")
                 .setIssuedAt(now)                   // iat
                 .setExpiration(expirationDate)      // exp
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -79,12 +84,12 @@ public class JwtService {
     }
     
     // Access + Refresh Token 발급
-    public Map<String, String> createAccessAndRefreshToken(Long memberId, String email, Role role) {
+    public Map<String, String> createAccessAndRefreshToken(Member member) {
 
-        String accessToken = createAccessToken(memberId, email, role);
-        String refreshToken = createRefreshToken(memberId);
+        String accessToken = createAccessToken(member);
+        String refreshToken = createRefreshToken(member.getId());
 
-        log.debug("Access/Refresh Token 발급 완료 : {}", memberId);
+        log.debug("Access/Refresh Token 발급 완료 : {}", member.getId());
 
         return Map.of(
                 "accessToken", accessToken,

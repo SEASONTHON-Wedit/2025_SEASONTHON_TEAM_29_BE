@@ -83,8 +83,7 @@ public class MemberService {
 		}
 
 		// JWT 토큰 생성 (액세스, 리프레쉬)
-		Map<String, String> tokens = jwtService.createAccessAndRefreshToken(member.getId(), member.getEmail(),
-			member.getRole());
+		Map<String, String> tokens = jwtService.createAccessAndRefreshToken(member);
 
 		return new MemberLoginResponseDTO(
 			member.getName(),

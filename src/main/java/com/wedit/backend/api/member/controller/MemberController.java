@@ -105,11 +105,7 @@ public class MemberController {
         Member member = savedRefreshToken.getMember();
 
         // 새 Access, Refresh Token 생성 후 발급
-        Map<String, String> newTokens = jwtService.createAccessAndRefreshToken(
-                member.getId(),
-                member.getEmail(),
-                member.getRole()
-        );
+        Map<String, String> newTokens = jwtService.createAccessAndRefreshToken(member);
 
         return ApiResponse.success(SuccessStatus.TOKEN_REISSUE_SUCCESS, newTokens);
     }

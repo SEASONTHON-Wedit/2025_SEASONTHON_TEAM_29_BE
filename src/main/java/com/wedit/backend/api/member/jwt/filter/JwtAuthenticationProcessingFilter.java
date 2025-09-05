@@ -6,7 +6,6 @@ import com.wedit.backend.api.member.jwt.entity.RefreshToken;
 import com.wedit.backend.api.member.jwt.repository.RefreshTokenRepository;
 import com.wedit.backend.api.member.jwt.service.JwtService;
 import com.wedit.backend.api.member.repository.MemberRepository;
-import com.wedit.backend.common.config.security.SecurityConfig;
 import com.wedit.backend.common.config.security.entity.SecurityMember;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
@@ -22,12 +21,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
@@ -149,7 +146,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
         Member member = savedRefreshToken.getMember();
 
         // 새로운 Access, Refresh Token 생성
-        Map<String, String> newTokens = jwtService.createAccessAndRefreshToken(member.getId(), member.getEmail(), member.getRole());
+        Map<String, String> newTokens = jwtService.createAccessAndRefreshToken(member);
 
         // 응답 코드와 컨텐츠 타입 설정
         response.setStatus(HttpServletResponse.SC_OK);
