@@ -1,5 +1,6 @@
 package com.wedit.backend.api.estimate.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wedit.backend.api.aws.s3.service.S3Service;
 import com.wedit.backend.api.estimate.dto.EstimateResponseDTO;
 import com.wedit.backend.api.estimate.entity.Estimate;
@@ -16,6 +18,12 @@ import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.api.reservation.entity.dto.request.MakeReservationRequestDTO;
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.entity.VendorImage;
+import com.wedit.backend.api.vendor.entity.dto.details.VendorDetailsDTO;
+import com.wedit.backend.api.vendor.entity.dto.details.WeddingHallDetailsDTO;
+import com.wedit.backend.api.vendor.entity.dto.details.DressDetailsDTO;
+import com.wedit.backend.api.vendor.entity.dto.details.StudioDetailsDTO;
+import com.wedit.backend.api.vendor.entity.dto.details.MakeupDetailsDTO;
+import com.wedit.backend.api.vendor.entity.enums.Category;
 import com.wedit.backend.api.vendor.entity.enums.VendorImageType;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
 import com.wedit.backend.common.exception.BadRequestException;
@@ -33,6 +41,7 @@ public class EstimateService {
 	private final MemberRepository memberRepository;
 	private final VendorRepository vendorRepository;
 	private final S3Service s3Service;
+	private final ObjectMapper objectMapper;
 
 	public Estimate makeEstimate(String userEmail, Long vendorId,
 		MakeReservationRequestDTO makeReservationRequestDTO) {
@@ -79,6 +88,9 @@ public class EstimateService {
 
 			// 업체의 대표 이미지 조회 (VendorService의 getVendorDetail 참고)
 			String mainImageUrl = getVendorMainImageUrl(vendor);
+			
+			// 업체의 최소금액 조회
+			Integer minimumAmount = getVendorMinimumAmount(vendor);
 
 			EstimateResponseDTO.EstimateDetailDTO estimateDetail = EstimateResponseDTO.EstimateDetailDTO.builder()
 				.estimateId(estimate.getId())
@@ -89,6 +101,7 @@ public class EstimateService {
 				.vendorDescription(vendor.getDescription())
 				.vendorCategory(vendor.getCategory())
 				.mainImageUrl(mainImageUrl)
+				.minimumAmount(minimumAmount)
 				.createdAt(estimate.getCreatedAt())
 				.build();
 
@@ -148,5 +161,69 @@ public class EstimateService {
 			log.warn("업체 대표 이미지 조회 중 오류 발생. 업체 ID: {}", vendor.getId(), e);
 			return null;
 		}
+	}
+
+	/**
+	 * 업체의 최소금액을 조회 (details JSON에서 추출)
+	 */
+	private Integer getVendorMinimumAmount(Vendor vendor) {
+		try {
+			String detailsJson = vendor.getDetails();
+			if (detailsJson == null || detailsJson.isEmpty()) {
+				return null;
+			}
+
+			// 카테고리별로 적절한 DTO 클래스로 역직렬화
+			VendorDetailsDTO detailsDTO = deserializeDetails(detailsJson, vendor.getCategory());
+			if (detailsDTO == null) {
+				return null;
+			}
+
+			// 각 카테고리별로 minimumAmount 추출
+			return switch (vendor.getCategory()) {
+				case WEDDING_HALL -> ((WeddingHallDetailsDTO) detailsDTO).getMinimumAmount();
+				case DRESS -> ((DressDetailsDTO) detailsDTO).getMinimumAmount();
+				case MAKEUP -> ((MakeupDetailsDTO) detailsDTO).getMinimumAmount();
+				case STUDIO -> ((StudioDetailsDTO) detailsDTO).getMinimumAmount();
+				default -> null;
+			};
+
+		} catch (Exception e) {
+			log.warn("업체 최소금액 조회 중 오류 발생. 업체 ID: {}", vendor.getId(), e);
+			return null;
+		}
+	}
+
+	/**
+	 * JSON 문자열을 category에 맞는 VendorDetailsDTO 객체로 역직렬화
+	 */
+	private VendorDetailsDTO deserializeDetails(String json, Category category) {
+		if (json == null || category == null) {
+			return null;
+		}
+
+		try {
+			Class<? extends VendorDetailsDTO> dtoClass = getDetailsClass(category);
+			return objectMapper.readValue(json, dtoClass);
+		} catch (IOException e) {
+			log.error("Vendor details 역직렬화 실패: category={}, json={}", category, json, e);
+			return null;
+		}
+	}
+
+	/**
+	 * Category enum 값에 따라 해당하는 DTO 클래스 반환 (VendorService와 동일한 로직)
+	 */
+	private Class<? extends VendorDetailsDTO> getDetailsClass(Category category) {
+		return switch (category) {
+			case WEDDING_HALL -> WeddingHallDetailsDTO.class;
+			case DRESS -> DressDetailsDTO.class;
+			case STUDIO -> StudioDetailsDTO.class;
+			case MAKEUP -> MakeupDetailsDTO.class;
+			default -> {
+				log.error("지원하지 않는 카테고리 타입입니다: {}", category);
+				throw new IllegalArgumentException("지원하지 않는 카테고리입니다: " + category);
+			}
+		};
 	}
 }

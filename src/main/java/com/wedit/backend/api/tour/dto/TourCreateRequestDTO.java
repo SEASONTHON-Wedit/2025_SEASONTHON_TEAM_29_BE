@@ -6,6 +6,7 @@ import lombok.Data;
 
 @Data
 public class TourCreateRequestDTO {
-	private String vendorName;
+	private Long vendorId;      // 권장: 업체 ID 사용
+	private String vendorName;  // 호환성: 업체 이름 (deprecated)
 	private LocalDate reservationDate;
 }

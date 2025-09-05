@@ -10,4 +10,5 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 public class MakeupDetailsDTO extends VendorDetailsDTO {
+    private Integer minimumAmount;
 }
