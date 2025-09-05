@@ -46,7 +46,7 @@ public class EstimateController {
 	) {
 		Estimate estimate = estimateService.makeEstimate(userDetails.getUsername(), vendorId,
 			makeReservationRequestDTO);
-		return ApiResponse.success(SuccessStatus.RESERVATION_CREATE_SUCCESS, estimate.getId());
+		return ApiResponse.success(SuccessStatus.ESTIMATE_CREATE_SUCCESS, estimate.getId());
 	}
 
 	@Operation(
