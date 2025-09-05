@@ -3,9 +3,14 @@ package com.wedit.backend.api.contract.controller;
 import com.wedit.backend.api.contract.dto.request.ContractAvailabilityRequestDTO;
 import com.wedit.backend.api.contract.dto.request.AvailableTimeRequestDTO;
 import com.wedit.backend.api.contract.dto.request.SimpleAvailabilityRequestDTO;
+import com.wedit.backend.api.contract.dto.request.ContractCreateRequestDTO;
+import com.wedit.backend.api.contract.dto.request.SimpleContractRequestDTO;
 import com.wedit.backend.api.contract.dto.response.ContractAvailabilityResponseDTO;
 import com.wedit.backend.api.contract.dto.response.AvailableTimeResponseDTO;
 import com.wedit.backend.api.contract.dto.response.SimpleAvailabilityResponseDTO;
+import com.wedit.backend.api.contract.dto.response.TimeSlotAvailabilityListResponseDTO;
+import com.wedit.backend.api.contract.dto.response.ContractCreateResponseDTO;
+import com.wedit.backend.api.contract.dto.response.SimpleContractResponseDTO;
 import com.wedit.backend.api.contract.service.ContractService;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
@@ -35,14 +40,15 @@ public class ContractController {
     private final ContractService contractService;
     
     @Operation(
-        summary = "업체의 여러 달 계약 가능 시간 조회 API",
-        description = "업체의 여러 달에 걸친 계약 가능한 시간을 페이징으로 조회합니다. " +
-                     "예약된 시간과 이미 계약된 시간을 제외한 가용 시간을 확인할 수 있습니다."
+        summary = "업체의 시간대별 가용성 조회 API",
+        description = "업체의 여러 달에 걸친 각 시간대별 가용성을 개별 항목으로 조회합니다. " +
+                     "각 시간대마다 가격 정보와 예상 보증인원, 식대 정보를 포함합니다. " +
+                     "예약 가능한 시간대만 조회하여 DB 부하를 최소화합니다."
     )
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200", 
-            description = "계약 가능 시간 조회 성공"
+            description = "시간대별 가용성 조회 성공"
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "400", 
@@ -53,65 +59,56 @@ public class ContractController {
             description = "업체를 찾을 수 없습니다."
         )
     })
-    @PostMapping("/{vendorId}/availability")
-    public ResponseEntity<ApiResponse<Page<ContractAvailabilityResponseDTO>>> getVendorContractAvailabilities(
+    @PostMapping("/{vendorId}/contract")
+    public ResponseEntity<ApiResponse<TimeSlotAvailabilityListResponseDTO>> getTimeSlotAvailabilities(
             @Parameter(description = "업체 ID", example = "1")
             @PathVariable Long vendorId,
             
-            @Parameter(description = "계약 가능 시간 조회 요청 정보")
-            @Valid @RequestBody ContractAvailabilityRequestDTO requestDTO,
-            
-            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            
-            @Parameter(description = "페이지 크기", example = "3")
-            @RequestParam(defaultValue = "3") int size,
-            
-            @Parameter(description = "정렬 방향 (asc, desc)", example = "asc")
-            @RequestParam(defaultValue = "asc") String sort
+            @Parameter(description = "시간대별 가용성 조회 요청 정보")
+            @Valid @RequestBody SimpleAvailabilityRequestDTO requestDTO
     ) {
-        // 정렬 방향 설정
-        Sort.Direction direction = sort.equalsIgnoreCase("desc") ? 
-                Sort.Direction.DESC : Sort.Direction.ASC;
-        
-        // Pageable 객체 생성 (월 기준으로 정렬)
-        Pageable pageable = PageRequest.of(page, size, direction, "month");
-        
-        // 서비스 호출
-        Page<ContractAvailabilityResponseDTO> result = 
-                contractService.getVendorContractAvailabilities(vendorId, requestDTO, pageable);
-        
+        TimeSlotAvailabilityListResponseDTO result = contractService.getTimeSlotAvailabilities(vendorId, requestDTO);
         return ApiResponse.success(SuccessStatus.CONTRACT_AVAILABILITY_GET_SUCCESS, result);
     }
     
     @Operation(
-        summary = "업체의 월별 간단한 시간대 가용성 조회 API ⭐",
-        description = "업체의 여러 달에 걸친 날짜별 예약 가능한 시간대를 조회합니다. " +
-                     "각 날짜별로 9개 고정 시간대(10:00~16:00) 중 예약 가능한 시간만 반환합니다."
+        summary = "간단한 계약 생성 API",
+        description = "날짜와 시간만으로 간단하게 계약을 생성합니다. " +
+                     "예: 2025.09.04 10:00 이런 식으로 간단하게!"
     )
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200", 
-            description = "월별 시간대 가용성 조회 성공"
-        ),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "400", 
-            description = "잘못된 요청입니다."
+            responseCode = "201", 
+            description = "계약 생성 성공"
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "404", 
-            description = "업체를 찾을 수 없습니다."
+            description = "업체 또는 회원을 찾을 수 없습니다."
+        ),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "409", 
+            description = "해당 시간대는 이미 예약되어 있습니다."
         )
     })
-    @PostMapping("/{vendorId}/simple-availability")
-    public ResponseEntity<ApiResponse<SimpleAvailabilityResponseDTO>> getSimpleMonthlyAvailabilities(
+    @PostMapping("/{vendorId}/create")
+    public ResponseEntity<ApiResponse<SimpleContractResponseDTO>> createSimpleContract(
             @Parameter(description = "업체 ID", example = "1")
             @PathVariable Long vendorId,
             
-            @Parameter(description = "월별 시간대 가용성 조회 요청 정보")
-            @Valid @RequestBody SimpleAvailabilityRequestDTO requestDTO
+            @Parameter(description = "회원 ID", example = "1")
+            @RequestParam Long memberId,
+            
+            @Parameter(description = "간단한 계약 생성 요청 정보")
+            @Valid @RequestBody SimpleContractRequestDTO requestDTO
     ) {
-        SimpleAvailabilityResponseDTO result = contractService.getSimpleMonthlyAvailabilities(vendorId, requestDTO);
-        return ApiResponse.success(SuccessStatus.CONTRACT_AVAILABILITY_GET_SUCCESS, result);
+        SimpleContractResponseDTO result = contractService.createSimpleContract(vendorId, memberId, requestDTO);
+        return ResponseEntity.status(201).body(
+                ApiResponse.<SimpleContractResponseDTO>builder()
+                        .status(201)
+                        .success(true)
+                        .message("계약이 성공적으로 생성되었습니다.")
+                        .data(result)
+                        .build()
+        );
     }
 }
