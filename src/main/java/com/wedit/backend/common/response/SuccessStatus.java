@@ -19,6 +19,7 @@ public enum SuccessStatus {
     AUTH_SUCCESS(HttpStatus.OK, "인증에 성공했습니다."),
     SCHEDULE_GET_SUCCESS(HttpStatus.OK, "일정 조회 성공"),
     RESERVATION_GET_SUCCESS(HttpStatus.OK, "예약 조회 성공"),
+    ESTIMATE_GET_SUCCESS(HttpStatus.OK, "견적서 조회 성공"),
     REVIEW_GET_SUCCESS(HttpStatus.OK, "리뷰 조회 성공"),
     TOKEN_REISSUE_SUCCESS(HttpStatus.OK, "액세스/리프레쉬 토큰 재발급 성공"),
     SEND_SMS_VERIFICATION_CODE(HttpStatus.OK, "SMS 인증코드 발송 성공"),

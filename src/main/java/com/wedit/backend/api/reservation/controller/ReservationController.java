@@ -36,7 +36,7 @@ public class ReservationController {
 	private final ReservationService reservationService;
 
 	@Operation(
-		summary = "예약 하기 위한 날짜 조회 API"
+		summary = "예약/견적서 위한 날짜 조회 API"
 	)
 	@ApiResponses({
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예약 날짜 조회 성공"),
@@ -53,7 +53,7 @@ public class ReservationController {
 	}
 
 	@Operation(
-		summary = "예약 하기 위한 특정 날짜 시간 조회 API"
+		summary = "예약/견적서를 위한 특정 날짜 시간 조회 API"
 	)
 	@ApiResponses({
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "특정 날짜 예약 조회 성공"),
