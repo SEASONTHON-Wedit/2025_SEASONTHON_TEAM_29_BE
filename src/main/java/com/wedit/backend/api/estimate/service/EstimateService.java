@@ -12,7 +12,7 @@ import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.api.reservation.entity.dto.request.MakeReservationRequestDTO;
 import com.wedit.backend.api.vendor.entity.Vendor;
-import com.wedit.backend.api.vendor.entity.dto.response.VendorResponse;
+import com.wedit.backend.api.vendor.entity.dto.response.VendorResponseDTO;
 import com.wedit.backend.api.vendor.entity.enums.Category;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
 import com.wedit.backend.common.exception.BadRequestException;
@@ -57,31 +57,31 @@ public class EstimateService {
 		Member member = memberRepository.findByEmail(memberEmail)
 			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
 
-		List<VendorResponse> weddingHall = new ArrayList<>();
-		List<VendorResponse> dressShop = new ArrayList<>();
-		List<VendorResponse> makeUpShop = new ArrayList<>();
-		List<VendorResponse> studio = new ArrayList<>();
+		List<VendorResponseDTO> weddingHall = new ArrayList<>();
+		List<VendorResponseDTO> dress = new ArrayList<>();
+		List<VendorResponseDTO> makeUpShop = new ArrayList<>();
+		List<VendorResponseDTO> studio = new ArrayList<>();
 
 		estimateRepository.findAllByMember(member).forEach(estimate -> {
 			switch (estimate.getVendor().getCategory()) {
 				case Category.WEDDING_HALL:
-					weddingHall.add(VendorResponse.of(estimate.getVendor()));
+					weddingHall.add(VendorResponseDTO.of(estimate.getVendor()));
 					break;
-				case Category.DRESS_SHOP:
-					dressShop.add(VendorResponse.of(estimate.getVendor()));
+				case Category.DRESS:
+					dress.add(VendorResponseDTO.of(estimate.getVendor()));
 					break;
 				case Category.MAKEUP:
-					makeUpShop.add(VendorResponse.of(estimate.getVendor()));
+					makeUpShop.add(VendorResponseDTO.of(estimate.getVendor()));
 					break;
 				case Category.STUDIO:
-					studio.add(VendorResponse.of(estimate.getVendor()));
+					studio.add(VendorResponseDTO.of(estimate.getVendor()));
 					break;
 			}
 		});
 
 		return EstimateResponseDTO.builder()
 			.weddingHall(weddingHall)
-			.dress(dressShop)
+			.dress(dress)
 			.makeUp(makeUpShop)
 			.studio(studio)
 			.build();

@@ -2,6 +2,7 @@ package com.wedit.backend.api.aws.s3.controller;
 
 import com.wedit.backend.api.aws.s3.dto.PresignedUrlRequestDTO;
 import com.wedit.backend.api.aws.s3.dto.PresignedUrlResponseDTO;
+import com.wedit.backend.api.aws.s3.entity.ImageDomain;
 import com.wedit.backend.api.aws.s3.service.S3Service;
 import com.wedit.backend.api.aws.s3.util.ImageUtil;
 import com.wedit.backend.api.member.jwt.service.JwtService;
@@ -47,7 +48,7 @@ public class S3Controller {
     })
     @PutMapping("/{domain}/upload-url")
     public ResponseEntity<ApiResponse<PresignedUrlResponseDTO>> getSinglePutUrl(
-            @PathVariable String domain,
+            @PathVariable ImageDomain domain,
             @RequestBody PresignedUrlRequestDTO reqDto,
             @RequestHeader("Authorization") String reqToken) {
 
@@ -55,7 +56,7 @@ public class S3Controller {
 
         validateFile(reqDto.getContentType(), reqDto.getContentLength());
 
-        PresignedUrlResponseDTO dto = s3Service.generatePresignedPutUrl(reqDto, domain, memberId);
+        PresignedUrlResponseDTO dto = s3Service.generatePresignedPutUrl(reqDto, domain.name(), memberId);
 
         return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, dto);
     }
@@ -73,7 +74,7 @@ public class S3Controller {
     })
     @PutMapping("/{domain}/upload-urls")
     public ResponseEntity<ApiResponse<List<PresignedUrlResponseDTO>>> getMultiplePutUrl(
-            @PathVariable String domain,
+            @PathVariable ImageDomain domain,
             @RequestBody List<PresignedUrlRequestDTO> reqDtos,
             @RequestHeader("Authorization") String reqToken) {
         Long memberId = extractMemberId(reqToken);
@@ -83,7 +84,7 @@ public class S3Controller {
         }
 
         List<PresignedUrlResponseDTO> dtos = reqDtos.stream()
-                .map(req -> s3Service.generatePresignedPutUrl(req, domain, memberId))
+                .map(req -> s3Service.generatePresignedPutUrl(req, domain.name(), memberId))
                 .toList();
 
         return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, dtos);
@@ -101,7 +102,7 @@ public class S3Controller {
     })
     @GetMapping("/{domain}/download-url")
     public ResponseEntity<ApiResponse<PresignedUrlResponseDTO>> getSingleDownloadUrl(
-            @PathVariable String domain,
+            @PathVariable ImageDomain domain,
             @Parameter(
                     description = "다운로드할 파일의 S3 객체 키 (파일 경로)",
                     required = true,
@@ -129,7 +130,7 @@ public class S3Controller {
     })
     @PostMapping("/{domain}/download-urls")
     public ResponseEntity<ApiResponse<List<PresignedUrlResponseDTO>>> getMultipleDownloadUrl(
-            @PathVariable String domain,
+            @PathVariable ImageDomain domain,
             @RequestBody List<String> keys,
             @RequestHeader("Authorization") String reqToken) {
 

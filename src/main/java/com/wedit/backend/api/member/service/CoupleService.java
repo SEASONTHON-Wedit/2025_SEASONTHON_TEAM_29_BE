@@ -8,98 +8,115 @@ import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.response.ErrorStatus;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class CoupleService {
 
     private final CoupleRepository coupleRepository;
     private final MemberRepository memberRepository;
 
     public String generateOrGetCoupleCode(Long memberId) {
+        log.info("커플 코드 생성/조회 요청 시작. memberId: {}", memberId);
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+        Member member = findMemberById(memberId);
 
         // 이미 커플이라면 코드 반환
-        Couple couple = member.getAsGroom() != null ? member.getAsGroom() : member.getAsBride();
-        if (couple != null && couple.getCoupleCode() != null) {
-            return couple.getCoupleCode();
+        Optional<Couple> existingCouple = coupleRepository.findByGroomOrBride(member);
+        if (existingCouple.isPresent()) {
+            String existingCode = existingCouple.get().getCoupleCode();
+            log.info("기존 커플 코드 반환. memberId: {}, coupleCode: {}", memberId, existingCode);
+            return existingCouple.get().getCoupleCode();
         }
 
         // 새 코드 생성
-        String code = generateRandomCode();
+        log.debug("새로운 커플 코드 생성을 시작합니다. memberId: {}", memberId);
+        String newCode = generateUniqueRandomCode();
         Couple newCouple;
 
         if (member.getType() == Type.GROOM) {
             newCouple = Couple.builder()
                     .groom(member)
-                    .coupleCode(code)
+                    .coupleCode(newCode)
                     .build();
             member.setAsGroom(newCouple);
         } else {
             newCouple = Couple.builder()
                     .bride(member)
-                    .coupleCode(code)
+                    .coupleCode(newCode)
                     .build();
             member.setAsBride(newCouple);
         }
 
         coupleRepository.save(newCouple);
+        log.info("새로운 커플 코드 생성 및 저장 완료. memberId: {}, newCoupleCode: {}", memberId, newCode);
 
-        return code;
+        return newCode;
     }
 
     public void connectWithCode(Long memberId, String coupleCode) {
+        log.info("커플 연동 요청 시작. memberId: {}, coupleCode: {}", memberId, coupleCode);
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+        Member newPartner = findMemberById(memberId);
 
         Couple couple = coupleRepository.findByCoupleCode(coupleCode)
-                .orElseThrow(() -> new BadRequestException(ErrorStatus.BAD_REQUEST_INVALID_COUPLE_CODE.getMessage()));
+                .orElseThrow(() -> {
+                    log.warn("유효하지 않은 커플 코드로 연동 시도. code: {}", coupleCode);
+                    return new BadRequestException(ErrorStatus.BAD_REQUEST_INVALID_COUPLE_CODE.getMessage());
+                });
 
-        if (member.getType() == Type.GROOM) {
-            if (couple.getGroom() != null && !couple.getGroom().getId().equals(memberId)) {
-                throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_REGISTRATION_GROOM.getMessage());
-            }
-            couple.updateGroom(member);
-        } else {
-            if (couple.getBride() != null && !couple.getBride().getId().equals(memberId)) {
-                throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_REGISTRATION_BRIDE.getMessage());
-            }
-            couple.updateBride(member);
+        try {
+            couple.connectPartner(newPartner);
+            log.info("커플 연동 성공. memberId: {}, partnerId: {}, coupleId: {}",
+                    couple.getGroom() != null ? couple.getGroom().getId() : couple.getBride().getId(),
+                    newPartner.getId(), couple.getId());
+
+        } catch (BadRequestException e) {
+            log.error("커플 연동 중 비즈니스 로직 오류 발생. memberId: {}, code: {}. 에러 메시지: {}", memberId, coupleCode, e.getMessage());
+            throw e; // 예외를 다시 던져서 글로벌 예외 핸들러가 처리하도록 함
         }
-
-        coupleRepository.save(couple);
     }
 
     public void disconnectCouple(Long memberId) {
+        log.info("커플 연동 해제 요청 시작. memberId: {}", memberId);
 
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+        Member member = findMemberById(memberId);
 
-        Couple couple = member.getAsGroom() != null ? member.getAsGroom() : member.getAsBride();
-        if (couple == null) {
-            throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_DISCONNECT_COUPLE.getMessage());
-        }
+        Couple couple = coupleRepository.findByGroomOrBride(member)
+                .orElseThrow(() -> {
+                    log.warn("이미 연동 해제된 사용자가 해제 시도. memberId: {}", memberId);
+                    return new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_DISCONNECT_COUPLE.getMessage());
+                });
 
-        if (couple.getGroom() != null) {
-            couple.getGroom().setAsGroom(null);
-        }
-        if (couple.getBride() != null) {
-            couple.getBride().setAsBride(null);
-        }
+        Long coupleId = couple.getId();
+
         couple.dissociate();
 
         coupleRepository.delete(couple);
+
+        log.info("커플 연동 해제 성공. memberId: {}, coupleId: {}", memberId, coupleId);
+    }
+
+    private Member findMemberById(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
     }
 
     // UUID, 영문+숫자 10자리
-    private String generateRandomCode() {
-        return java.util.UUID.randomUUID().toString().substring(0, 10).toUpperCase();
+    private String generateUniqueRandomCode() {
+        String code;
+        do {
+            code = java.util.UUID.randomUUID().toString().substring(0, 10).toUpperCase();
+        } while (coupleRepository.findByCoupleCode(code).isPresent()); // 중복되지 않을 때까지 반복
+
+        return code;
     }
 }

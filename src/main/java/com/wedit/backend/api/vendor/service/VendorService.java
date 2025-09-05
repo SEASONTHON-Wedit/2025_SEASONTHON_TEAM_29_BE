@@ -1,28 +1,29 @@
 package com.wedit.backend.api.vendor.service;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wedit.backend.api.aws.s3.service.S3Service;
+import com.wedit.backend.api.vendor.entity.Address;
+import com.wedit.backend.api.vendor.entity.dto.details.*;
+import com.wedit.backend.api.vendor.entity.dto.response.VendorDetailsResponseDTO;
+import com.wedit.backend.api.vendor.entity.enums.Category;
+import com.wedit.backend.common.exception.NotFoundException;
+import com.wedit.backend.common.response.ErrorStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.entity.VendorImage;
-import com.wedit.backend.api.vendor.entity.dto.request.VendorCreateRequest;
-import com.wedit.backend.api.vendor.entity.dto.request.VendorSearchRequest;
-import com.wedit.backend.api.vendor.entity.dto.response.VendorImageResponse;
-import com.wedit.backend.api.vendor.entity.dto.response.VendorResponse;
-import com.wedit.backend.api.vendor.entity.enums.Category;
-import com.wedit.backend.api.vendor.entity.enums.Meal;
-import com.wedit.backend.api.vendor.entity.enums.Style;
+import com.wedit.backend.api.vendor.entity.dto.request.VendorCreateRequestDTO;
 import com.wedit.backend.api.vendor.entity.enums.VendorImageType;
 import com.wedit.backend.api.vendor.repository.VendorImageRepository;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
-import com.wedit.backend.common.exception.NotFoundException;
-import com.wedit.backend.common.response.ErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,144 +34,183 @@ import lombok.extern.slf4j.Slf4j;
 public class VendorService {
 	private final VendorRepository vendorRepository;
 	private final VendorImageRepository vendorImageRepository;
-	private final LocalFileUploadService localFileUploadService;
+    private final ObjectMapper objectMapper;
+    private final S3Service s3Service;
 
-	@Transactional
-	public void createWeddingHall(VendorCreateRequest vendorCreateRequest, List<MultipartFile> weddingHallImages,
-		List<MultipartFile> bridalRoomImages, List<MultipartFile> buffetImages) {
+    @Transactional
+	public void createVendor(VendorCreateRequestDTO request) {
+        log.info("업체 생성 시작. 이름: {}, 카테고리: {}", request.getName(), request.getDetails().getCategory());
 
-		// 1. Vendor 엔티티 생성 및 저장
-		Vendor vendor = Vendor.builder()
-			.name(vendorCreateRequest.getName())
-			.style(vendorCreateRequest.getStyle())
-			.meal(vendorCreateRequest.getMeal())
-			.category(vendorCreateRequest.getCategory())
-			.description(vendorCreateRequest.getDescription())
-			.maximumGuest(vendorCreateRequest.getMaximumGuest())
-			.minimumAmount(vendorCreateRequest.getMinimumAmount())
-			.build();
-		Vendor savedVendor = vendorRepository.save(vendor);
+        // 카테고리별 상세 정보 직렬화
+        String detailsJson = convertDetailsToJson(request.getDetails());
 
-		log.info("Created vendor with ID: {}", savedVendor.getId());
+        // 새 Vendor 생성
+        Vendor vendor = Vendor.builder()
+                .name(request.getName())
+                .category(request.getDetails().getCategory())
+                .description(request.getDescription())
+                .address(request.getAddress() != null ? request.getAddress().toEntity() : null)
+                .details(detailsJson)
+                .build();
 
-		// 2. 웨딩홀 메인 이미지 업로드 및 저장
-		uploadAndSaveImages(weddingHallImages, savedVendor, VendorImageType.WEDDING_HALL_MAIN, "vendor/wedding_hall");
+        // Vendor 저장하여 ID 생성
+        Vendor savedVendor = vendorRepository.save(vendor);
 
-		// 3. 신부 대기실 이미지 업로드 및 저장
-		uploadAndSaveImages(bridalRoomImages, savedVendor, VendorImageType.WEDDING_HALL_BRIDAL_ROOM, "vendor/bridal_room");
+        // 2. 모든 이미지(로고, 대표, 그룹) 리스트에 담기
+        List<VendorImage> allImages = new ArrayList<>();
 
-		// 4. 뷔페 이미지 업로드 및 저장
-		uploadAndSaveImages(buffetImages, savedVendor, VendorImageType.WEDDING_HALL_BUFFET, "vendor/buffet");
+        // 2-1. 로고 이미지 추가
+        if (request.getLogoImageKey() != null && !request.getLogoImageKey().isEmpty()) {
 
-		log.info("Successfully created wedding hall with all images. Vendor ID: {}", savedVendor.getId());
+            allImages.add(createImage(savedVendor, request.getLogoImageKey(), VendorImageType.LOGO,
+                    0, null, null));
+        }
+
+        // 2-2. 대표 이미지 추가
+        if (request.getMainImageKey() != null && !request.getMainImageKey().isEmpty()) {
+
+            allImages.add(createImage(savedVendor, request.getMainImageKey(), VendorImageType.MAIN,
+                    0, null, null));
+        }
+
+        // 2-3. 그룹 이미지 추가
+        if (request.getImageGroups() != null) {
+            for (VendorCreateRequestDTO.ImageGroupDTO groupDTO : request.getImageGroups()) {
+                List<String> imageKeys = groupDTO.getImageKeys();
+                if (imageKeys != null) {
+                    for (int i = 0; i < imageKeys.size(); i++) {
+
+                        allImages.add(createImage(savedVendor, imageKeys.get(i), VendorImageType.GROUPED,
+                                i, groupDTO.getGroupTitle(), groupDTO.getSortOrder()));
+                    }
+                }
+            }
+        }
+
+        log.info("총 {}개의 이미지 저장을 시도합니다.", allImages.size());
+        vendorImageRepository.saveAll(allImages);
+        log.info("모든 이미지 저장 성공. 업체 ID: {}", savedVendor.getId());
+
+        log.info("업체 생성 성공. 업체 ID: {}", savedVendor.getId());
 	}
 
-	/**
-	 * 이미지 업로드 및 VendorImage 엔티티 저장
-	 */
-	private void uploadAndSaveImages(List<MultipartFile> images, Vendor vendor, VendorImageType imageType, String domain) {
-		if (images == null || images.isEmpty()) {
-			log.info("No images to upload for imageType: {}", imageType);
-			return;
-		}
+    @Transactional(readOnly = true)
+    public VendorDetailsResponseDTO getVendorDetail(Long vendorId) {
+        log.info("업체 상세 정보 조회를 시작합니다. 업체 ID: {}", vendorId);
 
-		List<String> uploadedUrls = localFileUploadService.uploadFiles(images, domain, vendor.getId());
+        // 1. Vendor와 연관된 모든 이미지 조회 (N+1 방지)
+        Vendor vendor = vendorRepository.findVendorWithImagesById(vendorId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage()));
+        log.info("업체 조회 성공. 이름: {}, 카테고리: {}", vendor.getName(), vendor.getCategory());
 
-		for (int i = 0; i < uploadedUrls.size(); i++) {
-			String imageUrl = uploadedUrls.get(i);
-			VendorImage vendorImage = VendorImage.builder()
-				.vendorImageType(imageType)
-				.imageUrl(imageUrl)
-				.sortOrder(i)
-				.vendor(vendor)
-				.build();
+        // 2. 카테고리별 details DTO 역직렬화
+        VendorDetailsDTO detailsDTO = deserializeDetails(vendor.getDetails(), vendor.getCategory());
 
-			vendorImageRepository.save(vendorImage);
-			log.info("Saved vendor image: {} for vendor ID: {}", imageUrl, vendor.getId());
-		}
-	}
+        // 3. 이미지 분류
+        List<VendorImage> images = vendor.getImages();
+        log.info("총 {}개의 연관 이미지를 처리합니다.", images.size());
+        
+        // 4. 대표 이지미 찾기
+        String mainUrl = images.stream()
+                .filter(img -> img.getImageType() == VendorImageType.MAIN)
+                .findFirst()
+                .map(img -> s3Service.generatePresignedGetUrl(img.getImageKey()).getPresignedUrl())
+                .orElse(null);
 
-	public List<VendorResponse> getWeddingHall() {
-		List<Vendor> vendors = vendorRepository.findAllByCategory(Category.WEDDING_HALL);
+        // 5. 그룹 이미지들을 묶고 정렬하여 DTO 변환
+        List<VendorDetailsResponseDTO.ImageGroupResponseDTO> imageGroupResponse = images.stream()
+                .filter(img -> img.getImageType() == VendorImageType.GROUPED)
+                .collect(Collectors.groupingBy(VendorImage::getGroupTitle))
+                .entrySet().stream()
+                .map(entry -> {
+                    List<VendorImage> groupImages = entry.getValue();
+                    groupImages.sort(Comparator.comparing(VendorImage::getSortOrder));
 
-		return vendors.stream().map(vendor -> {
-			List<VendorImage> vendorImages = vendorImageRepository.findAllByVendor(vendor);
-			List<VendorImageResponse> vendorImageResponseList = vendorImages.stream()
-				.map(vendorImage -> VendorImageResponse.builder()
-					.id(vendorImage.getId())
-					.vendorImageType(vendorImage.getVendorImageType())
-					.sortOrder(vendorImage.getSortOrder())
-					.imageUrl(vendorImage.getImageUrl())
-					.build())
-				.toList();
-			return VendorResponse.builder()
-				.id(vendor.getId())
-				.name(vendor.getName())
-				.category(vendor.getCategory())
-				.meal(vendor.getMeal())
-				.style(vendor.getStyle())
-				.description(vendor.getDescription())
-				.minimumAmount(vendor.getMinimumAmount())
-				.maximumGuest(vendor.getMaximumGuest())
-				.vendorImageResponses(vendorImageResponseList).build();
-		}).toList();
+                    List<VendorDetailsResponseDTO.ImageResponseDTO> imageResponseDTOs = groupImages.stream()
+                            .map(img -> VendorDetailsResponseDTO.ImageResponseDTO.builder()
+                                    .imageUrl(s3Service.generatePresignedGetUrl(img.getImageKey()).getPresignedUrl())
+                                    .sortOrder(img.getSortOrder())
+                                    .build())
+                            .collect(Collectors.toList());
 
-	}
+                    return VendorDetailsResponseDTO.ImageGroupResponseDTO.builder()
+                            .groupTitle(entry.getKey())
+                            .groupSortOrder(groupImages.get(0).getGroupSortOrder())
+                            .images(imageResponseDTOs)
+                            .build();
+                })
+                .sorted(Comparator.comparing(VendorDetailsResponseDTO.ImageGroupResponseDTO::getGroupSortOrder))
+                .collect(Collectors.toList());
 
-	/**
-	 * 웨딩홀 조건 검색
-	 * @param searchRequest 검색 조건
-	 * @return 검색 결과 페이지
-	 */
-	public Page<VendorResponse> searchWeddingHalls(VendorSearchRequest searchRequest) {
-		Pageable pageable = PageRequest.of(searchRequest.getPage(), searchRequest.getSize());
+        log.info("업체 상세 정보 응답 DTO 생성을 완료했습니다. 업체 ID: {}", vendorId);
 
-		List<Style> styles = (searchRequest.getStyles() != null && !searchRequest.getStyles().isEmpty())
-			? searchRequest.getStyles() : null;
-		List<Meal> meals = (searchRequest.getMeals() != null && !searchRequest.getMeals().isEmpty())
-			? searchRequest.getMeals() : null;
+        // 6. DTO 생성 후 반환
+        return VendorDetailsResponseDTO.builder()
+                .vendorId(vendor.getId())
+                .name(vendor.getName())
+                .category(vendor.getCategory())
+                .description(vendor.getDescription())
+                .address(vendor.getAddress())
+                .details(detailsDTO)
+                .mainImageUrl(mainUrl)
+                .imageGroups(imageGroupResponse)
+                .build();
+    }
 
-		Page<Vendor> vendorPage = vendorRepository.findWeddingHallsByConditions(
-			Category.WEDDING_HALL,
-			styles,
-			meals,
-			searchRequest.getMinGuestCount(),
-			searchRequest.getMinPrice(),
-			pageable
-		);
+    // 업체 리스트 페이징 조회, 업체 단일 간단 조회 필요함
 
-		return vendorPage.map(this::convertToVendorResponse);
-	}
+    // JSON 문자열을 category에 맞는 VendorDetailsDTO 객체로 역직렬화
+    private VendorDetailsDTO deserializeDetails(String json, Category category) {
+        if (json == null || category == null) {
+            return null;
+        }
 
-	private VendorResponse convertToVendorResponse(Vendor vendor) {
-		List<VendorImage> vendorImages = vendorImageRepository.findAllByVendor(vendor);
-		List<VendorImageResponse> vendorImageResponseList = vendorImages.stream()
-			.map(vendorImage -> VendorImageResponse.builder()
-				.id(vendorImage.getId())
-				.vendorImageType(vendorImage.getVendorImageType())
-				.sortOrder(vendorImage.getSortOrder())
-				.imageUrl(vendorImage.getImageUrl())
-				.build())
-			.toList();
+        try {
+            Class<? extends VendorDetailsDTO> dtoClass = getDetailsClass(category);
+            return objectMapper.readValue(json, dtoClass);
+        } catch (IOException e) {
+            log.error("Vendor details 역직렬화 실패: category={}, json={}", category, json, e);
+            throw new RuntimeException("업체 상세 정보 변환에 실패했습니다.", e);
+        }
+    }
 
-		return VendorResponse.builder()
-			.id(vendor.getId())
-			.category(vendor.getCategory())
-			.name(vendor.getName())
-			.meal(vendor.getMeal())
-			.style(vendor.getStyle())
-			.description(vendor.getDescription())
-			.minimumAmount(vendor.getMinimumAmount())
-			.maximumGuest(vendor.getMaximumGuest())
-			.vendorImageResponses(vendorImageResponseList)
-			.build();
-	}
+    // Category enum 값에 따라 해당하는 DTO 클래스 반환
+    private Class<? extends VendorDetailsDTO> getDetailsClass(Category category) {
+        return switch (category) {
+            case WEDDING_HALL -> WeddingHallDetailsDTO.class;
+            case DRESS -> DressDetailsDTO.class;
+            case STUDIO -> StudioDetailsDTO.class;
+            case MAKEUP ->  MakeupDetailsDTO.class;
+            default -> {
+                log.error("지원하지 않는 카테고리 타입입니다: {}", category);
+                throw new IllegalArgumentException("지원하지 않는 카테고리입니다: " + category);
+            }
+        };
+    }
 
-	public VendorResponse getVendorDetail(Long vendorId) {
-		Vendor vendor = vendorRepository.findById(vendorId)
-			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage()));
+    // Map<String, Object> details를 JSON 문자열로 직렬화
+    private String convertDetailsToJson(Object details) {
+        if (details == null) {
+            return null;
+        }
 
-		return convertToVendorResponse(vendor);
+        try {
+            return objectMapper.writeValueAsString(details);
+        } catch (Exception e) {
+            log.error("Vendor details 직렬화 실패: details DTO = {}", details, e);
+            throw new RuntimeException("업체 상세 정보 직렬화에 실패했습니다.", e);
+        }
+    }
 
-	}
+    // VendorImage 객체 생성 헬퍼 메서드
+    private VendorImage createImage(Vendor vendor, String key, VendorImageType type, int sortOrder, String groupTitle, Integer groupSortOrder) {
+        return VendorImage.builder()
+                .vendor(vendor)
+                .imageKey(key)
+                .imageType(type)
+                .sortOrder(sortOrder)
+                .groupTitle(groupTitle)
+                .groupSortOrder(groupSortOrder)
+                .build();
+    }
 }

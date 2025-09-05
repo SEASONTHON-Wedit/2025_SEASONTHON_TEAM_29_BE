@@ -32,6 +32,9 @@ public enum ErrorStatus {
     BAD_REQUEST_ALREADY_DISCONNECT_COUPLE(HttpStatus.BAD_REQUEST, "이미 커플이 아니거나 해제된 상태입니다."),
     BAD_REQUEST_MEMBER_TOUR_ACCESS(HttpStatus.BAD_REQUEST, "해당 유저만 투어일지를 작성할 수 있습니다."),
     BAD_REQUEST_NOT_SUPPORTED_DOMAIN(HttpStatus.BAD_REQUEST, "지원하지 않는 도메인입니다."),
+    BAD_REQUEST_COUPLE_CONNECT_MYSELF(HttpStatus.BAD_REQUEST, "자기 자신과는 연결할 수 없습니다."),
+    BAD_REQUEST_CONNECT_BRIDE_TO_GROOM(HttpStatus.BAD_REQUEST, "잘못된 연결 요청입니다. 신부를 등록할 수 없는 상태입니다."),
+    BAD_REQUEST_CONNECT_GROOM_TO_BRIDE(HttpStatus.BAD_REQUEST, "잘못된 연결 요청입니다. 신랑을 등록할 수 없는 상태입니다."),
 
     /// 401 UNAUTHORIZED
     UNAUTHORIZED_USER(HttpStatus.UNAUTHORIZED,"인증되지 않은 사용자입니다."),

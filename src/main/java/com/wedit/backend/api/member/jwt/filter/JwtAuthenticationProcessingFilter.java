@@ -6,6 +6,7 @@ import com.wedit.backend.api.member.jwt.entity.RefreshToken;
 import com.wedit.backend.api.member.jwt.repository.RefreshTokenRepository;
 import com.wedit.backend.api.member.jwt.service.JwtService;
 import com.wedit.backend.api.member.repository.MemberRepository;
+import com.wedit.backend.common.config.security.SecurityConfig;
 import com.wedit.backend.common.config.security.entity.SecurityMember;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
@@ -20,13 +21,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
@@ -43,22 +48,29 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    private static final String[] SWAGGER_URIS = {
-            "/api/swagger-ui",
-            "/api/v3/api-docs",
+    // 필터링 제외 목록
+    public static final String[] NOT_FILTER_URLS = {
+            "/api/swagger-resources/**",
+            "/api/swagger-ui/**",
             "/api/swagger-ui.html",
-            "/swagger-ui",
-            "/v3/api-docs",
+            "/api/v3/api-docs/**",
+            "/v3/api-docs/**",
+            "/swagger-resources/**",
+            "/swagger-ui/**",
             "/swagger-ui.html",
+            "/api/webjars/**",
+            "/webjars/**"
     };
 
-    /// 스웨거 관련 경로 필터링 제외
+    /// 엔드포인트 필터링 제외
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String requestURI = request.getRequestURI();
 
-        for (String uri : SWAGGER_URIS) {
-            if (requestURI.contains(uri)) {
+        log.info("JwtFilter shouldNotFilter 프로세싱 요청: {}", requestURI);
+
+        for (String url : NOT_FILTER_URLS) {
+            if (requestURI.startsWith(url)) {
                 return true;
             }
         }
@@ -68,6 +80,9 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
+        log.info("Value of accessTokenHeader: {}", accessTokenHeader);
+        log.info("Value of refreshTokenHeader: {}", refreshTokenHeader);
 
         String requestURI = request.getRequestURI();
 
@@ -109,6 +124,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
         } catch (Exception ex) {
             // 필터단에서 발생하는 예외를 적절한 타이의 예외로 포장하여 상위로 던짐
             // -> FilterExceptionHandler
+            log.error("JwtAuthenticationProcessingFilter - Uncaught exception: [{}], a ServletException will be thrown.", ex.getClass().getName(), ex);
             if (ex instanceof ServletException) {
                 throw (ServletException) ex;
             } else if (ex instanceof IOException) {

@@ -33,7 +33,7 @@ public class Review extends BaseTimeEntity {
     private String contentWorst;
 
     // 별점 (1~5)
-    private int rating;
+    private Integer rating;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
@@ -44,6 +44,7 @@ public class Review extends BaseTimeEntity {
     private Vendor vendor;
 
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<ReviewImage> images = new ArrayList<>();
 
     public void update(int rating, String best, String worst) {

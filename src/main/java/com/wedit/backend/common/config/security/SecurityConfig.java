@@ -1,7 +1,7 @@
 package com.wedit.backend.common.config.security;
 
 import com.wedit.backend.api.member.jwt.filter.FilterExceptionHandler;
-import com.wedit.backend.common.config.jwt.JwtConfig;
+import com.wedit.backend.api.member.jwt.filter.JwtAuthenticationProcessingFilter;
 import com.wedit.backend.common.oauth2.OAuth2AuthenticationFailureHandler;
 import com.wedit.backend.common.oauth2.OAuth2AuthenticationSuccessHandler;
 import com.wedit.backend.common.oauth2.OAuth2UserService;
@@ -27,11 +27,12 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtConfig jwtConfig;
     private final FilterExceptionHandler filterExceptionHandler;
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final OAuth2UserService oAuth2UserService;
+    private final JwtAuthenticationProcessingFilter jwtAuthenticationProcessingFilter;
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -91,7 +92,8 @@ public class SecurityConfig {
                                 "/oauth/callback"
                         ).permitAll()   // Swagger, Spring Actuator, OAuth2 Debug 허가
                         .requestMatchers(
-                                "/api/v1/member/**"
+                                "/api/v1/member/**",
+                                "/api/v1/vendor/**"
                         ).permitAll()   // Member 관련 허가
                         .anyRequest().authenticated()
                 )
@@ -108,7 +110,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(filterExceptionHandler)        // 인가 실패 예외 핸들링
                 );
 
-        http.addFilterBefore(jwtConfig.jwtAuthenticationProcessingFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtAuthenticationProcessingFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

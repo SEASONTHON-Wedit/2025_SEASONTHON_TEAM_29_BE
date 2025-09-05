@@ -9,10 +9,9 @@ import com.wedit.backend.api.vendor.entity.enums.Style;
 import com.wedit.backend.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,49 +19,44 @@ import java.util.List;
 @Entity
 @Table(name = "vendor")
 @Getter
-@NoArgsConstructor
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Vendor extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    private String name;            // 업체 이름
 
     @Enumerated(EnumType.STRING)
-    private Category category;
+    private Category category;      // 카테고리 (WEDDING_HALL, STUDIO, DRESS, MAKEUP)
 
-    @Enumerated(EnumType.STRING)
-    private Style style;
+    private String description;     // 업체 소개
 
-    @Enumerated(EnumType.STRING)
-    private Meal meal;
+    @Embedded
+    private Address address;        // 주소 임베드
 
-    private String description;
+    @Lob
+    @Column(name = "details")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String details;
 
-    private Integer minimumAmount;
-    private Integer maximumGuest;
-
+    // Vendor에 속한 모든 이미지
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<VendorImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Review>  reviews = new ArrayList<>();
+    @Builder.Default
+    private List<Review> reviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Reservation> reservations = new ArrayList<>();
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Tour> tours = new ArrayList<>();
-
-    @Builder
-    public Vendor(String name, Category category, Style style, Meal meal, String description, Integer minimumAmount, Integer maximumGuest) {
-        this.name = name;
-        this.category = category;
-        this.style = style;
-        this.meal = meal;
-        this.description = description;
-        this.minimumAmount = minimumAmount;
-        this.maximumGuest = maximumGuest;
-    }
 }

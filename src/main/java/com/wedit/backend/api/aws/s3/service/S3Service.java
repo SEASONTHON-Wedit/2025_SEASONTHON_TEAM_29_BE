@@ -120,13 +120,18 @@ public class S3Service {
         // 날짜 폴더 구조
         String currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
-        // UUID + 현재시각 + 원본파일명 (확장자 포함)
-        String safeFileName = originalFileName.replaceAll("[^a-zA-Z0-9.-]", "_");
+        // UUID 생성
         String uuid = UUID.randomUUID().toString();
-        String fileName = uuid + "_" + currentDateTime + "_" + safeFileName;
+
+        // 확장자 추출
+        String extension = "";
+        if (originalFileName != null && originalFileName.contains(".")) {
+            extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+        }
+        String safeFileName = uuid + "_" + currentDateTime + extension;
 
         // 최종 PreSigned URL 발급 후 반환
-        // {domain}/{memberId}/{mediaType}/{domainId}/{uuid}_{currentDateTime}_{originalFileName}
-        return String.format("%s/%d/%s/%d/%s", domain, memberId, mediaType, domainId, fileName);
+        // {domain}/{memberId}/{mediaType}/{domainId}/{uuid}_{currentDateTime}.{extension}
+        return String.format("%s/%d/%s/%d/%s", domain, memberId, mediaType, domainId, safeFileName);
     }
 }
