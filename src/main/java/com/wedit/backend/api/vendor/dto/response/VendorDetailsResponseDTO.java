@@ -23,7 +23,10 @@ public class VendorDetailsResponseDTO {
     @Schema(description = "업체 이름", example = "아펠가모 선릉")
     private String name;
 
-    @Schema(description = "업체 카테고리")
+    @Schema(description = "업체 전화번호", example = "02-123-4567")
+    private String phoneNumber;
+
+    @Schema(description = "업체 카테고리", example = "WEDDING_HALL")
     private Category category;
 
     @Schema(description = "업체 소개글", example = "품격 있는 채플 웨딩 스타일을 선도합니다...")
@@ -39,6 +42,7 @@ public class VendorDetailsResponseDTO {
     // --- 이미지 정보 ---
     @Schema(description = "대표 이미지의 S3 Presigned URL", example = "https://s3...")
     private String mainImageUrl;    // 대표 이미지 URL
+
     @Schema(description = "그룹화된 이미지 목록. 상세 페이지의 섹션을 구성합니다.")
     private List<ImageGroupResponseDTO> imageGroups;    // 그룹화된 이미지들
 
@@ -47,8 +51,12 @@ public class VendorDetailsResponseDTO {
     @Builder
     @Schema(description = "이미지 그룹 정보를 담는 DTO")
     public static class ImageGroupResponseDTO {
+
         @Schema(description = "그룹 제목", example = "Wedding Hall")
         private String groupTitle;
+
+        @Schema(description = "그룹 설명", example = "아펠가모 선릉의 채플홀 내부 사진입니다.")
+        private String groupDescription;
 
         @Schema(description = "그룹 표시 순서", example = "0")
         private Integer groupSortOrder;

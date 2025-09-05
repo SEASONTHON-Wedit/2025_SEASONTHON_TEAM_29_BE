@@ -88,9 +88,6 @@ public class EstimateService {
 
 			// 업체의 대표 이미지 조회 (VendorService의 getVendorDetail 참고)
 			String mainImageUrl = getVendorMainImageUrl(vendor);
-			
-			// 업체의 최소금액 조회
-			Integer minimumAmount = getVendorMinimumAmount(vendor);
 
 			EstimateResponseDTO.EstimateDetailDTO estimateDetail = EstimateResponseDTO.EstimateDetailDTO.builder()
 				.estimateId(estimate.getId())
@@ -101,7 +98,7 @@ public class EstimateService {
 				.vendorDescription(vendor.getDescription())
 				.vendorCategory(vendor.getCategory())
 				.mainImageUrl(mainImageUrl)
-				.minimumAmount(minimumAmount)
+				.minimumAmount(vendor.getMinAmount())
 				.createdAt(estimate.getCreatedAt())
 				.build();
 
@@ -166,33 +163,33 @@ public class EstimateService {
 	/**
 	 * 업체의 최소금액을 조회 (details JSON에서 추출)
 	 */
-	private Integer getVendorMinimumAmount(Vendor vendor) {
-		try {
-			String detailsJson = vendor.getDetails();
-			if (detailsJson == null || detailsJson.isEmpty()) {
-				return null;
-			}
-
-			// 카테고리별로 적절한 DTO 클래스로 역직렬화
-			VendorDetailsDTO detailsDTO = deserializeDetails(detailsJson, vendor.getCategory());
-			if (detailsDTO == null) {
-				return null;
-			}
-
-			// 각 카테고리별로 minimumAmount 추출
-			return switch (vendor.getCategory()) {
-				case WEDDING_HALL -> ((WeddingHallDetailsDTO) detailsDTO).getMinimumAmount();
-				case DRESS -> ((DressDetailsDTO) detailsDTO).getMinimumAmount();
-				case MAKEUP -> ((MakeupDetailsDTO) detailsDTO).getMinimumAmount();
-				case STUDIO -> ((StudioDetailsDTO) detailsDTO).getMinimumAmount();
-				default -> null;
-			};
-
-		} catch (Exception e) {
-			log.warn("업체 최소금액 조회 중 오류 발생. 업체 ID: {}", vendor.getId(), e);
-			return null;
-		}
-	}
+//	private Integer getVendorMinimumAmount(Vendor vendor) {
+//		try {
+//			String detailsJson = vendor.getDetails();
+//			if (detailsJson == null || detailsJson.isEmpty()) {
+//				return null;
+//			}
+//
+//			// 카테고리별로 적절한 DTO 클래스로 역직렬화
+//			VendorDetailsDTO detailsDTO = deserializeDetails(detailsJson, vendor.getCategory());
+//			if (detailsDTO == null) {
+//				return null;
+//			}
+//
+//			// 각 카테고리별로 minimumAmount 추출
+//			return switch (vendor.getCategory()) {
+//				case WEDDING_HALL -> ((WeddingHallDetailsDTO) detailsDTO).getMinimumAmount();
+//				case DRESS -> ((DressDetailsDTO) detailsDTO).getMinimumAmount();
+//				case MAKEUP -> ((MakeupDetailsDTO) detailsDTO).getMinimumAmount();
+//				case STUDIO -> ((StudioDetailsDTO) detailsDTO).getMinimumAmount();
+//				default -> null;
+//			};
+//
+//		} catch (Exception e) {
+//			log.warn("업체 최소금액 조회 중 오류 발생. 업체 ID: {}", vendor.getId(), e);
+//			return null;
+//		}
+//	}
 
 	/**
 	 * JSON 문자열을 category에 맞는 VendorDetailsDTO 객체로 역직렬화

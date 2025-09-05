@@ -1,18 +1,25 @@
 package com.wedit.backend.api.vendor.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wedit.backend.api.aws.s3.service.S3Service;
+import com.wedit.backend.api.review.repository.ReviewRepository;
 import com.wedit.backend.api.vendor.dto.details.*;
 import com.wedit.backend.api.vendor.dto.response.VendorDetailsResponseDTO;
+import com.wedit.backend.api.vendor.dto.response.VendorListResponseDTO;
+import com.wedit.backend.api.vendor.dto.response.VendorReviewStatsDTO;
 import com.wedit.backend.api.vendor.entity.enums.Category;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.response.ErrorStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,10 +37,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class VendorService {
+
 	private final VendorRepository vendorRepository;
 	private final VendorImageRepository vendorImageRepository;
+    private final ReviewRepository reviewRepository;
     private final ObjectMapper objectMapper;
     private final S3Service s3Service;
+
+    private static final int RANDOM_POOL_SIZE = 100;
 
     @Transactional
 	public Vendor createVendor(VendorCreateRequestDTO request) {
@@ -42,54 +53,46 @@ public class VendorService {
         // 카테고리별 상세 정보 직렬화
         String detailsJson = convertDetailsToJson(request.getDetails());
 
-        // 새 Vendor 생성
+        // 1. 새 Vendor 생성
         Vendor vendor = Vendor.builder()
                 .name(request.getName())
+                .phoneNumber(request.getPhoneNumber())
                 .category(request.getDetails().getCategory())
                 .description(request.getDescription())
                 .address(request.getAddress() != null ? request.getAddress().toEntity() : null)
+                .minimumAmount(request.getMinimumAmount())
                 .details(detailsJson)
                 .build();
 
-        // Vendor 저장하여 ID 생성
-        Vendor savedVendor = vendorRepository.save(vendor);
-
-        // 2. 모든 이미지(로고, 대표, 그룹) 리스트에 담기
+        // 2. 모든 이미지 엔티티 생성
         List<VendorImage> allImages = new ArrayList<>();
-
-        // 2-1. 로고 이미지 추가
+        // 로고 이미지
         if (request.getLogoImageKey() != null && !request.getLogoImageKey().isEmpty()) {
-
-            allImages.add(createImage(savedVendor, request.getLogoImageKey(), VendorImageType.LOGO,
-                    0, null, null));
+            allImages.add(createImage(vendor, request.getLogoImageKey(), VendorImageType.LOGO, 0, null, null, null));
         }
-
-        // 2-2. 대표 이미지 추가
+        // 대표 이미지
         if (request.getMainImageKey() != null && !request.getMainImageKey().isEmpty()) {
-
-            allImages.add(createImage(savedVendor, request.getMainImageKey(), VendorImageType.MAIN,
-                    0, null, null));
+            allImages.add(createImage(vendor, request.getMainImageKey(), VendorImageType.MAIN, 0, null, null, null));
         }
-
-        // 2-3. 그룹 이미지 추가
+        // 그룹 이미지
         if (request.getImageGroups() != null) {
             for (VendorCreateRequestDTO.ImageGroupDTO groupDTO : request.getImageGroups()) {
                 List<String> imageKeys = groupDTO.getImageKeys();
                 if (imageKeys != null) {
                     for (int i = 0; i < imageKeys.size(); i++) {
-
-                        allImages.add(createImage(savedVendor, imageKeys.get(i), VendorImageType.GROUPED,
-                                i, groupDTO.getGroupTitle(), groupDTO.getSortOrder()));
+                        allImages.add(createImage(vendor, imageKeys.get(i), VendorImageType.GROUPED, i, groupDTO.getGroupTitle(), groupDTO.getGroupDescription(), groupDTO.getSortOrder()));
                     }
                 }
             }
         }
 
-        log.info("총 {}개의 이미지 저장을 시도합니다.", allImages.size());
-        vendorImageRepository.saveAll(allImages);
-        log.info("모든 이미지 저장 성공. 업체 ID: {}", savedVendor.getId());
+        // 3. Vendor 이미지 리스트 연관관계 설정
+        vendor.setImages(allImages);
+        log.info("총 {}개의 이미지와 함께 업체 저장을 시도합니다.", allImages.size());
 
-        log.info("업체 생성 성공. 업체 ID: {}", savedVendor.getId());
+        // 4. Vendor 저장
+        Vendor savedVendor = vendorRepository.save(vendor);
+        log.info("업체 및 모든 이미지 생성 성공. 업체 ID: {}", savedVendor.getId());
 
         return savedVendor;
 	}
@@ -135,7 +138,8 @@ public class VendorService {
 
                     return VendorDetailsResponseDTO.ImageGroupResponseDTO.builder()
                             .groupTitle(entry.getKey())
-                            .groupSortOrder(groupImages.get(0).getGroupSortOrder())
+                            .groupDescription(groupImages.getFirst().getGroupDescription())
+                            .groupSortOrder(groupImages.getFirst().getGroupSortOrder())
                             .images(imageResponseDTOs)
                             .build();
                 })
@@ -148,6 +152,7 @@ public class VendorService {
         return VendorDetailsResponseDTO.builder()
                 .vendorId(vendor.getId())
                 .name(vendor.getName())
+                .phoneNumber(vendor.getPhoneNumber())
                 .category(vendor.getCategory())
                 .description(vendor.getDescription())
                 .address(vendor.getAddress())
@@ -157,7 +162,69 @@ public class VendorService {
                 .build();
     }
 
-    // 업체 리스트 페이징 조회, 업체 단일 간단 조회 필요함
+    @Transactional(readOnly = true)
+    public Page<VendorListResponseDTO> getVendorListByCategory(Category category, Pageable pageable) {
+
+        log.info("카테고리별 업체 목록 조회를 시작합니다. 카테고리: {}", category);
+
+        LocalDateTime twoWeeksAgo = LocalDateTime.now().minusWeeks(2);
+
+        // 1. DB 에서 인기순으로 ID 목록 조회 (랜덤 풀 확보)
+        List<Long> topVendorIds = vendorRepository.findVendorIdsByCategoryOrderByRecentReviews(
+                category, twoWeeksAgo, PageRequest.of(0, RANDOM_POOL_SIZE)
+        );
+
+        if (topVendorIds.isEmpty()) {
+            return Page.empty(pageable);
+        }
+
+        // 2. ID 목록 셔플 및 수동 페이징
+        Collections.shuffle(topVendorIds);
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), topVendorIds.size());
+
+        if (start >= topVendorIds.size()) {
+            return Page.empty(pageable);
+        }
+        List<Long> paginatedIds = topVendorIds.subList(start, end);
+
+        // 3. 페이징된 ID로 실제 데이터 Batch 조회
+        List<Vendor> vendors = vendorRepository.findAllById(paginatedIds);
+
+        // findAllById는 순서를 보장하지 않으므로, 셔플된 순서대로 재정렬
+        Map<Long, Vendor> vendorMap = vendors.stream()
+                .collect(Collectors.toMap(Vendor::getId, Function.identity()));
+
+        List<Vendor> vendorsOnPage = paginatedIds.stream()
+                .map(vendorMap::get)
+                .collect(Collectors.toList());
+
+        // 4. 추가 정보 Batch 조회
+        // 후기 평점 평균, 총 후기 개수
+        Map<Long, VendorReviewStatsDTO> statsMap = reviewRepository.findReviewStatsByVendorIds(paginatedIds).stream()
+                .collect(Collectors.toMap(VendorReviewStatsDTO::getVendorId, Function.identity()));
+        // 로고 이미지
+        Map<Long, String> logoUrlMap = vendorImageRepository.findAllByVendorInAndImageType(vendorsOnPage, VendorImageType.LOGO).stream()
+                .collect(Collectors.toMap(
+                        image -> image.getVendor().getId(),
+                        image -> s3Service.generatePresignedGetUrl(image.getImageKey()).getPresignedUrl()));
+
+        // 5. 최종 DTO 조립 및 Page 생성
+        List<VendorListResponseDTO> dtoList = vendorsOnPage.stream()
+                .map(vendor -> VendorListResponseDTO.builder()
+                        .vendorId(vendor.getId())
+                        .name(vendor.getName())
+                        .category(vendor.getCategory())
+                        .dong(vendor.getAddress() != null ? vendor.getAddress().getDong() : null)
+                        .logoImageUrl(logoUrlMap.get(vendor.getId()))
+                        .totalReviewCount(statsMap.getOrDefault(vendor.getId(), new VendorReviewStatsDTO(vendor.getId(), 0L, 0.0)).getReviewCount())
+                        .averageRating(statsMap.getOrDefault(vendor.getId(), new VendorReviewStatsDTO(vendor.getId(), 0L, 0.0)).getAverageRating())
+                        .build())
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(dtoList, pageable, topVendorIds.size());
+    }
 
     // JSON 문자열을 category에 맞는 VendorDetailsDTO 객체로 역직렬화
     private VendorDetailsDTO deserializeDetails(String json, Category category) {
@@ -203,13 +270,17 @@ public class VendorService {
     }
 
     // VendorImage 객체 생성 헬퍼 메서드
-    private VendorImage createImage(Vendor vendor, String key, VendorImageType type, int sortOrder, String groupTitle, Integer groupSortOrder) {
+    private VendorImage createImage(Vendor vendor, String imageKey,
+                                    VendorImageType type, int sortOrder,
+                                    String groupTitle, String groupDescription,
+                                    Integer groupSortOrder) {
         return VendorImage.builder()
                 .vendor(vendor)
-                .imageKey(key)
+                .imageKey(imageKey)
                 .imageType(type)
                 .sortOrder(sortOrder)
                 .groupTitle(groupTitle)
+                .groupDescription(groupDescription)
                 .groupSortOrder(groupSortOrder)
                 .build();
     }

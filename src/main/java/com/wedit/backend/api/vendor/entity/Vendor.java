@@ -28,6 +28,8 @@ public class Vendor extends BaseTimeEntity {
 
     private String name;            // 업체 이름
 
+    private String phoneNumber;
+
     @Enumerated(EnumType.STRING)
     private Category category;      // 카테고리 (WEDDING_HALL, STUDIO, DRESS, MAKEUP)
 
@@ -35,6 +37,9 @@ public class Vendor extends BaseTimeEntity {
 
     @Embedded
     private Address address;        // 주소 임베드
+
+    @Column(nullable = false)
+    private Integer minimumAmount;      // 최소 가격
 
     @Lob
     @Column(name = "details")
@@ -57,4 +62,10 @@ public class Vendor extends BaseTimeEntity {
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Tour> tours = new ArrayList<>();
+
+    // VendorImage 연관관계 설정
+    public void setImages(List<VendorImage> images) {
+        this.images = images;
+        images.forEach(image -> image.setVendor(this));
+    }
 }
