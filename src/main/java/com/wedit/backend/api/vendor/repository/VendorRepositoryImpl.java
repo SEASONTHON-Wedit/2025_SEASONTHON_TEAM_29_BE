@@ -27,24 +27,31 @@ public class VendorRepositoryImpl implements VendorRepositoryCustom {
     public Page<Vendor> searchWeddingHalls(WeddingHallSearchConditions conditions, Pageable pageable) {
 
         CriteriaBuilder cb = em.getCriteriaBuilder();
+
+        // 검색용 쿼리
         CriteriaQuery<Vendor> cq = cb.createQuery(Vendor.class);
-        Root<Vendor> vendor = cq.from(Vendor.class);
+        Root<Vendor> root = cq.from(Vendor.class);
+        Predicate searchPredicate = VendorSpecification.searchWeddingHalls(conditions)
+                .toPredicate(root, cq, cb);
 
-        Predicate predicate = VendorSpecification.searchWeddingHalls(conditions)
-                .toPredicate(vendor, cq, cb);
-        cq.where(predicate);
-
-        cq.orderBy(cb.asc(vendor.get("minimumAmount")));
+        cq.where(searchPredicate);
+        cq.orderBy(cb.asc(root.get("minimumAmount")));
 
         TypedQuery<Vendor> query = em.createQuery(cq);
         query.setFirstResult((int) pageable.getOffset());
         query.setMaxResults(pageable.getPageSize());
         List<Vendor> content = query.getResultList();
 
+        // 카운트용 쿼리
         CriteriaQuery<Long> countQuery = cb.createQuery(Long.class);
+        Root<Vendor> countRoot = countQuery.from(Vendor.class);
+        Predicate countPredicate = VendorSpecification.searchWeddingHalls(conditions)
+                .toPredicate(countRoot, countQuery, cb);
 
-        countQuery.select(cb.count(countQuery.from(Vendor.class))).where(predicate);
+        countQuery.select(cb.count(countRoot));
+        countQuery.where(countPredicate);
         Long total = em.createQuery(countQuery).getSingleResult();
+
 
         return new PageImpl<>(content, pageable, total);
     }
