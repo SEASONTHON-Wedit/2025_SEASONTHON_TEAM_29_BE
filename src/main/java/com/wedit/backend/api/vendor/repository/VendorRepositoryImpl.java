@@ -34,7 +34,7 @@ public class VendorRepositoryImpl implements VendorRepositoryCustom {
                 .toPredicate(vendor, cq, cb);
         cq.where(predicate);
 
-        cq.orderBy(cb.asc(vendor.get("minAmount")));
+        cq.orderBy(cb.asc(vendor.get("minimumAmount")));
 
         TypedQuery<Vendor> query = em.createQuery(cq);
         query.setFirstResult((int) pageable.getOffset());
