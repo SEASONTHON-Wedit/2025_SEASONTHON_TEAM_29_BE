@@ -1,9 +1,6 @@
 package com.wedit.backend.api.member.controller;
 
-import com.wedit.backend.api.member.dto.MemberLoginRequestDTO;
-import com.wedit.backend.api.member.dto.MemberLoginResponseDTO;
-import com.wedit.backend.api.member.dto.MemberSignupRequestDTO;
-import com.wedit.backend.api.member.dto.SocialMemberAdditionalRequestDTO;
+import com.wedit.backend.api.member.dto.*;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.jwt.entity.RefreshToken;
 import com.wedit.backend.api.member.jwt.service.JwtService;
@@ -139,5 +136,18 @@ public class MemberController {
         memberService.socialLogin(userDetails.getUsername(), socialMemberAdditionalRequestDTO);
 
         return ApiResponse.successOnly(SuccessStatus.MEMBER_SIGNUP_SUCCESS);
+    }
+
+    @GetMapping("/mypage")
+    public ResponseEntity<ApiResponse<MemberMyInfoResponseDTO>> getMyInfo(
+            @RequestHeader("Authorization") String reqToken) {
+
+        String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
+        Long memberId = jwtService.extractMemberId(token)
+                .orElseThrow(() -> new UnauthorizedException(ErrorStatus.UNAUTHORIZED_INVALID_TOKEN.getMessage()));
+
+        MemberMyInfoResponseDTO response = memberService.getMemberInfo(memberId);
+
+        return ApiResponse.success(SuccessStatus.MEMBER_MYPAGE_GET_SUCCESS, response);
     }
 }
