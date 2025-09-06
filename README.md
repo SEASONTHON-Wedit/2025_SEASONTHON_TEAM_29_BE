@@ -17,26 +17,6 @@
 
 ---
 
-## 📋 목차
-
-- [🚀 프로젝트 소개](#-프로젝트-소개)
-- [🛠 기술 스택](#-기술-스택)
-- [🏗 프로젝트 아키텍처](#-프로젝트-아키텍처)
-- [🌟 주요 기능](#-주요-기능)
-- [📁 프로젝트 구조](#-프로젝트-구조)
-- [🔗 API 문서](#-api-문서)
-- [⚙️ 환경 설정](#️-환경-설정)
-- [🚀 실행 방법](#-실행-방법)
-- [🐳 Docker 실행](#-docker-실행)
-- [📊 데이터베이스 구조](#-데이터베이스-구조)
-- [🔐 보안 및 인증](#-보안-및-인증)
-- [📝 API 엔드포인트](#-api-엔드포인트)
-- [🧪 테스트](#-테스트)
-- [🚀 배포](#-배포)
-- [👥 팀원](#-팀원)
-
----
-
 ## 🚀 프로젝트 소개
 
 **Wedit**은 예비 신랑신부들이 웨딩 준비 과정에서 필요한 모든 서비스를 한 곳에서 관리할 수 있는 플랫폼입니다.
@@ -120,18 +100,15 @@ http://localhost:8080/api/v3/api-docs
 ## 📊 데이터베이스 구조
 
 <img width="4236" height="3424" alt="Image" src="https://github.com/user-attachments/assets/cc7fc5a7-3816-4c4d-b494-77043e703102" />
-----
 
 ## 👥 팀원
 
 ### Backend 개발팀
 
-| 이름 | 역할 | GitHub | 담당 업무 |
-|------|------|--------|----------|
-| **김현빈** | Backend Lead | [@kimhyunbin](https://github.com/kimhyunbin) | 아키텍처 설계, 인증 시스템, CI/CD |
-| **팀원2** | Backend Developer | [@teammate2](https://github.com/teammate2) | API 개발, 데이터베이스 설계 |
-| **팀원3** | Backend Developer | [@teammate3](https://github.com/teammate3) | 외부 API 연동, 테스트 코드 |
-
+| 이름      | 역할 | GitHub                                         | 담당 업무                  |
+|---------|------|------------------------------------------------|------------------------|
+| **김현빈** | Backend Lead | [@kimhyunbin](https://github.com/kimhyunbin)   | 아키텍처 설계, 인증 시스템, CI/CD |
+| **오현우** | Backend Developer | [@HyunWoo9930](https://github.com/HyunWoo9930) | API 개발, 소셜로그인          |
 
 <div align="center">
 
@@ -139,6 +116,5 @@ http://localhost:8080/api/v3/api-docs
 
 [![Website](https://img.shields.io/badge/Website-wedit.me-blue?style=for-the-badge)](https://wedit.me)
 [![API Documentation](https://img.shields.io/badge/API%20Docs-Swagger-green?style=for-the-badge)](https://wedit.me/api/swagger-ui.html)
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com/your-username/2025_SEASONTHON_TEAM_29_BE)
 
 </div>
