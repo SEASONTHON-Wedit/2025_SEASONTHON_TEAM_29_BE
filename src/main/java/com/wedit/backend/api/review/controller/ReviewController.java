@@ -189,7 +189,7 @@ public class ReviewController {
     @Operation(
             summary = "업체별 리뷰 목록 페이징 조회",
             description = "특정 업체의 리뷰 목록을 페이징하여 조회합니다.<br> " +
-                    "정렬 옵션 ?sort=(최신순: createdAt,desc / 별점 높은 순: rating,desc / 별점 낮은 순: rating,asc)을 사용할 수 있습니다.<br<" +
+                    "정렬 옵션 ?sort=(최신순: createdAt,desc / 별점 높은 순: rating,desc / 별점 낮은 순: rating,asc)을 사용할 수 있습니다.<br>" +
                     "페이지 단위로 2개씩 불러옵니다."
     )
     @ApiResponses({
