@@ -1,10 +1,7 @@
 package com.wedit.backend.api.vendor.controller;
 
 
-import com.wedit.backend.api.vendor.dto.response.VendorCreateResponseDTO;
-import com.wedit.backend.api.vendor.dto.response.VendorDetailsResponseDTO;
-import com.wedit.backend.api.vendor.dto.response.VendorListResponseDTO;
-import com.wedit.backend.api.vendor.dto.response.VendorSearchResultDTO;
+import com.wedit.backend.api.vendor.dto.response.*;
 import com.wedit.backend.api.vendor.dto.search.WeddingHallSearchConditions;
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.entity.enums.Category;
@@ -17,7 +14,6 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,8 +45,10 @@ public class VendorController {
 
          이 API의 핵심은 `details` 객체의 구조가 `details` 내부의 `category` 필드 값에 따라 동적으로 결정된다는 점입니다.
          - `category`가 **"WEDDING_HALL"**이면, `details`는 웨딩홀의 상세 정보(`style`, `meal` 등)를 포함해야 합니다.
-         - `category`가 **"DRESS"**이면, `details`는 드레스샵의 상세 정보(`priceRange`, `fittingFee` 등)를 포함해야 합니다.
-
+         - `category`가 **"DRESS"**이면, `details`는 드레스샵의 상세 정보(`banquet`, `surcharge` 등)를 포함해야 합니다.
+         - `category`가 **"STUDIO"**이면, `details`는 스튜디오의 상세 정보(`studioType`)를 포함해야 합니다.
+         - `category`가 **"MAKEUP"**이면, `details`는 메이크업샵의 상세 정보(`trip`, `additional` 등)를 포함해야 합니다.
+                    
          ---
 
          **이미지 처리 절차:**
@@ -114,7 +112,7 @@ public class VendorController {
                                   }"""),
                             @ExampleObject(
                                     name = "드레스샵 생성 예시",
-                                    summary = "향후 확장될 Dress 타입의 예시입니다.",
+                                    summary = "Dress 카테고리 생성 요청의 표준 예시입니다.",
                                     value = """
                                   {
                                     "name": "시그니처 엘리자베스",
@@ -130,15 +128,63 @@ public class VendorController {
                                     "minimumAmount": 3000000,
                                     "details": {
                                       "category": "DRESS",
-                                      "priceRange": "HIGH",
-                                      "importedFrom": ["USA", "ITALY"],
-                                      "fittingFee": 50000
+                                      "banquet": true,
+                                      "surcharge": false,
+                                      "fittingCharge": true
                                     },
-                                    "logoImageKey": "vendor/logo/signature.png",
-                                    "mainImageKey": "vendor/main/signature_main.jpg",
-                                    "imageGroups": [
-                                      { "groupTitle": "2025 F/W 신상 화보", "groupDescription": "이번 시즌 신상 드레스 화보입니다.", "sortOrder": 0, "imageKeys": ["s3_key_for_dress_1.jpg"] }
-                                    ]
+                                    "logoImageKey": "vendor/2/logo/signature.png",
+                                    "mainImageKey": "vendor/2/main/signature_main.jpg",
+                                    "imageGroups": []
+                                  }"""),
+                            @ExampleObject(
+                                    name = "스튜디오 생성 예시",
+                                    summary = "Studio 카테고리 생성 요청의 표준 예시입니다.",
+                                    value = """
+                                  {
+                                    "name": "헤이스 스튜디오",
+                                    "phoneNumber": "02-511-9925",
+                                    "description": "자연광을 활용한 따뜻하고 감성적인 사진을 추구합니다.",
+                                    "address": {
+                                        "city": "서울특별시",
+                                        "district": "강남구",
+                                        "dong": "논현동",
+                                        "fullAddress": "서울특별시 강남구 논현동 123-45",
+                                        "kakaoMapUrl": "https://map.kakao.com/link/to/헤이스스튜디오,37.515,127.030"
+                                    },
+                                    "minimumAmount": 2500000,
+                                    "details": {
+                                      "category": "STUDIO",
+                                      "studioType": "OUTDOOR"
+                                    },
+                                    "logoImageKey": "vendor/3/logo/hayes.png",
+                                    "mainImageKey": "vendor/3/main/hayes_main.jpg",
+                                    "imageGroups": []
+                                  }"""),
+                            @ExampleObject(
+                                    name = "메이크업샵 생성 예시",
+                                    summary = "Makeup 카테고리 생성 요청의 표준 예시입니다.",
+                                    value = """
+                                  {
+                                    "name": "정샘물 인스피레이션",
+                                    "phoneNumber": "02-518-8100",
+                                    "description": "개개인의 아름다움을 극대화하는 메이크업을 선보입니다.",
+                                    "address": {
+                                        "city": "서울특별시",
+                                        "district": "강남구",
+                                        "dong": "청담동",
+                                        "fullAddress": "서울특별시 강남구 청담동 80-1",
+                                        "kakaoMapUrl": "https://map.kakao.com/link/to/정샘물인스피레이션,37.526,127.043"
+                                    },
+                                    "minimumAmount": 500000,
+                                    "details": {
+                                      "category": "MAKEUP",
+                                      "trip": false,
+                                      "additional": true,
+                                      "onlyWedding": false
+                                    },
+                                    "logoImageKey": "vendor/4/logo/jungsaemmool.png",
+                                    "mainImageKey": "vendor/4/main/jungsaemmool_main.jpg",
+                                    "imageGroups": []
                                   }""")
                     }
             )
@@ -235,5 +281,26 @@ public class VendorController {
         Page<VendorSearchResultDTO> response = vendorSearchService.searchWeddingHalls(conditions, pageable);
 
         return ApiResponse.success(SuccessStatus.VENDOR_SEARCH_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "업체 후기 리스트",
+            description = "특정 업체에 기록된 모든 후기를 페이징합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업체 후기 리스트 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다."),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 업체입니다.")
+    })
+    @GetMapping("/list/{vendorId}")
+    public ResponseEntity<ApiResponse<Page<VendorReviewListDTO>>> getVendorReviewListById(
+            @PathVariable Long vendorId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<VendorReviewListDTO> response = vendorService.getVendorReviewListById(vendorId, pageable);
+
+        return ApiResponse.success(SuccessStatus.VENDOR_REVIEW_LIST_GET_SUCCESS, response);
     }
 }
