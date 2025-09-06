@@ -1,11 +1,14 @@
 package com.wedit.backend.api.member.jwt.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.jwt.entity.RefreshToken;
 import com.wedit.backend.api.member.jwt.repository.RefreshTokenRepository;
 import com.wedit.backend.api.member.jwt.service.JwtService;
 import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.common.config.security.entity.SecurityMember;
+import com.wedit.backend.common.response.ApiResponse;
+import com.wedit.backend.common.response.SuccessStatus;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -24,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
@@ -40,19 +45,29 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     private final MemberRepository memberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    private static final String[] SWAGGER_URIS = {
-            "/swagger-ui",
-            "/v3/api-docs",
+    // 필터링 제외 목록
+    public static final String[] NOT_FILTER_URLS = {
+            "/api/swagger-resources/**",
+            "/api/swagger-ui/**",
+            "/api/swagger-ui.html",
+            "/api/v3/api-docs/**",
+            "/v3/api-docs/**",
+            "/swagger-resources/**",
+            "/swagger-ui/**",
             "/swagger-ui.html",
+            "/api/webjars/**",
+            "/webjars/**"
     };
 
-    /// 스웨거 관련 경로 필터링 제외
+    /// 엔드포인트 필터링 제외
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String requestURI = request.getRequestURI();
-        
-        for (String uri : SWAGGER_URIS) {
-            if (requestURI.contains(uri)) {
+
+        log.info("JwtFilter shouldNotFilter 프로세싱 요청: {}", requestURI);
+
+        for (String url : NOT_FILTER_URLS) {
+            if (requestURI.startsWith(url)) {
                 return true;
             }
         }
@@ -63,15 +78,19 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
+        log.info("Value of accessTokenHeader: {}", accessTokenHeader);
+        log.info("Value of refreshTokenHeader: {}", refreshTokenHeader);
+
         String requestURI = request.getRequestURI();
 
         try {
             // /token-reissue 로 요청했는가?
             if (requestURI.equals(TOKEN_REISSUE_URL)) {
-                
+
                 // 리프레쉬 토큰 요청 헤더에서 추출 후 유효성 검사
                 Optional<String> refreshTokenOpt = extractToken(request, refreshTokenHeader)
                         .filter(jwtService::isTokenValid);
+                log.info("Extracted Refresh Token: {}", refreshTokenOpt.orElse("없음"));
 
                 // 리프레쉬 토큰이 비어있다면 예외
                 if (refreshTokenOpt.isEmpty()) {
@@ -79,18 +98,18 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
                 }
 
                 String refreshToken = refreshTokenOpt.get();
+                log.info("Refresh Token to find in DB: {}", refreshToken);
 
                 // 리프레쉬 토큰으로 새 토큰 발급 후 인증 컨텍스트 설정
                 handleRefreshToken(response, refreshToken);
 
-                // 재발급 처리 후 필터 종료
-                filterChain.doFilter(request, response);
                 return;
             }
 
             // 액세스 토큰 요청 헤더에서 추출 후 유효성 검사, 인증 컨텍스트 설정
             Optional<String> accessTokenOpt = extractToken(request, accessTokenHeader)
                     .filter(jwtService::isTokenValid);
+            log.info("Extracted Access Token: {}", accessTokenOpt.orElse("없음"));
 
             accessTokenOpt.ifPresent(token -> jwtService.extractEmail(token)
                     .flatMap(memberRepository::findByEmail)
@@ -102,6 +121,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
         } catch (Exception ex) {
             // 필터단에서 발생하는 예외를 적절한 타이의 예외로 포장하여 상위로 던짐
             // -> FilterExceptionHandler
+            log.error("JwtAuthenticationProcessingFilter - Uncaught exception: [{}], a ServletException will be thrown.", ex.getClass().getName(), ex);
             if (ex instanceof ServletException) {
                 throw (ServletException) ex;
             } else if (ex instanceof IOException) {
@@ -113,7 +133,8 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     }
 
     /// Refresh Token을 처리하여 Access Token 재발급 및 인증 처리
-    private void handleRefreshToken(HttpServletResponse response, String refreshToken) {
+    private void handleRefreshToken(HttpServletResponse response, String refreshToken) throws IOException {
+
         RefreshToken savedRefreshToken = refreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(() -> new JwtException("저장된 리프레쉬 토큰이 없습니다."));
 
@@ -125,11 +146,19 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
         Member member = savedRefreshToken.getMember();
 
         // 새로운 Access, Refresh Token 생성
-        Map<String, String> newTokens = jwtService.createAccessAndRefreshToken(member.getId(), member.getEmail(), member.getRole());
+        Map<String, String> newTokens = jwtService.createAccessAndRefreshToken(member);
+
+        // 응답 코드와 컨텐츠 타입 설정
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType("application/json;charset=UTF-8");
 
         // 새로 발급한 토큰을 응답 헤더에 담아 전송
         response.setHeader(accessTokenHeader, "Bearer " + newTokens.get("accessToken"));
         response.setHeader(refreshTokenHeader, "Bearer " + newTokens.get("refreshToken"));
+
+        // 응답 바디 메시지 작성
+        String json = new ObjectMapper().writeValueAsString(ApiResponse.success(SuccessStatus.TOKEN_REISSUE_SUCCESS, newTokens));
+        response.getWriter().write(json);
 
         setAuthentication(member);
 
@@ -143,7 +172,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return Optional.of(bearerToken.substring(7));
         }
-        
+
         return Optional.empty();
     }
 

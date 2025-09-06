@@ -27,25 +27,25 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 	private final MemberRepository memberRepository;
 
 	// 프론트엔드 URL (환경에 따라 설정)
-	@Value("${app.oauth2.authorized-redirect-uri:http://localhost:3000/oauth2/redirect}")
+	@Value("${app.oauth2.authorized-redirect-uri:https://wedit.me/oauth/callback}")
 	private String redirectUri;
 
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
 		Authentication authentication) throws IOException {
 
-		System.out.println("=== OAuth2 인증 성공 핸들러 시작 ===");
+		log.info("=== OAuth2 인증 성공 핸들러 시작 ===");
 
 		OAuth2User oauth2User = (OAuth2User)authentication.getPrincipal();
 
-		System.out.println("oauth2User attributes = " + oauth2User.getAttributes());
+		log.debug("oauth2User attributes = {}", oauth2User.getAttributes());
 
 		// registrationId를 통해 어떤 소셜 로그인인지 확인
 		String registrationId = extractRegistrationId(request);
 		String userNameAttributeName = oauth2User.getName();
 
-		System.out.println("registrationId = " + registrationId);
-		System.out.println("userNameAttributeName = " + userNameAttributeName);
+		log.info("registrationId = {}", registrationId);
+		log.info("userNameAttributeName = {}", userNameAttributeName);
 
 		// OAuthAttributes를 사용해서 올바르게 사용자 정보 추출
 		OAuthAttributes attributes = OAuthAttributes.of(registrationId, userNameAttributeName,
@@ -58,27 +58,40 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 		Member member = memberRepository.findByOauthId(socialProvider + "_" + socialId)
 			.orElseThrow(() -> new IllegalStateException("사용자를 찾을 수 없습니다."));
 
-		System.out.println(
-			"조회된 사용자 - ID: " + member.getId() + ", Email: " + member.getEmail());
+		log.info("조회된 사용자 - ID: {}, Email: {}", member.getId(), member.getEmail());
+
+		// 회원가입 완료 여부 체크
+		boolean isProfileComplete = isProfileComplete(member);
+		log.info("회원가입 완료 여부: {}", isProfileComplete);
 
 		// JWT 토큰 생성
-		System.out.println(
-			"토큰 생성 - userId: " + member.getId() + ", email: " + member.getEmail());
-		String accessToken = jwtService.createAccessToken(member.getId(), member.getEmail(), member.getRole());
+		log.info("토큰 생성 - userId: {}, email: {}", member.getId(), member.getEmail());
+		String accessToken = jwtService.createAccessToken(member);
 		String refreshToken = jwtService.createRefreshToken(member.getId());
 
-		System.out.println("생성된 AccessToken: " + accessToken.substring(0, Math.min(50, accessToken.length())) + "...");
+		log.info("생성된 AccessToken: {}...", accessToken.substring(0, Math.min(50, accessToken.length())));
 
 		String targetUrl = UriComponentsBuilder.fromUriString(redirectUri)
 			.queryParam("token", accessToken)
 			.queryParam("refresh", refreshToken)
+			.queryParam("isNewUser", !isProfileComplete)  // 추가 정보 입력 필요 여부
 			.build().toUriString();
 
-		System.out.println("일반 사용자 - 리다이렉트 URL: " + targetUrl);
+		log.info("최종 리다이렉트 URL: {}", targetUrl);
 		response.sendRedirect(targetUrl);
 
-		System.out.println("=== OAuth2 인증 성공 핸들러 완료 ===");
-		log.info("OAuth2 인증 성공. 사용자: {}", member.getEmail());
+		log.info("=== OAuth2 인증 성공 핸들러 완료 ===");
+	}
+
+	/**
+	 * 회원가입 완료 여부 확인
+	 * 필수 정보가 모두 입력되었는지 체크
+	 */
+	private boolean isProfileComplete(Member member) {
+		return member.getPhoneNumber() != null && 
+			   member.getBirthDate() != null && 
+			   member.getWeddingDate() != null && 
+			   member.getType() != null;
 	}
 
 	private String extractRegistrationId(HttpServletRequest request) {

@@ -2,11 +2,14 @@ package com.wedit.backend.api.vendor.entity;
 
 import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.review.entity.Review;
-import com.wedit.backend.common.entity.Category;
+import com.wedit.backend.api.tour.entity.Tour;
+import com.wedit.backend.api.vendor.entity.enums.Category;
+import com.wedit.backend.common.entity.BaseTimeEntity;
+
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,28 +17,55 @@ import java.util.List;
 @Entity
 @Table(name = "vendor")
 @Getter
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Vendor {
+public class Vendor extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    private String name;            // 업체 이름
+
+    private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
-    private Category category;
+    private Category category;      // 카테고리 (WEDDING_HALL, STUDIO, DRESS, MAKEUP)
 
-    private String description;
+    private String description;     // 업체 소개
 
-    private boolean isClosed;
+    @Embedded
+    private Address address;        // 주소 임베드
 
+    @Column(nullable = false)
+    private Integer minimumAmount;      // 최소 가격
+
+    @Lob
+    @Column(name = "details")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String details;
+
+    // Vendor에 속한 모든 이미지
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<VendorImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Review>  reviews = new ArrayList<>();
+    @Builder.Default
+    private List<Review> reviews = new ArrayList<>();
 
     @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Reservation> reservations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Tour> tours = new ArrayList<>();
+
+    // VendorImage 연관관계 설정
+    public void setImages(List<VendorImage> images) {
+        this.images = images;
+        images.forEach(image -> image.setVendor(this));
+    }
 }

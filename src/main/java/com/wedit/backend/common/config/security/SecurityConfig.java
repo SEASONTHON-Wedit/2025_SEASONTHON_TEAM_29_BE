@@ -1,7 +1,7 @@
 package com.wedit.backend.common.config.security;
 
 import com.wedit.backend.api.member.jwt.filter.FilterExceptionHandler;
-import com.wedit.backend.common.config.jwt.JwtConfig;
+import com.wedit.backend.api.member.jwt.filter.JwtAuthenticationProcessingFilter;
 import com.wedit.backend.common.oauth2.OAuth2AuthenticationFailureHandler;
 import com.wedit.backend.common.oauth2.OAuth2AuthenticationSuccessHandler;
 import com.wedit.backend.common.oauth2.OAuth2UserService;
@@ -27,11 +27,12 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtConfig jwtConfig;
     private final FilterExceptionHandler filterExceptionHandler;
     private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
     private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
     private final OAuth2UserService oAuth2UserService;
+    private final JwtAuthenticationProcessingFilter jwtAuthenticationProcessingFilter;
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -48,7 +49,7 @@ public class SecurityConfig {
                     CorsConfiguration config = new CorsConfiguration();
                     config.setAllowedOrigins(Arrays.asList(
                             "https://*.wedit.me",
-                            "https://localhost:3000"
+                            "http://localhost:3000"
                     ));
                     config.setAllowedMethods(Arrays.asList(
                             "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
@@ -69,30 +70,38 @@ public class SecurityConfig {
                 }))
                 .headers(headers -> headers
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .sessionManagement(
+                sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
-                            "/api-doc/**",
-                            "/api/v3/api-docs/**",
-                            "/api/swagger-resources/**",
-                            "/api/swagger-ui/**",
-                            "/api/swagger-ui.html",
-                            "/v3/api-docs/**",
-                            "/swagger-resources/**",
-                            "/swagger-ui/**",
-                            "/swagger-ui.html",
-                            "/actuator/health",
-                            "/actuator/info"
-                        ).permitAll()   // Swagger, Spring Actuator 허가
+                                "/api/swagger-resources/**",
+                                "/api/swagger-ui/**",
+                                "/api/swagger-ui.html",
+                                "/api/v3/api-docs/**",
+                                "/v3/api-docs/**",
+                                "/swagger-resources/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/actuator/health",
+                                "/actuator/info",
+                                "/api/webjars/**",
+                                "/webjars/**",
+                                "/uploads/**",
+                                "/api/oauth2/authorization/**",
+                                "/login/oauth2/code/**",
+                                // "/api/login/oauth2/code/**",
+                                "/oauth/callback"
+                        ).permitAll()   // Swagger, Spring Actuator, OAuth2 Debug 허가
                         .requestMatchers(
-                                "/api/v1/member/**"
+                                "/api/v1/member/**",
+                                "/api/v1/vendor/**"
                         ).permitAll()   // Member 관련 허가
                         .anyRequest().authenticated()
-                )   // OAuth2 도입 시 추가
-            .oauth2Login(
+                )
+            .oauth2Login(   // OAuth2
                 oauth2Login -> oauth2Login
-                    .defaultSuccessUrl("/")
+                        .authorizationEndpoint(auth ->
+                                auth.baseUri("/api/oauth2/authorization"))
                     .successHandler(oAuth2AuthenticationSuccessHandler)
                     .failureHandler(oAuth2AuthenticationFailureHandler)
                     .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
@@ -102,7 +111,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(filterExceptionHandler)        // 인가 실패 예외 핸들링
                 );
 
-        http.addFilterBefore(jwtConfig.jwtAuthenticationProcessingFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtAuthenticationProcessingFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

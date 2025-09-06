@@ -1,8 +1,6 @@
 package com.wedit.backend.api.member.controller;
 
-import com.wedit.backend.api.member.dto.MemberLoginRequestDTO;
-import com.wedit.backend.api.member.dto.MemberLoginResponseDTO;
-import com.wedit.backend.api.member.dto.MemberSignupRequestDTO;
+import com.wedit.backend.api.member.dto.*;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.jwt.entity.RefreshToken;
 import com.wedit.backend.api.member.jwt.service.JwtService;
@@ -13,10 +11,14 @@ import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.ErrorStatus;
 import com.wedit.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -32,57 +34,45 @@ public class MemberController {
     private final RefreshTokenService refreshTokenService;
 
     @Operation(
-            summary = "회원가입 API",
-            description = "회원가입을 진행합니다. <br>"
-                + "<p>"
-                + "호출 필드 정보) <br>"
-                + "email : 사용자 이메일 <br>"
-                + "password : 사용자 비밀번호 <br>"
-                + "name : 사용자 본명 <br>"
-                + "phoneNumber : 전화번호 (ex. 01012345678) <br>"
-                + "birthDate : 생년월일 (ex. 2025-07-21) <br>"
-                + "weddingDate : 결혼 예정일 (ex. 2025-07-21) <br>"
-                + "type : 회원 타입 (신랑 : GROOM / 신부 : BRIDE)"
+            summary = "일반 회원가입",
+            description = "이메일, 비밀번호 등을 이용해 신규 회원을 등록합니다."
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "회원가입 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.", content = @Content)
     })
     @PostMapping("/signup")
-    public ResponseEntity<ApiResponse<Void>> signup(@RequestBody MemberSignupRequestDTO memberSignupRequestDTO) {
+    public ResponseEntity<ApiResponse<Void>> signup(
+            @RequestBody MemberSignupRequestDTO memberSignupRequestDTO) {
 
         memberService.signupMember(memberSignupRequestDTO);
 
         return ApiResponse.successOnly(SuccessStatus.MEMBER_SIGNUP_SUCCESS);
     }
 
-    // 로그인
     @Operation(
-            summary = "로그인 APi",
-            description = "Email 과 Password 를 통해 사용자를 인증하고 토큰을 발급합니다. <br>"
-                + "<p>"
-                + "호출 필드 정보) <br>"
-                + "email : 사용자 이메일 (ex. user@naver.com) <br>"
-                + "password : 사용자 비밀번호 (ex. 123ABC@$)"
+            summary = "이메일/비밀번호 로그인",
+            description = "이메일과 비밀번호로 사용자를 인증하고 Access/Refresh 토큰을 발급합니다."
     )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "폼 로그인 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "일반 로그인 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패")
     })
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<MemberLoginResponseDTO>> login(@RequestBody MemberLoginRequestDTO memberLoginRequestDTO) {
+    public ResponseEntity<ApiResponse<MemberLoginResponseDTO>> login(
+            @RequestBody MemberLoginRequestDTO memberLoginRequestDTO) {
 
         MemberLoginResponseDTO responseDTO = memberService.loginMember(memberLoginRequestDTO);
 
         return ApiResponse.success(SuccessStatus.FORM_LOGIN_SUCCESS, responseDTO);
     }
 
-    // 토큰 재발급
     @Operation(
-            summary = "토큰 재발급 APi",
-            description = "유효한 리프레시 토큰을 헤더(X-Refresh-Token)로 제공 시 새로운 액세스 토큰과 리프레쉬 토큰을 생성하여 헤더로 전송합니다. <br>"
-                + "[주의] Swagger 로 테스트 시 토큰 앞에 'Bearer ' 을 붙여야 함."
+            summary = "액세스 토큰 재발급",
+            description = "만료된 액세스 토큰을 재발급합니다. 요청 헤더에 'X-Refresh-Token'으로 유효한 리프레시 토큰을 포함해야 합니다."
+                + "[주의] Swagger 로 테스트 시 토큰 앞에 'Bearer ' 을 붙여야 함.",
+            security = @SecurityRequirement(name = "X-Refresh-Token")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "토큰 재발급 성공"),
@@ -90,7 +80,8 @@ public class MemberController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 정보가 존재하지 않습니다.")
     })
     @GetMapping("/token-reissue")
-    public ResponseEntity<ApiResponse<Map<String, String>>> reissueToken(@RequestHeader(value = "X-Refresh-Token", required = false) String refreshToken) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> reissueToken(
+            @RequestHeader(value = "X-Refresh-Token", required = false) String refreshToken) {
 
         // 리프레쉬 토큰이 존재하지 않을 경우 예외 처리
         if (refreshToken == null || refreshToken.isEmpty()) {
@@ -104,7 +95,7 @@ public class MemberController {
         }
 
         // DB에서 리프레쉬 토큰 존재여부 및 만료 확인
-        RefreshToken savedRefreshToken = refreshTokenService.findByToken(refreshToken)
+        RefreshToken savedRefreshToken = refreshTokenService.findByToken(pureRefreshToken)
                 .orElseThrow(() -> new UnauthorizedException(ErrorStatus.UNAUTHORIZED_INVALID_TOKEN.getMessage()));
 
         if (refreshTokenService.isTokenExpired(savedRefreshToken)) {
@@ -114,14 +105,45 @@ public class MemberController {
         Member member = savedRefreshToken.getMember();
 
         // 새 Access, Refresh Token 생성 후 발급
-        Map<String, String> newTokens = jwtService.createAccessAndRefreshToken(
-                member.getId(),
-                member.getEmail(),
-                member.getRole()
-        );
+        Map<String, String> newTokens = jwtService.createAccessAndRefreshToken(member);
 
         return ApiResponse.success(SuccessStatus.TOKEN_REISSUE_SUCCESS, newTokens);
     }
 
-    // Member 필드 수정 엔드포인트 (이메일, 비밀번호, 이름, 결혼예정일 등)
+    @Operation(
+            summary = "소셜 로그인 추가 정보 입력 API",
+            description = "소셜 로그인 후 추가 정보를 입력합니다. <br>" +
+                    "필수 정보: 생년월일, 전화번호, 결혼예정일, 타입(신랑/신부)",
+            security = {
+                    @SecurityRequirement(name = "Authorization")
+            }
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "추가 정보 입력 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "입력 값 오류 (전화번호 중복, 미인증 등)", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패 (유효하지 않은 토큰)", content = @Content),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "회원 정보가 존재하지 않습니다.", content = @Content)
+    })
+    @PostMapping("/social_login/additional_info")
+    public ResponseEntity<ApiResponse<Void>> socialLogin(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @RequestBody SocialMemberAdditionalRequestDTO socialMemberAdditionalRequestDTO
+    ) {
+        memberService.socialLogin(userDetails.getUsername(), socialMemberAdditionalRequestDTO);
+
+        return ApiResponse.successOnly(SuccessStatus.MEMBER_SIGNUP_SUCCESS);
+    }
+
+    @GetMapping("/mypage")
+    public ResponseEntity<ApiResponse<MemberMyInfoResponseDTO>> getMyInfo(
+            @RequestHeader("Authorization") String reqToken) {
+
+        String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
+        Long memberId = jwtService.extractMemberId(token)
+                .orElseThrow(() -> new UnauthorizedException(ErrorStatus.UNAUTHORIZED_INVALID_TOKEN.getMessage()));
+
+        MemberMyInfoResponseDTO response = memberService.getMemberInfo(memberId);
+
+        return ApiResponse.success(SuccessStatus.MEMBER_MYPAGE_GET_SUCCESS, response);
+    }
 }

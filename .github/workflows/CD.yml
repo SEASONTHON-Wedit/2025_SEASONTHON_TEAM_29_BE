@@ -31,7 +31,10 @@ jobs:
       # 3. 새 컨테이너 실행
       - name: Run New Container
         run: |
-          sudo docker run --name wedit --rm -d -p 8080:8080 ${{ secrets.DOCKERHUB_USERNAME }}/wedit_cicd_action:latest
+          sudo docker run --name wedit -d -p 8080:8080 \
+              -v wedit_uploads:/app/uploads \
+              -v wedit_logs:/app/logs \
+              ${{ secrets.DOCKERHUB_USERNAME }}/wedit_cicd_action:latest
 
       # 4. 미사용 이미지 정리
       - name: Prune Unused Docker Images

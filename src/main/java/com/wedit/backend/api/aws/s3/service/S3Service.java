@@ -1,26 +1,137 @@
 package com.wedit.backend.api.aws.s3.service;
 
+import com.wedit.backend.api.aws.s3.dto.PresignedUrlRequestDTO;
+import com.wedit.backend.api.aws.s3.dto.PresignedUrlResponseDTO;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.UUID;
+
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class S3Service {
 
-    // GET URL
-    // reviewImage 의 파일 경로를 불러와 URL 생성 후 반환 (동적 생성)
-    // reviewImage의 파일 경로도 함께 반환 -> 삭제 시 사용
+    private final S3Presigner s3Presigner;
+    private final S3Client s3Client;
 
-    // PUT URL
-    // 최종 URL 발급 전 DB(ex. reviewImage)에 임의의 S3 파일 경로 저장
-    // 업로드 시 Content-Type 도 같이 저장
-    // 업로드 상태 저장 필드 추가 (완료, 실패, 진행 등)
-    // 조회용 URL도 발급
-    // 발급 URL 로 PUT 성공/실패 시 핸들러 필요?
-    // 혹은 타임아웃 스케줄링 구현
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucketName;
 
-    // DELETE Logic
-    // 프론트가 준 파일 경로(키)를 기반으로 DB 조회 후 DB와 S3 모두에서 삭제
+    @Value("${cloud.aws.s3.presign.expiration-minutes}")
+    private Integer durationMinutes;
+
+
+    public PresignedUrlResponseDTO  generatePresignedPutUrl(
+            PresignedUrlRequestDTO reqDto,
+            String domain,
+            Long memberId) {
+
+        // S3 객체 키 생성
+        String key = createS3Key(domain, memberId, reqDto.getDomainId(), reqDto.getContentType(), reqDto.getFilename());
+
+        // PreSigned URL 생성
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .contentType(reqDto.getContentType())
+                .contentLength(reqDto.getContentLength())
+                .build();
+
+        PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder()
+                .putObjectRequest(putObjectRequest)
+                .signatureDuration(Duration.ofMinutes(durationMinutes))
+                .build();
+
+        String url = s3Presigner.presignPutObject(presignRequest).url().toString();
+
+        return PresignedUrlResponseDTO.builder()
+                .s3Key(key)
+                .presignedUrl(url)
+                .build();
+    }
+
+    public PresignedUrlResponseDTO  generatePresignedGetUrl(String key) {
+
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .getObjectRequest(getObjectRequest)
+                .signatureDuration(Duration.ofMinutes(durationMinutes))
+                .build();
+
+        String url = s3Presigner.presignGetObject(presignRequest).url().toString();
+
+        return PresignedUrlResponseDTO.builder()
+                .s3Key(key)
+                .presignedUrl(url)
+                .build();
+    }
+
+    public void deleteFile(String key) {
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+
+        s3Client.deleteObject(deleteObjectRequest);
+        log.info("S3 file deleted : {}", key);
+    }
+
+    public void deleteFiles(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+
+        List<ObjectIdentifier> toDelete = keys.stream()
+                .map(key -> ObjectIdentifier.builder().key(key).build())
+                .toList();
+
+        DeleteObjectsRequest deleteObjectsRequest = DeleteObjectsRequest.builder()
+                .bucket(bucketName)
+                .delete(Delete.builder().objects(toDelete).build())
+                .build();
+
+        s3Client.deleteObjects(deleteObjectsRequest);
+        log.info("S3 file deleted : {} items", keys.size());
+    }
 
     // URL Generator
-    
-    // 파일 누락, 중복 업로드, 미완료 파일 예외 유의
+    private String createS3Key(String domain, Long memberId, Long domainId, String contentType, String originalFileName) {
+
+        // 미디어 타입 분류
+        String mediaType = contentType.toLowerCase().startsWith("image/") ? "images" : "videos";
+
+        // 날짜 폴더 구조
+        String currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+
+        // UUID 생성
+        String uuid = UUID.randomUUID().toString();
+
+        // 확장자 추출
+        String extension = "";
+        if (originalFileName != null && originalFileName.contains(".")) {
+            extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+        }
+        String safeFileName = uuid + "_" + currentDateTime + extension;
+
+        // 최종 PreSigned URL 발급 후 반환
+        // {domain}/{memberId}/{mediaType}/{domainId}/{uuid}_{currentDateTime}.{extension}
+        return String.format("%s/%d/%s/%d/%s", domain, memberId, mediaType, domainId, safeFileName);
+    }
 }
