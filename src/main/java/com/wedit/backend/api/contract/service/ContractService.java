@@ -52,7 +52,6 @@ import java.util.stream.Collectors;
 public class ContractService {
 
     private final ContractRepository contractRepository;
-    private final ReservationRepository reservationRepository;
     private final VendorRepository vendorRepository;
     private final MemberRepository memberRepository;
 
@@ -114,32 +113,6 @@ public class ContractService {
     }
 
     /**
-     * 특정 날짜의 시간대 가용성 계산
-     */
-    private DailyTimeAvailabilityDTO calculateDailyAvailability(LocalDate date, List<Contract> contracts) {
-        List<Contract> dailyContracts = contracts != null ? contracts : Collections.emptyList();
-
-        // 계약된 시간대 추출
-        List<LocalTime> contractedTimes = dailyContracts.stream()
-                .map(Contract::getStartTime)
-                .collect(Collectors.toList());
-
-        // 예약 가능한 시간대 계산
-        List<LocalTime> availableTimes = AVAILABLE_TIME_SLOTS.stream()
-                .filter(time -> !contractedTimes.contains(time))
-                .collect(Collectors.toList());
-
-        return DailyTimeAvailabilityDTO.builder()
-                .date(date)
-                .availableTimes(availableTimes)
-                .contractedTimes(contractedTimes)
-                .totalTimeSlots(AVAILABLE_TIME_SLOTS.size())
-                .availableTimeSlots(availableTimes.size())
-                .hasAvailableTime(!availableTimes.isEmpty())
-                .build();
-    }
-
-    /**
      * 시간대별 가용성 조회 (각 시간대를 개별 항목으로 반환)
      */
     public TimeSlotAvailabilityListResponseDTO getTimeSlotAvailabilities(
@@ -157,7 +130,7 @@ public class ContractService {
         Map<LocalDate, List<Contract>> contractsByDate = getContractsByDates(vendorId, allDates);
 
         // 업체의 최소 가격 정보 추출
-        Integer minimumAmount = extractMinimumAmount(vendor);
+        Integer minimumAmount = vendor.getMinimumAmount();
 
         // 모든 날짜와 시간대 조합을 생성
         List<TimeSlotAvailabilityDTO> allTimeSlots = generateAllTimeSlots(
@@ -203,23 +176,6 @@ public class ContractService {
                 .pagination(pagination)
                 .filter(filter)
                 .build();
-    }
-
-    /**
-     * 업체의 최소 가격 정보 추출
-     */
-    private Integer extractMinimumAmount(Vendor vendor) {
-        try {
-            if (vendor.getDetails() != null) {
-                ObjectMapper objectMapper = new ObjectMapper();
-                WeddingHallDetailsDTO details = objectMapper.readValue(
-                        vendor.getDetails(), WeddingHallDetailsDTO.class);
-                return details.getMinimumAmount();
-            }
-        } catch (Exception e) {
-            log.warn("업체 {}의 최소 가격 정보를 파싱할 수 없습니다: {}", vendor.getId(), e.getMessage());
-        }
-        return 5000000; // 기본값: 500만원
     }
 
     /**
@@ -315,7 +271,7 @@ public class ContractService {
         validateTimeSlotAvailability(vendorId, requestDTO.getContractDate(), requestDTO.getContractTime());
         
         // 업체의 최소 가격 정보 추출
-        Integer minimumAmount = extractMinimumAmount(vendor);
+        Integer minimumAmount = vendor.getMinimumAmount();
         
         // 기본값으로 계약 정보 설정
         LocalTime endTime = requestDTO.getContractTime().plusHours(4); // 기본 4시간
