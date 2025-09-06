@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Optional;
 
 import com.wedit.backend.api.vendor.entity.enums.Category;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -41,4 +40,6 @@ public interface VendorRepository extends JpaRepository<Vendor, Long>, VendorRep
 			@Param("twoWeeksAgo") LocalDateTime twoWeeksAgo,
 			Pageable pageable
 	);
+
+	// vendorId로 특정 업체 전체 후기 페이징 조회
 }
