@@ -89,6 +89,7 @@ public class SecurityConfig {
                                 "/uploads/**",
                                 "/api/oauth2/authorization/**",
                                 "/login/oauth2/code/**",
+                                "/api/login/oauth2/code/**",
                                 "/oauth/callback"
                         ).permitAll()   // Swagger, Spring Actuator, OAuth2 Debug 허가
                         .requestMatchers(

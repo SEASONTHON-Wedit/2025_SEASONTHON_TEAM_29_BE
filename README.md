@@ -29,57 +29,53 @@
 - **💰 견적 관리**: 각 업체별 견적 비교 및 관리
 
 ---
+## 🪾 브랜치 전략
+- **Issue**를 통한 feature/bug/fix/refactor 브랜치 생성
+- 
 
-## 🏗 프로젝트 아키텍처
+----
 
-<img width="552" height="355" alt="Image" src="https://github.com/user-attachments/assets/eb527460-b91a-4842-a73a-c89718061444" />
+## 📊 데이터베이스 구조
 
----
-
-## 🌟 주요 기능
-
-### 👤 회원 관리
-- **일반 회원가입/로그인** - 이메일 기반 계정 시스템
-- **소셜 로그인** - Google, Naver 연동
-- **SMS 인증** - 전화번호 본인인증
-- **커플 연동** - 신랑신부 계정 연결 시스템
-
-### 🏢 업체 관리
-- **카테고리별 업체 조회**
-    - 웨딩홀 (WEDDING_HALL)
-    - 드레스 (DRESS)
-    - 스튜디오 (STUDIO)
-    - 메이크업 (MAKEUP)
-- **상세 정보 관리** - 업체별 특화 정보 저장
-- **이미지 업로드** - AWS S3 연동 파일 관리
-- **위치 기반 검색** - 주소 정보 관리
-
-### 📅 예약 시스템
-- **실시간 예약 가능 시간 조회**
-- **예약 생성 및 관리**
-- **예약 상태 추적**
-- **예약 충돌 방지 로직**
-
-### 📝 리뷰 시스템
-- **이용 후기 작성/수정/삭제**
-- **별점 평가 시스템**
-- **리뷰 통계 제공**
-- **이미지 첨부 기능**
-
-### 🎯 투어 관리
-- **업체 견학 일정 관리**
-- **투어 예약 시스템**
-- **투어 후기 관리**
-
-### 💰 견적 시스템
-- **업체별 견적 요청**
-- **견적 비교 기능**
-- **견적서 관리**
-
+<img width="4236" height="3424" alt="Image" src="https://github.com/user-attachments/assets/cc7fc5a7-3816-4c4d-b494-77043e703102" />
 ---
 
 ## 📁 프로젝트 구조
 
+```
+src/main/java/com/wedit/backend/
+├── BackendApplication.java
+├── api/                              # API 컨트롤러
+│   ├── member/                       # 👤 회원 관련
+│   │   ├── controller/
+│   │   ├── dto/
+│   │   ├── entity/
+│   │   ├── jwt/
+│   │   │   ├── entity/
+│   │   │   ├── filter/
+│   │   │   ├── repository/
+│   │   │   └── service/
+│   │   ├── repository/
+│   │   └── service/
+│   ├── vendor/                       # 🏢 업체 관련
+│   │   ├── controller/
+│   │   ├── dto/
+│   │   ├── entity/
+│   │   ├── repository/
+│   │   └── service/
+│   ├── reservation/                  # 📅 예약 관련
+│   ├── review/                       # ⭐ 리뷰 관련
+│   ├── contract/                     # 📄 계약 관련
+│   ├── tour/                         # 🎯 투어 관련
+│   ├── estimate/                     # 💰 견적 관련
+│   └── aws/s3/                       # 📁 파일 업로드
+└── common/                           # 🛠 공통 설정
+    ├── config/                       # 설정 클래스
+    ├── security/                     # 보안 설정
+    ├── oauth2/                       # OAuth2 설정
+    ├── exception/                    # 예외 처리
+    └── response/                     # 응답 포맷
+```
 
 ---
 
@@ -97,10 +93,10 @@ http://localhost:8080/api/v3/api-docs
 
 ----
 
-## 📊 데이터베이스 구조
+## 🏗 프로젝트 아키텍처
 
-<img width="4236" height="3424" alt="Image" src="https://github.com/user-attachments/assets/cc7fc5a7-3816-4c4d-b494-77043e703102" />
-
+<img width="552" height="355" alt="Image" src="https://github.com/user-attachments/assets/eb527460-b91a-4842-a73a-c89718061444" />
+---- 
 ## 👥 팀원
 
 ### Backend 개발팀
