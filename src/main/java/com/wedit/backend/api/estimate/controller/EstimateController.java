@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/v1/estimate")
 @Slf4j
 @RequiredArgsConstructor
-@Tag(name = "Estimate", description = "견적서 관련 API 입니다.")
+@Tag(name = "Reservation/Estimate/Contract", description = "Reservation, Estimate, Contract 관련 API 입니다.")
 public class EstimateController {
 	private final EstimateService estimateService;
 

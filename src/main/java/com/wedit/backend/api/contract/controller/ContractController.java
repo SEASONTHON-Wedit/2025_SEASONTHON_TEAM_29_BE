@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
-@Tag(name = "Contract", description = "계약 관련 API")
+@Tag(name = "Reservation/Estimate/Contract", description = "Reservation, Estimate, Contract 관련 API 입니다.")
 @RestController
 @RequiredArgsConstructor
 @Slf4j
