@@ -282,25 +282,4 @@ public class VendorController {
 
         return ApiResponse.success(SuccessStatus.VENDOR_SEARCH_SUCCESS, response);
     }
-
-    @Operation(
-            summary = "업체 후기 리스트",
-            description = "특정 업체에 기록된 모든 후기를 페이징합니다."
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업체 후기 리스트 조회 성공"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 업체입니다.")
-    })
-    @GetMapping("/list/{vendorId}")
-    public ResponseEntity<ApiResponse<Page<VendorReviewListDTO>>> getVendorReviewListById(
-            @PathVariable Long vendorId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
-        Pageable pageable = PageRequest.of(page, size);
-        Page<VendorReviewListDTO> response = vendorService.getVendorReviewListById(vendorId, pageable);
-
-        return ApiResponse.success(SuccessStatus.VENDOR_REVIEW_LIST_GET_SUCCESS, response);
-    }
 }
