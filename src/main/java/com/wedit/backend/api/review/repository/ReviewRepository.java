@@ -15,7 +15,7 @@ import java.util.Optional;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-    // reviewId로 조회 시 연관 이미지도 Left Join으로 함께 조회 -> N+1 방지
+    // reviewId로 조회 시 연관 이미지도 Left Join 으로 함께 조회 -> N+1 방지
     @Query("SELECT r FROM Review r LEFT JOIN FETCH r.images WHERE r.id = :id")
     Optional<Review> findByIdWithImages(@Param("id") Long id);
 
@@ -44,4 +44,18 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
             "WHERE r.vendor.id IN :vendorIds " +
             "GROUP BY r.vendor.id")
     List<VendorReviewStatsDTO> findReviewStatsByVendorIds(@Param("vendorIds") List<Long> vendorIds);
+
+    // 후기 목록 페이징 조회
+    @Query(value = "SELECT r FROM Review r JOIN FETCH r.member WHERE r.vendor.id = :vendorId",
+            countQuery = "SELECT COUNT(r) FROM Review r WHERE r.vendor.id = :vendorId")
+    Page<Review> findByVendorId(@Param("vendorId") Long vendorId, Pageable pageable);
+
+
+    // 특정 업체의 리뷰 통계 (총 후기 개수, 평균 별점)
+    @Query("SELECT COUNT(r), COALESCE(AVG(r.rating), 0.0) FROM Review r WHERE r.vendor.id = :vendorId")
+    Optional<Object[]> findReviewStatsByVendorId(@Param("vendorId") Long vendorId);
+    
+    // 특정 업체의 별점별 후기 개수 조회
+    @Query("SELECT r.rating, COUNT(r) FROM Review r WHERE r.vendor.id = :vendorId GROUP BY r.rating")
+    List<Object[]> findRatingCountsByVendorId(@Param("vendorId") Long vendorId);
 }

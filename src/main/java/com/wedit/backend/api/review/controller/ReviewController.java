@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -166,4 +167,45 @@ public class ReviewController {
 
         return ApiResponse.successOnly(SuccessStatus.REVIEW_DELETE_SUCCESS);
     }
+
+    @Operation(
+            summary = "업체별 리뷰 통계 조회",
+            description = "특정 업체의 전체 리뷰 개수, 평균 평점, 별점별 개수 정보를 조회합니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업체 후기 통계 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 업체를 찾을 수 없습니다.")
+    })
+    @GetMapping("/{vendorId}/stats")
+    public ResponseEntity<ApiResponse<ReviewStatsResponseDTO>> getReviewStats(
+            @Parameter(description = "업체 ID")
+            @PathVariable Long vendorId) {
+
+        ReviewStatsResponseDTO response = reviewService.getReviewStats(vendorId);
+
+        return ApiResponse.success(SuccessStatus.VENDOR_REVIEW_STATS_SUCCESS, response);
+    }
+
+    @Operation(
+            summary = "업체별 리뷰 목록 페이징 조회",
+            description = "특정 업체의 리뷰 목록을 페이징하여 조회합니다.<br> " +
+                    "정렬 옵션 ?sort=(최신순: createdAt,desc / 별점 높은 순: rating,desc / 별점 낮은 순: rating,asc)을 사용할 수 있습니다.<br<" +
+                    "페이지 단위로 2개씩 불러옵니다."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "업체 후기 리스팅 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "해당 업체를 찾을 수 없습니다.")
+    })
+    @GetMapping("/{vendorId}/reviews")
+    public ResponseEntity<ApiResponse<ReviewListResponseDTO>> getReviewsByVendor(
+            @Parameter(description = "업체 ID")
+            @PathVariable Long vendorId,
+            @PageableDefault(size = 2, sort = "createdAt", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+
+        ReviewListResponseDTO response = reviewService.findReviewsByVendor(vendorId, pageable);
+
+        return ApiResponse.success(SuccessStatus.VENDOR_REVIEW_LIST_GET_SUCCESS, response);
+    }
+
 }
