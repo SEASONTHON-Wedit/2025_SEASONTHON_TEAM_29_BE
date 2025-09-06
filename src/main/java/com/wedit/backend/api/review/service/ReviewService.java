@@ -294,7 +294,7 @@ public class ReviewService {
                 .build();
     }
 
-     // 툭정 업체의 후기 목록 페이징 조회
+     // 특정 업체의 후기 목록 페이징 조회
      public ReviewListResponseDTO findReviewsByVendor(Long vendorId, Pageable pageable) {
         if (!vendorRepository.existsById(vendorId)) {
             throw new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + " : " + vendorId);
