@@ -15,6 +15,9 @@ public class MyReviewResponseDTO {
     @Schema(description = "업체 이름", example = "로즈로사")
     private String vendorName;
 
+    @Schema(description = "업체 지역구", example = "강남구")
+    private String district;
+
     @Schema(description = "업체의 대표 이미지 URL")
     private String vendorLogoUrl;
 

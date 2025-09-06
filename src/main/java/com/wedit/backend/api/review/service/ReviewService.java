@@ -258,6 +258,7 @@ public class ReviewService {
             return MyReviewResponseDTO.builder()
                     .reviewId(review.getId())
                     .vendorName(vendor.getName())
+                    .district(vendor.getAddress().getDistrict())
                     .vendorLogoUrl(vendorLogoUrl)
                     .myRating(review.getRating())
                     .build();
