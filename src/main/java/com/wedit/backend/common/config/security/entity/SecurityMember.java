@@ -1,7 +1,6 @@
 package com.wedit.backend.common.config.security.entity;
 
 import com.wedit.backend.api.member.entity.Member;
-import com.wedit.backend.api.member.entity.Type;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

@@ -2,13 +2,10 @@ package com.wedit.backend.api.member.service;
 
 import java.util.Map;
 
+import com.wedit.backend.api.member.dto.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.wedit.backend.api.member.dto.MemberLoginRequestDTO;
-import com.wedit.backend.api.member.dto.MemberLoginResponseDTO;
-import com.wedit.backend.api.member.dto.MemberSignupRequestDTO;
-import com.wedit.backend.api.member.dto.SocialMemberAdditionalRequestDTO;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.entity.PhoneNumberVerification;
 import com.wedit.backend.api.member.entity.Role;
@@ -20,9 +17,9 @@ import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.exception.UnauthorizedException;
 import com.wedit.backend.common.response.ErrorStatus;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -86,8 +83,7 @@ public class MemberService {
 		}
 
 		// JWT 토큰 생성 (액세스, 리프레쉬)
-		Map<String, String> tokens = jwtService.createAccessAndRefreshToken(member.getId(), member.getEmail(),
-			member.getRole());
+		Map<String, String> tokens = jwtService.createAccessAndRefreshToken(member);
 
 		return new MemberLoginResponseDTO(
 			member.getName(),
@@ -124,6 +120,17 @@ public class MemberService {
 			.type(socialMemberAdditionalRequestDTO.getType())
 			.weddingDate(socialMemberAdditionalRequestDTO.getWeddingDate())
 			.build();
+
 		memberRepository.save(build);
+	}
+
+	// Member 마이페이지
+	@Transactional(readOnly = true)
+	public MemberMyInfoResponseDTO getMemberInfo(Long memberId) {
+
+		Member member = memberRepository.findMemberWithCoupleInfoById(memberId)
+				.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+
+		return MemberMyInfoResponseDTO.from(member);
 	}
 }
