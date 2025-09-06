@@ -1,10 +1,12 @@
 package com.wedit.backend.api.tour.entity;
 
-import com.wedit.backend.api.member.entity.Member;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.common.entity.BaseTimeEntity;
 
-import jakarta.persistence.Column;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -12,6 +14,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,15 +39,14 @@ public class Tour extends BaseTimeEntity {
 	private Long lineOrder;
 
 	@ManyToOne
-	private Member member;
-
-	@ManyToOne
 	private Vendor vendor;
 
+	@OneToMany(mappedBy = "tour", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<MemberTourConnection> memberTourConnections = new ArrayList<>();
+
 	@Builder
-	public Tour(Status status, Member member, Vendor vendor, Long materialOrder, Long neckLineOrder, Long lineOrder) {
+	public Tour(Status status, Vendor vendor, Long materialOrder, Long neckLineOrder, Long lineOrder) {
 		this.status = status;
-		this.member = member;
 		this.vendor = vendor;
 		this.materialOrder = materialOrder;
 		this.neckLineOrder = neckLineOrder;

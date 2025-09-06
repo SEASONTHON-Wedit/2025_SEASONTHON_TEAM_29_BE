@@ -7,7 +7,7 @@ import java.util.List;
 import com.wedit.backend.api.member.jwt.entity.RefreshToken;
 import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.review.entity.Review;
-import com.wedit.backend.api.tour.entity.Tour;
+import com.wedit.backend.api.tour.entity.MemberTourConnection;
 import com.wedit.backend.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.CascadeType;
@@ -102,7 +102,7 @@ public class Member extends BaseTimeEntity {
 
 	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default
-	private List<Tour> tours = new ArrayList<>();
+	private List<MemberTourConnection> tours = new ArrayList<>();
 
 	public void changeEmail(String newEmail) {
 		this.email = newEmail;
