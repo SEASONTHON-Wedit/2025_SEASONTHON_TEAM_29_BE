@@ -96,7 +96,7 @@ public class ReservationController {
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예약 조회 성공"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
 	})
-	@GetMapping("/")
+	@GetMapping
 	public ResponseEntity<ApiResponse<List<ReservationResponseDTO>>> getMyReservation(
 		@AuthenticationPrincipal UserDetails userDetails
 	) {

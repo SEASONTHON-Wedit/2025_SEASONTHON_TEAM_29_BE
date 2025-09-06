@@ -265,6 +265,49 @@ public class ReviewService {
         });
     }
 
+    // 특정 업체 리뷰 통계 조회
+    public ReviewStatsResponseDTO getReviewStats(Long vendorId) {
+
+        // 벤더 존재 유무 조회
+        if (!vendorRepository.existsById(vendorId)) {
+            throw new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + " : " + vendorId);
+        }
+
+        // 특정 업체의 리뷰 통계 (총 후기 개수, 평균 별점)
+        Object[] stats = reviewRepository.findReviewStatsByVendorId(vendorId)
+                .orElse(new Object[]{0L, 0.0});
+        Long totalCount = (Long) stats[0];
+        Double averageRating = (Double) stats[1];
+
+        // 특정 업체의 별점 별 후기 개수
+        Map<Integer, Long> ratingCountResult = reviewRepository.findRatingCountsByVendorId(vendorId)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Integer) row[0],
+                        row -> (Long) row[1]
+                ));
+
+        // DTO 조립 후 반환
+        return ReviewStatsResponseDTO.builder()
+                .totalReviewCount(totalCount)
+                .averageRating(averageRating)
+                .ratingCounts(ratingCountResult)
+                .build();
+    }
+
+     // 특정 업체의 후기 목록 페이징 조회
+     public ReviewListResponseDTO findReviewsByVendor(Long vendorId, Pageable pageable) {
+        if (!vendorRepository.existsById(vendorId)) {
+            throw new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + " : " + vendorId);
+        }
+
+        // 후기 목록 페이징 조회
+        Page<Review> reviewPage = reviewRepository.findByVendorId(vendorId, pageable);
+
+         // DTO 조립 후 반환
+        return new ReviewListResponseDTO(reviewPage);
+     }
+
     private void validateReviewOwner(Review review, Long memberId) {
         if (!review.getMember().getId().equals(memberId)) {
             throw new UnauthorizedException(ErrorStatus.UNAUTHORIZED_WRITER_NOT_SAME_USER.getMessage());
@@ -308,19 +351,12 @@ public class ReviewService {
     }
 
     // 작성자 이름 마스킹 처리 헬퍼 메서드
-    // ex. 홍길동 -> 홍*동
+    // ex. 홍길동 -> 홍길*
     private String maskWriterName(String name) {
-        if (name == null || name.length() <= 1) {
+        if (name == null || name.isEmpty()) {
             return name;
         }
-        if (name.length() == 2) {
-            return name.charAt(0) + "*";
-        }
 
-        char firstChar = name.charAt(0);
-        char lastChar = name.charAt(name.length() - 1);
-        String middleMask =  "*".repeat(name.length() - 2);
-        
-        return firstChar + middleMask + lastChar;
+        return name.substring(0, name.length() - 1) + "*";
     }
 }
