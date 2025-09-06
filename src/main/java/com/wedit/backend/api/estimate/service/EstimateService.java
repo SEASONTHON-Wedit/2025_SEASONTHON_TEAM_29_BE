@@ -97,7 +97,8 @@ public class EstimateService {
 				.vendorName(vendor.getName())
 				.vendorDescription(vendor.getDescription())
 				.vendorCategory(vendor.getCategory())
-				.mainImageUrl(mainImageUrl)
+				.logoImageUrl(mainImageUrl)
+				.dong(vendor.getAddress().getDong())
 				.minimumAmount(vendor.getMinimumAmount())
 				.createdAt(estimate.getCreatedAt())
 				.build();
@@ -148,7 +149,7 @@ public class EstimateService {
 			List<VendorImage> images = vendor.getImages();
 			if (images != null) {
 				return images.stream()
-					.filter(img -> img.getImageType() == VendorImageType.MAIN)
+					.filter(img -> img.getImageType() == VendorImageType.LOGO)
 					.findFirst()
 					.map(img -> s3Service.generatePresignedGetUrl(img.getImageKey()).getPresignedUrl())
 					.orElse(null);

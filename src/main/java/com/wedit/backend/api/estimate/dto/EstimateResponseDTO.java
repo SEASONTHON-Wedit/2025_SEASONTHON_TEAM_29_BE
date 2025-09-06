@@ -28,7 +28,8 @@ public class EstimateResponseDTO {
 		private String vendorName;
 		private String vendorDescription;
 		private Category vendorCategory;
-		private String mainImageUrl;
+		private String logoImageUrl;
+		private String dong;
 		private Integer minimumAmount;
 		private LocalDateTime createdAt;
 	}
