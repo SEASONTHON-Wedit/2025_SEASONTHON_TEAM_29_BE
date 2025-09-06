@@ -158,7 +158,7 @@ public class ReservationService {
 	@Transactional(readOnly = true)
 	public List<ReservationResponseDTO> getMyReservations(String userEmail) {
 		log.info("회원 예약 조회를 시작합니다. 회원 이메일: {}", userEmail);
-		
+
 		Member member = memberRepository.findByEmail(userEmail)
 			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
 
@@ -168,10 +168,10 @@ public class ReservationService {
 
 		return reservations.stream().map(reservation -> {
 			Vendor vendor = reservation.getVendor();
-			
+
 			// 업체의 대표 이미지 조회 (EstimateService, TourService와 동일한 방식)
 			String mainImageUrl = getVendorMainImageUrl(vendor);
-			
+
 			return ReservationResponseDTO.builder()
 				.id(reservation.getId())
 				.vendorId(vendor.getId())
@@ -179,6 +179,7 @@ public class ReservationService {
 				.vendorDescription(vendor.getDescription())
 				.vendorCategory(vendor.getCategory())
 				.mainImageUrl(mainImageUrl)
+				.district(vendor.getAddress().getDistrict())
 				.reservationDate(reservation.getReservationDate())
 				.reservationTime(reservation.getReservationTime())
 				.createdAt(reservation.getCreatedAt())
@@ -196,7 +197,7 @@ public class ReservationService {
 			List<VendorImage> images = vendor.getImages();
 			if (images != null) {
 				return images.stream()
-					.filter(img -> img.getImageType() == VendorImageType.MAIN)
+					.filter(img -> img.getImageType() == VendorImageType.LOGO)
 					.findFirst()
 					.map(img -> s3Service.generatePresignedGetUrl(img.getImageKey()).getPresignedUrl())
 					.orElse(null);

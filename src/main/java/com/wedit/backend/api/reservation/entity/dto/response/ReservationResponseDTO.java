@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import com.wedit.backend.api.vendor.entity.Address;
 import com.wedit.backend.api.vendor.entity.enums.Category;
 
 import lombok.Builder;
@@ -22,4 +23,5 @@ public class ReservationResponseDTO {
 	private LocalTime reservationTime;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
+	private String district;
 }
