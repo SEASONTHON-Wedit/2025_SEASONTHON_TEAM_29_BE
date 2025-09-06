@@ -27,7 +27,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
 	private final MemberRepository memberRepository;
 
 	// 프론트엔드 URL (환경에 따라 설정)
-	@Value("${app.oauth2.authorized-redirect-uri:http://localhost:3000/oauth/callback}")
+	@Value("${app.oauth2.authorized-redirect-uri:https://wedit.me/oauth/callback}")
 	private String redirectUri;
 
 	@Override
