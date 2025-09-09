@@ -20,7 +20,7 @@ public class Region {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     // 서울특별시, 강남구 등
     @Column(nullable = false)
