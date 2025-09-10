@@ -1,55 +1,55 @@
 package com.wedit.backend.api.tour.entity;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.common.entity.BaseTimeEntity;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tour")
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Tour extends BaseTimeEntity {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Enumerated(EnumType.STRING)
-	private Status status;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id", nullable = false)
+    private Member member; // 이 투어를 생성한 사용자
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vendor_id", nullable = false)
+    private Vendor vendor;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TourStatus status;
+
+    private LocalDateTime visitDateTime;    // 에약된 방문 일시
 
 	private Long materialOrder;
 	private Long neckLineOrder;
 	private Long lineOrder;
 
-	@ManyToOne
-	private Vendor vendor;
+    @Builder
+    public Tour(Member member, Vendor vendor, LocalDateTime visitDateTime) {
+        this.member = member;
+        this.vendor = vendor;
+        this.visitDateTime = visitDateTime;
+        this.status = TourStatus.WAITING;
+    }
 
-	@OneToMany(mappedBy = "tour", cascade = CascadeType.ALL, orphanRemoval = true)
-	private List<MemberTourConnection> memberTourConnections = new ArrayList<>();
-
-	@Builder
-	public Tour(Status status, Vendor vendor, Long materialOrder, Long neckLineOrder, Long lineOrder) {
-		this.status = status;
-		this.vendor = vendor;
-		this.materialOrder = materialOrder;
-		this.neckLineOrder = neckLineOrder;
-		this.lineOrder = lineOrder;
-	}
+    // 드레스(투어일지) 저장 및 상태 "기록 완료"로 변경
+    public void completeRecording(Long materialOrder, Long neckLineOrder, Long lineOrder) {
+        this.materialOrder = materialOrder;
+        this.neckLineOrder = neckLineOrder;
+        this.lineOrder = lineOrder;
+        this.status = TourStatus.COMPLETE;
+    }
 }

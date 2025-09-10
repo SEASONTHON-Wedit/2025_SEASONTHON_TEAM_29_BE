@@ -1,27 +1,21 @@
 package com.wedit.backend.api.tour.controller;
 
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.wedit.backend.api.tour.dto.TourCreateRequestDTO;
+import com.wedit.backend.api.member.jwt.service.JwtService;
 import com.wedit.backend.api.tour.dto.TourDetailResponseDTO;
-import com.wedit.backend.api.tour.dto.TourDressCreateRequestDTO;
-import com.wedit.backend.api.tour.dto.TourResponseDTO;
-import com.wedit.backend.api.tour.service.TourService;
+import com.wedit.backend.api.tour.dto.TourListResponseDTO;
+import com.wedit.backend.api.tour.dto.TourUpdateRequestDTO;
+import com.wedit.backend.common.exception.UnauthorizedException;
 import com.wedit.backend.common.response.ApiResponse;
+import com.wedit.backend.common.response.ErrorStatus;
 import com.wedit.backend.common.response.SuccessStatus;
-
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.wedit.backend.api.tour.service.TourService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -30,69 +24,69 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/tour")
 public class TourController {
-	private final TourService tourService;
 
-	@Operation(
-		summary = "투어일지 생성 API"
-	)
-	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투어일지 생성 성공"),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
-	})
-	@PostMapping
-	public ResponseEntity<ApiResponse<Void>> createTour(
-		@AuthenticationPrincipal UserDetails userDetails,
-		@RequestBody TourCreateRequestDTO tourCreateRequestDTO
-	) {
-		tourService.createTour(userDetails.getUsername(), tourCreateRequestDTO);
-		return ApiResponse.successOnly(SuccessStatus.TOUR_CREATE_SUCCESS);
-	}
+    private final TourService tourService;
+    private final JwtService jwtService;
 
-	@Operation(
-		summary = "투어일지 조회 API"
-	)
-	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투어일지 조회 성공"),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
-	})
-	@GetMapping
-	public ResponseEntity<ApiResponse<List<TourResponseDTO>>> getMyTourList(
-		@AuthenticationPrincipal UserDetails userDetails
-	) {
-		List<TourResponseDTO> myTourList = tourService.getMyTourList(userDetails.getUsername());
-		return ApiResponse.success(SuccessStatus.TOUR_GET_SUCCESS, myTourList);
-	}
 
-	@Operation(
-		summary = "투어일지 드레스 저장 API"
-	)
-	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투어일지 드레스 저장 성공"),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
-	})
-	@PostMapping("/save_dress")
-	public ResponseEntity<ApiResponse<Void>> saveDressDrawing(
-		@AuthenticationPrincipal UserDetails userDetails,
-		@RequestBody TourDressCreateRequestDTO tourDressCreateRequestDTO
-	) {
-		tourService.saveDress(userDetails.getUsername(), tourDressCreateRequestDTO);
-		return ApiResponse.successOnly(SuccessStatus.TOUR_DRESS_CREATE_SUCCESS);
-	}
+    @Operation(summary = "내 투어일지 목록 조회 (페이징, 커플 공유 포함)")
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<TourListResponseDTO>>> getMyTours(
+            @RequestHeader("Authorization") String reqToken,
+            @PageableDefault(size = 10) Pageable pageable) {
 
-	@Operation(
-		summary = "투어일지 상세 조회 API"
-	)
-	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "투어일지 상세 조회 성공"),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청입니다.")
-	})
-	@GetMapping("/{tourId}/detail")
-	public ResponseEntity<ApiResponse<TourDetailResponseDTO>> getTourDetail(
-		@PathVariable Long tourId,
-		@AuthenticationPrincipal UserDetails userDetails
-	) {
-		TourDetailResponseDTO tourDetail = tourService.getTourDetail(userDetails.getUsername(), tourId);
-		return ApiResponse.success(SuccessStatus.TOUR_GET_SUCCESS, tourDetail);
-	}
+        Long memberId = extractMemberIdFromToken(reqToken);
 
+        Page<TourListResponseDTO> response = tourService.getMyTours(memberId, pageable);
+
+        return ApiResponse.success(SuccessStatus.TOUR_GET_LIST_SUCCESS, response);
+    }
+
+    @Operation(summary = "투어일지 상세 조회")
+    @GetMapping("/{tourId}")
+    public ResponseEntity<ApiResponse<TourDetailResponseDTO>> getTourDetail(
+            @RequestHeader("Authorization") String reqToken,
+            @PathVariable Long tourId) {
+
+        Long memberId = extractMemberIdFromToken(reqToken);
+
+        TourDetailResponseDTO response = tourService.getTourDetail(tourId, memberId);
+
+        return ApiResponse.success(SuccessStatus.TOUR_GET_SUCCESS, response);
+    }
+
+    @Operation(summary = "투어일지 드레스 그림 기록/수정")
+    @PutMapping("/{tourId}")
+    public ResponseEntity<ApiResponse<Void>> recordDressDrawing(
+            @RequestHeader("Authorization") String reqToken,
+            @PathVariable Long tourId,
+            @RequestBody TourUpdateRequestDTO requestDTO) {
+
+        Long memberId = extractMemberIdFromToken(reqToken);
+
+        tourService.recordDressDrawing(tourId, memberId, requestDTO);
+
+        return ApiResponse.successOnly(SuccessStatus.TOUR_UPDATE_SUCCESS);
+    }
+
+    @Operation(summary = "투어일지 삭제")
+    @DeleteMapping("/{tourId}")
+    public ResponseEntity<ApiResponse<Void>> deleteTour(
+            @RequestHeader("Authorization") String reqToken,
+            @PathVariable Long tourId) {
+
+        Long memberId = extractMemberIdFromToken(reqToken);
+
+        tourService.deleteTour(tourId, memberId);
+
+        return ApiResponse.successOnly(SuccessStatus.TOUR_DELETE_SUCCESS);
+    }
+
+
+
+    private Long extractMemberIdFromToken(String reqToken) {
+        String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
+        return jwtService.extractMemberId(token)
+                .orElseThrow(() -> new UnauthorizedException(ErrorStatus.UNAUTHORIZED_INVALID_TOKEN.getMessage()));
+    }
 }

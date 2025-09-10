@@ -31,6 +31,7 @@ public enum SuccessStatus {
     COUPLE_CONNECT_SUCCESS(HttpStatus.OK, "커플 연동 성공"),
     COUPLE_DISCONNECT_SUCCESS(HttpStatus.OK, "커플 해제 성공"),
     TOUR_GET_SUCCESS(HttpStatus.OK, "투어일지 조회 성공"),
+    TOUR_GET_LIST_SUCCESS(HttpStatus.OK, "내 투어일지 리스트 조회 성공"),
     REVIEW_UPDATE_SUCCESS(HttpStatus.OK, "후기 수정 성공"),
     REVIEW_DETAIL_GET_SUCCESS(HttpStatus.OK, "후기 상세 조회 성공"),
     MY_REVIEW_LIST_GET_SUCCESS(HttpStatus.OK, "내 후기 리스팅 조회 성공"),
@@ -54,8 +55,6 @@ public enum SuccessStatus {
     RESERVATION_CREATE_SUCCESS(HttpStatus.CREATED, "일정 등록 성공"),
     IMAGE_UPLOAD_CREATE_SUCCESS(HttpStatus.CREATED, "이미지 업로드 성공"),
     VENDOR_CREATE_SUCCESS(HttpStatus.CREATED, "업체 등록 성공"),
-    TOUR_CREATE_SUCCESS(HttpStatus.CREATED, "투어일지 생성 성공"),
-    TOUR_DRESS_CREATE_SUCCESS(HttpStatus.CREATED, "투어일지 드레스 저장 성공"),
     ESTIMATE_CREATE_SUCCESS(HttpStatus.CREATED, "견적서 생성 성공"),
 
 
@@ -65,6 +64,8 @@ public enum SuccessStatus {
     RESERVATION_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "일정 삭제 성공"),
     REVIEW_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "리뷰 삭제 성공"),
     S3_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "이미지 혹은 동영상 삭제 성공"),
+    TOUR_UPDATE_SUCCESS(HttpStatus.NO_CONTENT, "투어일지 수정 성공"),
+    TOUR_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "투어일지 삭제 성공"),
 
 
     ;

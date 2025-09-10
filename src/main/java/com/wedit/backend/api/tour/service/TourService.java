@@ -1,7 +1,17 @@
 package com.wedit.backend.api.tour.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
+import com.wedit.backend.api.media.entity.Media;
+import com.wedit.backend.api.media.service.MediaService;
+import com.wedit.backend.api.member.entity.Couple;
+import com.wedit.backend.api.tour.dto.TourListResponseDTO;
+import com.wedit.backend.api.tour.dto.TourUpdateRequestDTO;
+import com.wedit.backend.common.exception.ForbiddenException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,18 +19,11 @@ import com.wedit.backend.api.aws.s3.service.S3Service;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.api.member.service.CoupleService;
-import com.wedit.backend.api.tour.dto.TourCreateRequestDTO;
 import com.wedit.backend.api.tour.dto.TourDetailResponseDTO;
-import com.wedit.backend.api.tour.dto.TourDressCreateRequestDTO;
-import com.wedit.backend.api.tour.dto.TourResponseDTO;
-import com.wedit.backend.api.tour.entity.MemberTourConnection;
-import com.wedit.backend.api.tour.entity.Status;
+import com.wedit.backend.api.tour.entity.TourStatus;
 import com.wedit.backend.api.tour.entity.Tour;
-import com.wedit.backend.api.tour.repository.MemberTourRepository;
 import com.wedit.backend.api.tour.repository.TourRepository;
 import com.wedit.backend.api.vendor.entity.Vendor;
-import com.wedit.backend.api.vendor.entity.VendorImage;
-import com.wedit.backend.api.vendor.entity.enums.VendorImageType;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
 import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.NotFoundException;
@@ -32,187 +35,140 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class TourService {
-	private final TourRepository tourRepository;
-	private final MemberRepository memberRepository;
-	private final VendorRepository vendorRepository;
-	private final S3Service s3Service;
-	private final CoupleService coupleService;
-	private final MemberTourRepository memberTourRepository;
 
-	public void createTour(String memberEmail, TourCreateRequestDTO tourCreateRequestDTO) {
-		log.info("투어일지 생성 시작. 회원: {}, 업체ID: {}, 업체명: {}",
-			memberEmail, tourCreateRequestDTO.getVendorId(), tourCreateRequestDTO.getVendorName());
+    private final TourRepository tourRepository;
+    private final MemberRepository memberRepository;
+    private final VendorRepository vendorRepository;
+    private final MediaService mediaService;
 
-		Member member = memberRepository.findByEmail(memberEmail)
-			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+    
+    // ReservationService 등 다른 서비스에서 호출되어 투어일지를 생성
+    public Tour createTourFromReservation(Long memberId, Long vendorId, LocalDateTime visitDateTime) {
 
-		Vendor vendor;
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+        Vendor vendor = vendorRepository.findById(vendorId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage()));
 
-		// vendorId가 우선, 없으면 vendorName으로 조회
-		if (tourCreateRequestDTO.getVendorId() != null) {
-			vendor = vendorRepository.findById(tourCreateRequestDTO.getVendorId())
-				.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage()));
-		} else if (tourCreateRequestDTO.getVendorName() != null) {
-			log.warn("vendorName으로 업체 조회는 deprecated입니다. vendorId 사용을 권장합니다.");
-			vendor = vendorRepository.findFirstByName(tourCreateRequestDTO.getVendorName())
-				.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage()));
-		} else {
-			throw new BadRequestException("vendorId 또는 vendorName 중 하나는 필수입니다.");
-		}
-		Tour tour = Tour.builder()
-			.status(Status.WAITING)
-			.vendor(vendor).build();
-		Tour savedTour = tourRepository.save(tour);
+        Tour tour = Tour.builder()
+                .member(member)
+                .vendor(vendor)
+                .visitDateTime(visitDateTime)
+                .build();
 
-		Member couple = coupleService.hasCouple(member);
+        log.info("예약 기반 투어일지 생성. 사용자 ID: {}, 업체 ID: {}", memberId, vendorId);
 
-		if (couple == null) {
-			MemberTourConnection memberTourConnection = MemberTourConnection.builder()
-				.tour(tour)
-				.member(member)
-				.createdByMemberId(member.getId())
-				.build();
-			memberTourRepository.save(memberTourConnection);
-			log.info("투어일지 생성 완료. 투어ID: {}, 업체ID: {}", savedTour.getId(), vendor.getId());
-		} else {
-			MemberTourConnection memberTourConnection = MemberTourConnection.builder()
-				.tour(tour)
-				.member(member)
-				.createdByMemberId(member.getId())
-				.build();
-			memberTourRepository.save(memberTourConnection);
-			MemberTourConnection coupleMemberTourConnection = MemberTourConnection.builder()
-				.tour(tour)
-				.member(couple)
-				.createdByMemberId(member.getId())
-				.build();
-			memberTourRepository.save(coupleMemberTourConnection);
-			log.info("투어일지 생성, 연동 완료. 투어ID: {}, 업체ID: {}", tour.getId(), vendor.getId());
-		}
-	}
+        return tourRepository.save(tour);
+    }
 
-	@Transactional(readOnly = true)
-	public List<TourResponseDTO> getMyTourList(String memberEmail) {
-		log.info("회원 투어일지 조회를 시작합니다. 회원 이메일: {}", memberEmail);
+    // 투어일지에 드레스 그림 정보를 기록하고 상태를 '기록 완료'로 변경
+    public void recordDressDrawing(Long tourId, Long memberId, TourUpdateRequestDTO dto) {
+        Tour tour = findOwnedTour(tourId, memberId);
+        tour.completeRecording(
+                dto.getMaterialOrder(),
+                dto.getNeckLineOrder(),
+                dto.getLineOrder()
+                );
 
-		Member member = memberRepository.findByEmail(memberEmail)
-			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+        log.info("투어일지 드레스 기록 완료. 투어 ID: {}", tourId);
+    }
 
-		// 회원의 모든 투어일지를 업체 정보와 이미지를 함께 조회 (N+1 문제 방지)
-		List<MemberTourConnection> tours = member.getTours();
-		log.info("회원의 투어일지 {}개를 조회했습니다.", tours.size());
+    // 투어일지 삭제, 소유자만 가능
+    public void deleteTour(Long tourId, Long memberId) {
 
-		return tours.stream().map(tour -> {
-			Vendor vendor = tour.getTour().getVendor();
+        Tour tour = findOwnedTour(tourId, memberId);
 
-			// 업체의 로고 이미지 조회 (EstimateService와 동일한 방식)
-			String logoImageUrl = getVendorLogoImageUrl(vendor);
+        tourRepository.delete(tour);
 
-			return TourResponseDTO.builder()
-				.id(tour.getId())
-				.status(tour.getTour().getStatus())
-				.vendorId(vendor.getId())
-				.vendorName(vendor.getName())
-				.vendorDescription(vendor.getDescription())
-				.vendorCategory(vendor.getCategory())
-				.logoImageUrl(logoImageUrl)
-				.build();
-		}).toList();
-	}
+        log.info("투어일지 삭제 완료. 투어 ID: {}", tourId);
+    }
 
-	public void saveDress(String memberEmail, TourDressCreateRequestDTO tourDressCreateRequestDTO) {
-		Member member = memberRepository.findByEmail(memberEmail)
-			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+    /**
+     * 내 투어일지 목록을 조회합니다. 커플인 경우 파트너의 투어일지도 함께 조회합니다. <br>
+     * 목록은 예약일시(visitDateTime) 최신순으로 정렬됩니다.
+     */
+    @Transactional(readOnly = true)
+    public Page<TourListResponseDTO> getMyTours(Long memberId, Pageable pageable) {
 
-		Tour tour = tourRepository.findById(tourDressCreateRequestDTO.getTourId())
-			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_TOUR.getMessage()));
+        Member currentMember = findMemberById(memberId);
+        Long partnerId = getPartnerId(currentMember);
 
-		List<MemberTourConnection> memberTourConnections = memberTourRepository.findAllByTour(tour);
+        Page<Tour> tourPage = (partnerId != null)
+                ? tourRepository.findToursByMemberAndPartner(memberId, partnerId, pageable)
+                : tourRepository.findToursByMember(memberId, pageable);
 
-		tour.setMaterialOrder(tourDressCreateRequestDTO.getMaterialOrder());
-		tour.setNeckLineOrder(tourDressCreateRequestDTO.getNeckLineOrder());
-		tour.setLineOrder(tourDressCreateRequestDTO.getLineOrder());
-		tour.setStatus(Status.COMPLETE);
+        return tourPage.map(tour -> {
+            String logoUrl = Optional.ofNullable(tour.getVendor().getLogoMedia())
+                    .map(Media::getMediaKey)
+                    .map(mediaService::toCdnUrl)
+                    .orElse(null);
 
-		Tour saved = tourRepository.save(tour);
+            boolean isOwned = tour.getMember().getId().equals(memberId);
+            return TourListResponseDTO.from(tour, logoUrl, isOwned);
+        });
+    }
 
-		for (MemberTourConnection memberTourConnection : memberTourConnections) {
-			memberTourConnection.setTour(saved);
-			memberTourRepository.save(memberTourConnection);
-		}
-	}
+    /**
+     * 특정 투어일지의 상세 정보를 조회합니다. 소유자 또는 파트너만 조회 가능합니다.
+     */
+    @Transactional(readOnly = true)
+    public TourDetailResponseDTO getTourDetail(Long tourId, Long memberId) {
+        Tour tour = findViewableTour(tourId, memberId);
+        return TourDetailResponseDTO.from(tour);
+    }
 
-	@Transactional(readOnly = true)
-	public TourDetailResponseDTO getTourDetail(String memberEmail, Long tourId) {
-		log.info("투어일지 상세 조회를 시작합니다. 회원: {}, 투어ID: {}", memberEmail, tourId);
 
-		Member member = memberRepository.findByEmail(memberEmail)
-			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+    // --- 헬퍼 메서드 ---
 
-		Tour tour = tourRepository.findById(tourId)
-			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_TOUR.getMessage()));
+    private Member findMemberById(Long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+    }
 
-		Vendor vendor = tour.getVendor();
+    private Long getPartnerId(Member member) {
+        Couple couple = (member.getAsGroom() != null) ? member.getAsGroom() : member.getAsBride();
+        
+        return Optional.ofNullable(couple)
+                .map(c -> c.getPartner(member))
+                .map(Member::getId)
+                .orElse(null);
+    }
 
-		// 업체의 대표 이미지 조회
-		String mainImageUrl = getVendorMainImageUrl(vendor);
+    // Tour 조회 후 소유권 검증 (수정/삭제용)
+    private Tour findOwnedTour(Long tourId, Long memberId) {
+        Tour tour = tourRepository.findById(tourId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_TOUR.getMessage()));
 
-		log.info("투어일지 상세 조회 완료. 투어ID: {}, 업체: {}", tourId, vendor.getName());
+        if (!tour.getMember().getId().equals(memberId)) {
+            throw new ForbiddenException(ErrorStatus.FORBIDDEN_RESOURCE_ACCESS.getMessage());
+        }
 
-		return TourDetailResponseDTO.builder()
-			.id(tour.getId())
-			.status(tour.getStatus())
-			.vendorId(vendor.getId())
-			.vendorName(vendor.getName())
-			.vendorDescription(vendor.getDescription())
-			.vendorCategory(vendor.getCategory())
-			.mainImageUrl(mainImageUrl)
-			.materialOrder(tour.getMaterialOrder())
-			.neckLineOrder(tour.getNeckLineOrder())
-			.lineOrder(tour.getLineOrder())
-			.build();
-	}
+        return tour;
+    }
 
-	/**
-	 * 업체의 대표 이미지 URL을 조회 (EstimateService와 동일한 방식)
-	 */
-	private String getVendorMainImageUrl(Vendor vendor) {
-		try {
-			// 업체의 이미지 중 MAIN 타입 이미지 찾기
-			List<VendorImage> images = vendor.getImages();
-			if (images != null) {
-				return images.stream()
-					.filter(img -> img.getImageType() == VendorImageType.MAIN)
-					.findFirst()
-					.map(img -> s3Service.generatePresignedGetUrl(img.getImageKey()).getPresignedUrl())
-					.orElse(null);
-			}
-			return null;
-		} catch (Exception e) {
-			log.warn("업체 대표 이미지 조회 중 오류 발생. 업체 ID: {}", vendor.getId(), e);
-			return null;
-		}
-	}
+    // Tour 조회 후 "조회 권한" 검증
+    private Tour findViewableTour(Long tourId, Long memberId) {
+        Tour tour = tourRepository.findById(tourId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_TOUR.getMessage()));
 
-	/**
-	 * 업체의 로고 이미지 URL을 조회 (EstimateService와 동일한 방식)
-	 */
-	private String getVendorLogoImageUrl(Vendor vendor) {
-		try {
-			// Vendor의 이미지 중 LOGO 타입 이미지 찾기
-			List<VendorImage> images = vendor.getImages();
-			if (images != null) {
-				return images.stream()
-					.filter(img -> img.getImageType() == VendorImageType.LOGO)
-					.findFirst()
-					.map(img -> s3Service.generatePresignedGetUrl(img.getImageKey()).getPresignedUrl())
-					.orElse(null);
-			}
-			return null;
-		} catch (Exception e) {
-			log.warn("업체 로고 이미지 조회 중 오류 발생. 업체 ID: {}", vendor.getId(), e);
-			return null;
-		}
-	}
+        // 1. 내가 소유자인가?
+        if (tour.getMember().getId().equals(memberId)) {
+            return tour;
+        }
+
+        // 2. 내가 파트너인가?
+        Member requester = findMemberById(memberId);
+        boolean isPartner = Optional.ofNullable(getPartnerId(requester))
+                .map(pId -> pId.equals(tour.getMember().getId()))
+                .orElse(false);
+
+        if (isPartner) {
+            return tour;
+        }
+
+        // 둘 다 아니면 권한 없음
+        throw new ForbiddenException(ErrorStatus.FORBIDDEN_RESOURCE_ACCESS.getMessage());
+    }
 }
