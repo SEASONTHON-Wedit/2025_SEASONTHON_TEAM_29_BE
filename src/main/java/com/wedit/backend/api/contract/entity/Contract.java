@@ -11,63 +11,40 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "contracts")
 public class Contract extends BaseTimeEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id", nullable = false)
     private Member member;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vendor_id", nullable = false)
-    private Vendor vendor;
-    
-    @Column(name = "contract_date", nullable = false)
-    private LocalDate contractDate;
-    
-    @Column(name = "start_time", nullable = false)
-    private LocalTime startTime;
-    
-    @Column(name = "end_time", nullable = false)
-    private LocalTime endTime;
-    
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private ContractStatus status;
-    
-    @Column(name = "total_amount")
+
+    @Column(nullable = false)
     private Long totalAmount;
-    
-    @Column(name = "deposit_amount")
-    private Long depositAmount;
-    
-    @Column(name = "special_requests", length = 1000)
-    private String specialRequests;
-    
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ContractStatus status;
+
+    @OneToMany(mappedBy = "contract", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ContractItem> contractItems = new ArrayList<>();
+
     @Builder
-    public Contract(Member member, Vendor vendor, LocalDate contractDate, 
-                   LocalTime startTime, LocalTime endTime, ContractStatus status,
-                   Long totalAmount, Long depositAmount, String specialRequests) {
+    public Contract(Member member, Long totalAmount, List<ContractItem> contractItems) {
         this.member = member;
-        this.vendor = vendor;
-        this.contractDate = contractDate;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.status = status;
         this.totalAmount = totalAmount;
-        this.depositAmount = depositAmount;
-        this.specialRequests = specialRequests;
-    }
-    
-    public void updateStatus(ContractStatus status) {
-        this.status = status;
+        this.status = ContractStatus.COMPLETED; // 생성 시 완료 상태
+        this.contractItems = contractItems;
+        // 연관관계 편의 메서드로 contractItems에 현재 contract를 설정
+        contractItems.forEach(item -> item.setContract(this));
     }
 }

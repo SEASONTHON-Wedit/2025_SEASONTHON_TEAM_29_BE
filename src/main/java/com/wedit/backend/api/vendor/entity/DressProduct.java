@@ -26,8 +26,10 @@ public class DressProduct extends Product {
 
     @Builder
     public DressProduct(Vendor vendor, String name, Long basePrice, String description,
-                        DressMaterial mainMaterial, DressOrigin dressOrigin) {
-        super(vendor, name, basePrice, description);
+                        Integer durationInMinutes, DressMaterial mainMaterial,
+                        DressOrigin dressOrigin) {
+
+        super(vendor, name, basePrice, description, durationInMinutes);
         this.mainMaterial = mainMaterial;
         this.dressOrigin = dressOrigin;
     }

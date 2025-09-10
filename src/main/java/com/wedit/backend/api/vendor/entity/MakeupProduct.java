@@ -24,8 +24,9 @@ public class MakeupProduct extends Product {
 
     @Builder
     public MakeupProduct(Vendor vendor, String name, Long basePrice, String description,
-                         Boolean hasPrivateRoom, Boolean isStylistDesignationAvailable) {
-        super(vendor, name, basePrice, description);
+                         Integer durationInMinutes, Boolean hasPrivateRoom,
+                         Boolean isStylistDesignationAvailable) {
+        super(vendor, name, basePrice, description, durationInMinutes);
         this.hasPrivateRoom = hasPrivateRoom;
         this.isStylistDesignationAvailable = isStylistDesignationAvailable;
     }

@@ -6,10 +6,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ContractStatus {
-    PENDING("대기중"),
-    CONFIRMED("확정"),
-    CANCELLED("취소됨"),
-    COMPLETED("완료됨");
-    
+
+    COMPLETED("완료됨"),
+    CANCELLED("취소됨");
+
     private final String description;
 }

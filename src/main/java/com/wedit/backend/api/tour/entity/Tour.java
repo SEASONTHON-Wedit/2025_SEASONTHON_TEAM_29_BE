@@ -10,7 +10,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "tour")
+@Table(name = "tours")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Tour extends BaseTimeEntity {

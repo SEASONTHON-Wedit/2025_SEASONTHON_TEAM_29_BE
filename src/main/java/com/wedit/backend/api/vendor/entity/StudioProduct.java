@@ -29,9 +29,10 @@ public class StudioProduct extends Product {
 
     @Builder
     public StudioProduct(Vendor vendor, String name, Long basePrice, String description,
-                         StudioPhotoStyle photoStyle, StudioSpecialShot specialShot, Boolean iphoneSnap) {
+                         Integer durationInMinutes, StudioPhotoStyle photoStyle,
+                         StudioSpecialShot specialShot, Boolean iphoneSnap) {
 
-        super(vendor, name, basePrice, description);
+        super(vendor, name, basePrice, description, durationInMinutes);
         this.photoStyle = photoStyle;
         this.specialShot = specialShot;
         this.iphoneSnap = iphoneSnap;

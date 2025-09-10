@@ -33,9 +33,10 @@ public class WeddingHallProduct extends Product {
 
     @Builder
     public WeddingHallProduct(Vendor vendor, String name, Long basePrice, String description,
-                              HallStyle hallStyle, HallMeal hallMeal, Integer capacity, Boolean hasParking) {
+                              Integer durationInMinutes, HallStyle hallStyle,
+                              HallMeal hallMeal, Integer capacity, Boolean hasParking) {
 
-        super(vendor, name, basePrice, description);
+        super(vendor, name, basePrice, description, durationInMinutes);
         this.hallStyle = hallStyle;
         this.hallMeal = hallMeal;
         this.capacity = capacity;
