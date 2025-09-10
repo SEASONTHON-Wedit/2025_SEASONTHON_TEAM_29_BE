@@ -37,6 +37,7 @@ public enum ErrorStatus {
 	BAD_REQUEST_CONNECT_BRIDE_TO_GROOM(HttpStatus.BAD_REQUEST, "잘못된 연결 요청입니다. 신부를 등록할 수 없는 상태입니다."),
 	BAD_REQUEST_CONNECT_GROOM_TO_BRIDE(HttpStatus.BAD_REQUEST, "잘못된 연결 요청입니다. 신랑을 등록할 수 없는 상태입니다."),
 	BAD_REQUEST_ALREADY_HAVE_INVITATION(HttpStatus.BAD_REQUEST, "이미 청첩장을 가지고 있습니다."),
+	BAD_REQUEST_ALREADY_OTHER_MEMBER_HAVE_INVITATION(HttpStatus.BAD_REQUEST, "이미 다른 멤버가 청첩장을 가지고 있습니다."),
 
 	/// 401 UNAUTHORIZED
 	UNAUTHORIZED_USER(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다."),
@@ -61,6 +62,7 @@ public enum ErrorStatus {
 	NOT_FOUND_VENDOR(HttpStatus.NOT_FOUND, "해당 업체를 찾을 수 없습니다."),
 	NOT_FOUND_TOUR(HttpStatus.NOT_FOUND, "해당 투어를 찾을 수 없습니다."),
 	NOT_FOUND_REVIEW(HttpStatus.NOT_FOUND, "해당 리뷰를 찾을 수 없습니다."),
+	NOT_FOUND_INVITATION(HttpStatus.NOT_FOUND, "초청장을 찾을 수 없습니다."),
 
 	/// 409 CONFLICT
 	CONFLICT_DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "중복된 리소스가 존재합니다."),

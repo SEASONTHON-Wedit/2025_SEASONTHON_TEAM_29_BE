@@ -3,12 +3,15 @@ package com.wedit.backend.api.invitation.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.wedit.backend.api.invitation.dto.InvitationCreateRequestDTO;
+import com.wedit.backend.api.invitation.dto.InvitationGetResponseDTO;
+import com.wedit.backend.api.invitation.entity.Invitation;
 import com.wedit.backend.api.invitation.service.InvitationService;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
@@ -35,5 +38,16 @@ public class InvitationController {
 		@RequestBody InvitationCreateRequestDTO createRequestDTO) {
 		invitationService.createInvitation(userDetails.getUsername(), createRequestDTO);
 		return ApiResponse.successOnly(SuccessStatus.INVITATION_CREATE_SUCCESS);
+	}
+
+	@Operation(
+		summary = "초청장 조회 API", description = "초청정 조회 API"
+	)
+	@GetMapping
+	public ResponseEntity<ApiResponse<InvitationGetResponseDTO>> getInvitation(
+		@AuthenticationPrincipal UserDetails userDetails
+	) {
+		InvitationGetResponseDTO invitation = invitationService.getInvitation(userDetails.getUsername());
+		return ApiResponse.success(SuccessStatus.AUTH_SUCCESS, invitation);
 	}
 }
