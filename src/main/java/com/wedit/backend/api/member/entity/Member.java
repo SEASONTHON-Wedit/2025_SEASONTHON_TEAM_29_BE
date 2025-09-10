@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.wedit.backend.api.invitation.entity.Invitation;
 import com.wedit.backend.api.member.jwt.entity.RefreshToken;
 import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.review.entity.Review;
@@ -94,6 +95,11 @@ public class Member extends BaseTimeEntity {
 	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default
 	private List<Reservation> reservations = new ArrayList<>();
+
+	// Member - Reservation, 1:N on Member perspective
+	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+	@Builder.Default
+	private List<Invitation> invitations = new ArrayList<>();
 
 	// Member - Review, 1:N on Member perspective
 	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)

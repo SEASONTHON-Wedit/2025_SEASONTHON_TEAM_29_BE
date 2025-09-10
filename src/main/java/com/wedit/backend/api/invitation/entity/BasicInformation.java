@@ -1,6 +1,7 @@
 package com.wedit.backend.api.invitation.entity;
 
 import jakarta.persistence.Embeddable;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -24,5 +25,24 @@ public class BasicInformation {
 
 	private boolean isBrideFirst;
 
-
+	@Builder
+	public BasicInformation(String goormFirstName, String goormLastName, String goormFatherName,
+		boolean isGoormFatherDead,
+		String goormMotherName, boolean isGoormMotherDead, String brideFirstName, String brideLastName,
+		String brideFatherName, boolean isBrideFatherDead, String brideMotherName, boolean isBrideMotherDead,
+		boolean isBrideFirst) {
+		this.goormFirstName = goormFirstName;
+		this.goormLastName = goormLastName;
+		this.goormFatherName = goormFatherName;
+		this.isGoormFatherDead = isGoormFatherDead;
+		this.goormMotherName = goormMotherName;
+		this.isGoormMotherDead = isGoormMotherDead;
+		this.brideFirstName = brideFirstName;
+		this.brideLastName = brideLastName;
+		this.brideFatherName = brideFatherName;
+		this.isBrideFatherDead = isBrideFatherDead;
+		this.brideMotherName = brideMotherName;
+		this.isBrideMotherDead = isBrideMotherDead;
+		this.isBrideFirst = isBrideFirst;
+	}
 }
