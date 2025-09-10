@@ -1,11 +1,8 @@
 package com.wedit.backend.api.vendor.entity.enums;
 
-import lombok.Getter;
-
-@Getter
-public enum Category {
+public enum VendorType {
     WEDDING_HALL,
     DRESS,
-    STUDIO,
-    MAKEUP;
+    MAKEUP,
+    STUDIO
 }

@@ -1,21 +1,15 @@
 package com.wedit.backend.api.vendor.entity;
 
-import com.wedit.backend.api.reservation.entity.Reservation;
-import com.wedit.backend.api.review.entity.Review;
-import com.wedit.backend.api.tour.entity.Tour;
-import com.wedit.backend.api.vendor.entity.enums.Category;
+import com.wedit.backend.api.media.entity.Media;
+import com.wedit.backend.api.vendor.entity.enums.VendorType;
 import com.wedit.backend.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
-@Table(name = "vendor")
+@Table(name = "vendors")
 @Getter
 @Builder
 @AllArgsConstructor
@@ -28,44 +22,54 @@ public class Vendor extends BaseTimeEntity {
 
     private String name;            // 업체 이름
 
-    private String phoneNumber;
-
-    @Enumerated(EnumType.STRING)
-    private Category category;      // 카테고리 (WEDDING_HALL, STUDIO, DRESS, MAKEUP)
-
-    private String description;     // 업체 소개
-
-    @Embedded
-    private Address address;        // 주소 임베드
+    private String phoneNumber;     // 업체 전화번호
 
     @Column(nullable = false)
-    private Integer minimumAmount;      // 최소 가격
+    private String fullAddress;     // 업체 전체 주소 (도로명 또는 지번)
 
-    @Lob
-    @Column(name = "details")
-    @JdbcTypeCode(SqlTypes.JSON)
-    private String details;
+    private String addressDetail;   // 상세 주소 (3층, 101호 등)
 
-    // Vendor에 속한 모든 이미지
-    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "logo_media_id")
+    private Media logoMedia;        // 로고 이미지
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "rep_media_id")
+    private Media repMedia;         // 대표 이미지
+
+    @Column(columnDefinition = "TEXT")
+    private String description;     // 업체 소개
+
+    private Double latitude;        // 위도
+    private Double longitude;       // 경도
+    private String kakaoMapUrl;     // 카카오맵 URL
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private VendorType vendorType;    // 업체 타입
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "region_id", nullable = false)
+    private Region region;           // 계층적 소속 지역
+
     @Builder.Default
-    private List<VendorImage> images = new ArrayList<>();
+    private Double averageRating = 0.0;
 
-    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<Review> reviews = new ArrayList<>();
+    private Integer reviewCount = 0;
 
-    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<Reservation> reservations = new ArrayList<>();
+    private Long minBasePrice = 0L;
 
-    @OneToMany(mappedBy = "vendor", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Tour> tours = new ArrayList<>();
+    public void setLogoMedia(Media logoMedia) {
+        this.logoMedia = logoMedia;
+    }
 
-    // VendorImage 연관관계 설정
-    public void setImages(List<VendorImage> images) {
-        this.images = images;
-        images.forEach(image -> image.setVendor(this));
+    public void setRepMedia(Media repMedia) {
+        this.repMedia = repMedia;
+    }
+
+    public void setMinBasePrice(Long minBasePrice) {
+        this.minBasePrice = minBasePrice;
     }
 }
