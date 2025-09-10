@@ -65,6 +65,8 @@ public class S3Service {
         return PresignedUrlResponseDTO.builder()
                 .s3Key(key)
                 .presignedUrl(url)
+                .contentType(reqDto.getContentType())
+                .contentLength(reqDto.getContentLength())
                 .build();
     }
 

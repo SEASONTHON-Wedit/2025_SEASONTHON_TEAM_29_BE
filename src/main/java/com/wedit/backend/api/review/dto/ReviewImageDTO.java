@@ -1,6 +1,5 @@
 package com.wedit.backend.api.review.dto;
 
-import com.wedit.backend.api.review.entity.ReviewImage;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;

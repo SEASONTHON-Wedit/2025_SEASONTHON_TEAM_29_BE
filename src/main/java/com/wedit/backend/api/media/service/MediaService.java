@@ -8,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -43,7 +45,6 @@ public class MediaService {
      */
     @Transactional
     public Media save(Media media) {
-
         return mediaRepository.save(media);
     }
 
@@ -57,8 +58,15 @@ public class MediaService {
     }
 
     /**
+     * S3 key를 CDN URL로 변환하는 책임을 S3Service에 위임합니다.
+     */
+    public String toCdnUrl(String key) {
+        return s3Service.toCdnUrl(key);
+    }
+
+    /**
      * 특정 소유자와 관련된 모든 Media 정보 및 S3 파일을 삭제합니다.
-     * 애플리케이션 레벨에서 참조 무결성을 보장하는 매우 중요한 메서드입니다.
+     * 애플리케이션 레벨에서 참조 무결성을 보장
      * @param ownerDomain 삭제할 미디어의 소유자 도메인
      * @param ownerId 삭제할 미디어의 소유자 ID
      */
@@ -79,5 +87,22 @@ public class MediaService {
 
         // 3. DB에서 Media 데이터들을 삭제
         mediaRepository.deleteAllInBatch(mediaList);
+    }
+
+    /**
+     * 여러 소유자(owner)에 속한 모든 미디어를 조회합니다. (N+1 문제 해결용)
+     */
+    public List<Media> findAllByOwnerDomainAndOwnerIds(MediaDomain ownerDomain, List<Long> ownerIds) {
+        if (ownerIds == null || ownerIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return mediaRepository.findAllByOwnerDomainAndOwnerIdIn(ownerDomain, ownerIds);
+    }
+
+    /**
+     * 특정 소유자의 특정 하위 타입 미디어를 조회합니다.
+     */
+    public Optional<Media> findByOwnerAndSubType(MediaDomain ownerDomain, Long ownerId, String mediaSubType) {
+        return mediaRepository.findByOwnerDomainAndOwnerIdAndMediaSubType(ownerDomain, ownerId, mediaSubType);
     }
 }
