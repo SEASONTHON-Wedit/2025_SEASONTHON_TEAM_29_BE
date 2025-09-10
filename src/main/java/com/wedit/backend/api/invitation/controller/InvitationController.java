@@ -48,6 +48,6 @@ public class InvitationController {
 		@AuthenticationPrincipal UserDetails userDetails
 	) {
 		InvitationGetResponseDTO invitation = invitationService.getInvitation(userDetails.getUsername());
-		return ApiResponse.success(SuccessStatus.AUTH_SUCCESS, invitation);
+		return ApiResponse.success(SuccessStatus.INVITATION_GET_SUCCESS, invitation);
 	}
 }

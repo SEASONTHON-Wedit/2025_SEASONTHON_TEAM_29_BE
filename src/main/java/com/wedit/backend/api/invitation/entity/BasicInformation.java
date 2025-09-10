@@ -9,12 +9,12 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class BasicInformation {
-	private String goormFirstName;
-	private String goormLastName;
-	private String goormFatherName;
-	private boolean isGoormFatherDead;
-	private String goormMotherName;
-	private boolean isGoormMotherDead;
+	private String groomFirstName;
+	private String groomLastName;
+	private String groomFatherName;
+	private boolean isGroomFatherDead;
+	private String groomMotherName;
+	private boolean isGroomMotherDead;
 
 	private String brideFirstName;
 	private String brideLastName;
@@ -26,17 +26,17 @@ public class BasicInformation {
 	private boolean isBrideFirst;
 
 	@Builder
-	public BasicInformation(String goormFirstName, String goormLastName, String goormFatherName,
-		boolean isGoormFatherDead,
-		String goormMotherName, boolean isGoormMotherDead, String brideFirstName, String brideLastName,
+	public BasicInformation(String groomFirstName, String groomLastName, String groomFatherName,
+		boolean isGroomFatherDead,
+		String groomMotherName, boolean isGroomMotherDead, String brideFirstName, String brideLastName,
 		String brideFatherName, boolean isBrideFatherDead, String brideMotherName, boolean isBrideMotherDead,
 		boolean isBrideFirst) {
-		this.goormFirstName = goormFirstName;
-		this.goormLastName = goormLastName;
-		this.goormFatherName = goormFatherName;
-		this.isGoormFatherDead = isGoormFatherDead;
-		this.goormMotherName = goormMotherName;
-		this.isGoormMotherDead = isGoormMotherDead;
+		this.groomFirstName = groomFirstName;
+		this.groomLastName = groomLastName;
+		this.groomFatherName = groomFatherName;
+		this.isGroomFatherDead = isGroomFatherDead;
+		this.groomMotherName = groomMotherName;
+		this.isGroomMotherDead = isGroomMotherDead;
 		this.brideFirstName = brideFirstName;
 		this.brideLastName = brideLastName;
 		this.brideFatherName = brideFatherName;

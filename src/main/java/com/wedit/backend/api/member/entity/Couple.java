@@ -96,7 +96,7 @@ public class Couple extends BaseTimeEntity {
 	}
 
 	public Member getOtherMember(Member member) {
-		if (this.groom == member) {
+		if (this.groom.equals(member)) {
 			return this.bride;
 		} else {
 			return this.groom;
