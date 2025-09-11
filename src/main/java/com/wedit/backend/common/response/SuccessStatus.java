@@ -50,24 +50,26 @@ public enum SuccessStatus {
     CART_GET_SUCCESS(HttpStatus.OK, "견적서(Cart) 조회 성공"),
     CART_ITEM_UPDATE_SUCCESS(HttpStatus.OK, "견적서의 찜한 상품 활성화 성공"),
     TOUR_UPDATE_SUCCESS(HttpStatus.OK, "투어일지 수정 성공"),
+    RESERVATION_AVAILABILITY_GET_SUCCESS(HttpStatus.OK, "상담 예약 가능 시간 조회 성공"),
+    MY_RESERVATION_GET_SUCCESS(HttpStatus.OK, "내 상담 예약 목록 조회 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),
     REVIEW_CREATE_SUCCESS(HttpStatus.CREATED, "리뷰 작성 성공"),
-    RESERVATION_CREATE_SUCCESS(HttpStatus.CREATED, "일정 등록 성공"),
     IMAGE_UPLOAD_CREATE_SUCCESS(HttpStatus.CREATED, "이미지 업로드 성공"),
     VENDOR_CREATE_SUCCESS(HttpStatus.CREATED, "업체 등록 성공"),
     CART_ITEM_ADD_SUCCESS(HttpStatus.CREATED, "견적서에 상품 등로 성공"),
+    CONSULTATION_RESERVATION_CREATE_SUCCESS(HttpStatus.CREATED, "상담 예약 생성 성공"),
 
 
     /// 204 NO CONTENT
     SCHEDULE_DELETE_SUCCESS(HttpStatus.NO_CONTENT,"캘린더 일정 삭제 성공"),
     IMAGE_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "이미지 삭제 성공"),
-    RESERVATION_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "일정 삭제 성공"),
     REVIEW_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "리뷰 삭제 성공"),
     S3_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "이미지 혹은 동영상 삭제 성공"),
     TOUR_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "투어일지 삭제 성공"),
     CART_ITEM_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "견적서의 찜한 상품 삭제 성공"),
+    CONSULTATION_RESERVATION_CANCEL_SUCCESS(HttpStatus.NO_CONTENT, "상담 예약 취소 성공"),
 
 
     ;

@@ -1,211 +1,176 @@
 package com.wedit.backend.api.reservation.service;
 
+
+import com.wedit.backend.api.member.entity.Member;
+import com.wedit.backend.api.member.repository.MemberRepository;
+import com.wedit.backend.api.reservation.dto.DateAvailabilityDTO;
+import com.wedit.backend.api.reservation.dto.MyReservationResponseDTO;
+import com.wedit.backend.api.reservation.dto.ReservationRequestDTO;
+import com.wedit.backend.api.reservation.dto.SlotResponseDTO;
+import com.wedit.backend.api.reservation.entity.ConsultationSlot;
+import com.wedit.backend.api.reservation.entity.Reservation;
+import com.wedit.backend.api.reservation.entity.ReservationEventPayload;
+import com.wedit.backend.api.reservation.entity.SlotStatus;
+import com.wedit.backend.api.reservation.repository.ConsultationSlotRepository;
+import com.wedit.backend.api.reservation.repository.ReservationRepository;
+import com.wedit.backend.common.event.ReservationCancelledEvent;
+import com.wedit.backend.common.event.ReservationCreatedEvent;
+import com.wedit.backend.common.exception.ForbiddenException;
+import com.wedit.backend.common.exception.NotFoundException;
+import com.wedit.backend.common.response.ErrorStatus;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.wedit.backend.api.aws.s3.service.S3Service;
-import com.wedit.backend.api.member.entity.Member;
-import com.wedit.backend.api.member.repository.MemberRepository;
-import com.wedit.backend.api.reservation.entity.Reservation;
-import com.wedit.backend.api.reservation.entity.dto.request.MakeReservationRequestDTO;
-import com.wedit.backend.api.reservation.entity.dto.response.DateAvailabilityDTO;
-import com.wedit.backend.api.reservation.entity.dto.response.DateDetailDTO;
-import com.wedit.backend.api.reservation.entity.dto.response.ReservationResponseDTO;
-import com.wedit.backend.api.reservation.entity.dto.response.TimeSlotDTO;
-import com.wedit.backend.api.reservation.repository.ReservationRepository;
-import com.wedit.backend.api.vendor.entity.Vendor;
-import com.wedit.backend.api.vendor.entity.VendorImage;
-import com.wedit.backend.api.vendor.entity.enums.VendorImageType;
-import com.wedit.backend.api.vendor.repository.VendorRepository;
-import com.wedit.backend.common.exception.BadRequestException;
-import com.wedit.backend.common.exception.NotFoundException;
-import com.wedit.backend.common.response.ErrorStatus;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 @RequiredArgsConstructor
 @Slf4j
 @Service
+@Transactional
 public class ReservationService {
-	private final ReservationRepository reservationRepository;
-	private final VendorRepository vendorRepository;
-	private final MemberRepository memberRepository;
-	private final S3Service s3Service;
 
-	private static final List<LocalTime> AVAILABLE_TIME_SLOTS = Arrays.asList(
-		LocalTime.of(10, 0),
-		LocalTime.of(10, 30),
-		LocalTime.of(11, 0),
-		LocalTime.of(13, 30),
-		LocalTime.of(14, 0),
-		LocalTime.of(14, 30),
-		LocalTime.of(15, 0),
-		LocalTime.of(15, 30),
-		LocalTime.of(16, 0)
-	);
+    private final ReservationRepository reservationRepository;
+    private final ConsultationSlotRepository consultationSlotRepository;
+    private final MemberRepository memberRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-	private static final int TOTAL_TIME_SLOTS = AVAILABLE_TIME_SLOTS.size();
+    // 특정 업체의 해당 월 상담 가능 시간 목록을 모두 조회
+    // 인메모리가 아닌 DB 조회로 서버 부담 감소
+    @Transactional(readOnly = true)
+    public List<SlotResponseDTO> getAvailableSlots(Long vendorId, int year, int month) {
 
-	public List<DateAvailabilityDTO> getVendorReservations(Long vendorId, int year, int month) {
-		Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(
-			() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage())
-		);
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDateTime start = yearMonth.atDay(1).atStartOfDay();
+        LocalDateTime end = yearMonth.atEndOfMonth().atTime(23, 59, 59);
 
-		YearMonth yearMonth = YearMonth.of(year, month);
-		LocalDate startDate = yearMonth.atDay(1);
-		LocalDate endDate = yearMonth.atEndOfMonth();
+        return consultationSlotRepository.findByVendorIdAndStartTimeBetween(vendorId, start, end)
+                .stream()
+                .map(SlotResponseDTO::from)
+                .collect(Collectors.toList());
+    }
 
-		List<Reservation> reservations = reservationRepository.findAllByVendorAndReservationDateBetween(
-			vendor, startDate, endDate);
+    // 상담 예약 생성
+    // 동시성 문제 때문에 비관적 락 검
+    public Long createReservation(Long memberId, ReservationRequestDTO request) {
 
-		Map<LocalDate, Long> reservationCountByDate = reservations.stream()
-			.collect(Collectors.groupingBy(
-				Reservation::getReservationDate,
-				Collectors.counting()
-			));
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
 
-		List<DateAvailabilityDTO> result = new ArrayList<>();
+        // 상담 슬롯 조회 및 락, 다른 트랜잭션은 대기 후 CS 진입
+        // DB 단에서 보장
+        ConsultationSlot slot = consultationSlotRepository.findByIdWithPessimisticLock(request.slotId())
+                .orElseThrow(() -> new NotFoundException("상담 시간을 찾을 수 없습니다."));
 
-		for (int day = 1; day <= yearMonth.lengthOfMonth(); day++) {
-			LocalDate currentDate = LocalDate.of(year, month, day);
-			long reservedSlots = reservationCountByDate.getOrDefault(currentDate, 0L);
+        // 슬롯 상태 변경
+        slot.book();
 
-			DateAvailabilityDTO availability = DateAvailabilityDTO.builder()
-				.date(currentDate)
-				.totalSlots(TOTAL_TIME_SLOTS)
-				.reservedSlots((int)reservedSlots)
-				.isAvailable(reservedSlots < TOTAL_TIME_SLOTS)
-				.build();
+        // 예약 정보 생성 및 저장
+        Reservation reservation = Reservation.builder()
+                .member(member)
+                .vendor(slot.getVendor())
+                .visitDateTime(slot.getStartTime())
+                .consultationSlotId(slot.getId())
+                .build();
+        reservationRepository.save(reservation);
 
-			result.add(availability);
-		}
+        // 업체가 DRESS 타입이면, 투어 일지 생성 이벤트 발행
+        // TourService와 강결합 회피 위함
+        ReservationEventPayload payload = ReservationEventPayload.from(reservation);
+        eventPublisher.publishEvent(new ReservationCreatedEvent(this, payload));
 
-		return result;
-	}
+        // 추후 커플 캘린더 구현 시, 캘린더 일정 생성 이벤트 발행
 
-	public DateDetailDTO getVendorReservationsDetail(Long vendorId, LocalDate date) {
-		Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(
-			() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage())
-		);
+        log.info("상담 예약 생성 완료 및 이벤트 발행. reservationId: {}, memberId: {}", reservation.getId(), memberId);
 
-		List<Reservation> reservations = reservationRepository.findAllByVendorAndReservationDateBetween(
-			vendor, date, date);
+        return reservation.getId();
+    }
 
-		Map<LocalTime, Reservation> reservationByTime = reservations.stream()
-			.collect(Collectors.toMap(
-				Reservation::getReservationTime,
-				reservation -> reservation,
-				(existing, replacement) -> existing // 중복 시간대가 있으면 기존 것 유지 (데이터 무결성 문제)
-			));
+    // 내 예약 취소
+    public void cancelReservation(Long memberId, Long reservationId) {
 
-		List<TimeSlotDTO> timeSlots = AVAILABLE_TIME_SLOTS.stream()
-			.map(timeSlot -> {
-				Reservation reservation = reservationByTime.get(timeSlot);
-				return TimeSlotDTO.builder()
-					.time(timeSlot)
-					.timeDisplay(timeSlot.toString())
-					.isAvailable(reservation == null)
-					.reservationId(reservation != null ? reservation.getId() : null)
-					.build();
-			})
-			.collect(Collectors.toList());
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_RESERVATION.getMessage()));
 
-		int reservedCount = (int)timeSlots.stream().filter(slot -> !slot.isAvailable()).count();
-		int availableCount = TOTAL_TIME_SLOTS - reservedCount;
+        if (!reservation.getMember().getId().equals(memberId)) {
+            throw new ForbiddenException("자신만 예약을 취소할 수 있습니다.");
+        }
 
-		return DateDetailDTO.builder()
-			.date(date)
-			.timeSlots(timeSlots)
-			.totalSlots(TOTAL_TIME_SLOTS)
-			.availableSlots(availableCount)
-			.reservedSlots(reservedCount)
-			.build();
-	}
+        // 해당 예약과 연결된 상담 슬롯을 AVAILABLE 상태로 변경
+        consultationSlotRepository.findById(reservation.getConsultationSlotId())
+                .ifPresent(ConsultationSlot::makeAvailable);
 
-	public Reservation makeReservation(String userEmail, Long vendorId,
-		MakeReservationRequestDTO makeReservationRequestDTO) {
-		Member member = memberRepository.findByEmail(userEmail)
-			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+        reservation.cancel();
 
-		Vendor vendor = vendorRepository.findById(vendorId).orElseThrow(
-			() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage())
-		);
+        // 에약 취소 이벤트 발행
+        ReservationEventPayload payload = ReservationEventPayload.from(reservation);
+        eventPublisher.publishEvent(new ReservationCancelledEvent(this, payload));
 
-		if (reservationRepository.existsByReservationDateAndReservationTime(makeReservationRequestDTO.getDate(),
-			makeReservationRequestDTO.getTime())) {
-			throw new BadRequestException(ErrorStatus.BAD_REQUEST_RESERVATION_CONFLICT.getMessage());
-		}
+        // 추후 커플 캘린더 구현 시, 커플 캘린더 일정 취소 이벤트 발행
+        
+        log.info("상당 예약 취소 완료 및 이벤트 발행. reservationId: {}, memberId: {}",  reservationId, memberId);
+    }
 
-		Reservation reservation = Reservation.builder()
-			.reservationDate(makeReservationRequestDTO.getDate())
-			.reservationTime(makeReservationRequestDTO.getTime())
-			.vendor(vendor)
-			.member(member).build();
+    // 내 예약 목록 조회
+    @Transactional(readOnly = true)
+    public List<MyReservationResponseDTO> getMyReservations(Long memberId) {
 
-		return reservationRepository.save(reservation);
-	}
+        List<Reservation> reservations = reservationRepository.findAllByMemberIdWithVendor(memberId);
 
-	@Transactional(readOnly = true)
-	public List<ReservationResponseDTO> getMyReservations(String userEmail) {
-		log.info("회원 예약 조회를 시작합니다. 회원 이메일: {}", userEmail);
+        return reservations.stream()
+                .map(MyReservationResponseDTO::from)
+                .collect(Collectors.toList());
+    }
 
-		Member member = memberRepository.findByEmail(userEmail)
-			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
+    // 특정 업체의 월간 예약 현황(날짜별 예약 가능 여부) 조회
+    @Transactional(readOnly = true)
+    public List<DateAvailabilityDTO> getMonthlyAvailability(Long vendorId, int year, int month) {
 
-		// 회원의 모든 예약을 업체 정보와 이미지를 함께 조회 (N+1 문제 방지)
-		List<Reservation> reservations = reservationRepository.findAllByMemberWithVendorAndImages(member);
-		log.info("회원의 예약 {}개를 조회했습니다.", reservations.size());
+        YearMonth yearMonth = YearMonth.of(year, month);
+        LocalDateTime startOfMonth = yearMonth.atDay(1).atStartOfDay();
+        LocalDateTime endOfMonth = yearMonth.atEndOfMonth().atTime(23, 59, 59);
 
-		return reservations.stream().map(reservation -> {
-			Vendor vendor = reservation.getVendor();
+        // 해당 월의 모든 슬롯 정보를 조회
+        List<ConsultationSlot> slots = consultationSlotRepository.findByVendorIdAndStartTimeBetween(vendorId, startOfMonth, endOfMonth);
+        
+        // 날짜별로 슬롯 그룹화 후 각 날짜의 예약 가능 여부 계산
+        Map<LocalDate, List<ConsultationSlot>> slotsByDate = slots.stream()
+                .collect(Collectors.groupingBy(slot -> slot.getStartTime().toLocalDate()));
 
-			// 업체의 대표 이미지 조회 (EstimateService, TourService와 동일한 방식)
-			String mainImageUrl = getVendorMainImageUrl(vendor);
+        // 해당 월의 모든 날짜에 대해 DTO 생성
+        return yearMonth.atDay(1).datesUntil(yearMonth.atEndOfMonth().plusDays(1))
+                .map(date -> {
+                    List<ConsultationSlot> dailySlots = slotsByDate.getOrDefault(date, List.of());
 
-			return ReservationResponseDTO.builder()
-				.id(reservation.getId())
-				.vendorId(vendor.getId())
-				.vendorName(vendor.getName())
-				.vendorDescription(vendor.getDescription())
-				.vendorCategory(vendor.getCategory())
-				.mainImageUrl(mainImageUrl)
-				.district(vendor.getAddress().getDistrict())
-				.reservationDate(reservation.getReservationDate())
-				.reservationTime(reservation.getReservationTime())
-				.createdAt(reservation.getCreatedAt())
-				.updatedAt(reservation.getUpdatedAt())
-				.build();
-		}).toList();
-	}
+                    int totalSlots = dailySlots.size();
+                    int availableSlots = (int) dailySlots.stream()
+                            .filter(slot -> slot.getStatus() == SlotStatus.AVAILABLE)
+                            .count();
 
-	/**
-	 * 업체의 대표 이미지 URL을 조회 (EstimateService, TourService와 동일한 방식)
-	 */
-	private String getVendorMainImageUrl(Vendor vendor) {
-		try {
-			// 업체의 이미지 중 MAIN 타입 이미지 찾기
-			List<VendorImage> images = vendor.getImages();
-			if (images != null) {
-				return images.stream()
-					.filter(img -> img.getImageType() == VendorImageType.LOGO)
-					.findFirst()
-					.map(img -> s3Service.generatePresignedGetUrl(img.getImageKey()).getPresignedUrl())
-					.orElse(null);
-			}
-			return null;
-		} catch (Exception e) {
-			log.warn("업체 대표 이미지 조회 중 오류 발생. 업체 ID: {}", vendor.getId(), e);
-			return null;
-		}
-	}
+                    return new DateAvailabilityDTO(date, availableSlots > 0, totalSlots, availableSlots);
+                })
+                .collect(Collectors.toList());
+    }
+
+    // 특정 업체의 일간 예약 현황(시간별 예약 가능 여부) 조회
+    @Transactional(readOnly = true)
+    public List<SlotResponseDTO> getAvailableSlotsByDate(Long vendorId, int year, int month, int day) {
+
+        LocalDate date = LocalDate.of(year, month, day);
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(23, 59, 59);
+
+        return consultationSlotRepository.findByVendorIdAndStartTimeBetween(vendorId, start, end)
+                .stream()
+                .map(SlotResponseDTO::from)
+                .collect(Collectors.toList());
+    }
 }

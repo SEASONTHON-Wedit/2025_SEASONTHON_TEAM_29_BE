@@ -8,6 +8,8 @@ import com.wedit.backend.api.tour.entity.Tour;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface TourRepository extends JpaRepository<Tour, Long> {
 
     @Query("SELECT t FROM Tour t " +
@@ -22,4 +24,8 @@ public interface TourRepository extends JpaRepository<Tour, Long> {
             "WHERE t.member.id = :memberId " +
             "ORDER BY t.visitDateTime DESC")
     Page<Tour> findToursByMember(@Param("memberId") Long memberId, Pageable pageable);
+
+    boolean existsByReservationId(Long reservationId);
+
+    Optional<Tour> findByReservationId(Long reservationId);
 }

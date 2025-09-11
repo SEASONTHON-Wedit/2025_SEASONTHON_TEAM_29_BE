@@ -7,8 +7,12 @@ import java.util.Optional;
 import com.wedit.backend.api.media.entity.Media;
 import com.wedit.backend.api.media.service.MediaService;
 import com.wedit.backend.api.member.entity.Couple;
+import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.tour.dto.TourListResponseDTO;
 import com.wedit.backend.api.tour.dto.TourUpdateRequestDTO;
+import com.wedit.backend.api.vendor.entity.enums.VendorType;
+import com.wedit.backend.common.event.ReservationCancelledEvent;
+import com.wedit.backend.common.event.ReservationCreatedEvent;
 import com.wedit.backend.common.exception.ForbiddenException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +35,7 @@ import com.wedit.backend.common.response.ErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 @Service
 @Slf4j
@@ -43,9 +48,8 @@ public class TourService {
     private final VendorRepository vendorRepository;
     private final MediaService mediaService;
 
-    
-    // ReservationService 등 다른 서비스에서 호출되어 투어일지를 생성
-    public Tour createTourFromReservation(Long memberId, Long vendorId, LocalDateTime visitDateTime) {
+
+    public Tour createTourFromReservation(Long memberId, Long vendorId, Long reservationId, LocalDateTime visitDateTime) {
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
@@ -56,6 +60,7 @@ public class TourService {
                 .member(member)
                 .vendor(vendor)
                 .visitDateTime(visitDateTime)
+                .reservationId(reservationId)
                 .build();
 
         log.info("예약 기반 투어일지 생성. 사용자 ID: {}, 업체 ID: {}", memberId, vendorId);
@@ -117,6 +122,50 @@ public class TourService {
     public TourDetailResponseDTO getTourDetail(Long tourId, Long memberId) {
         Tour tour = findViewableTour(tourId, memberId);
         return TourDetailResponseDTO.from(tour);
+    }
+
+    // --- 이벤트 리스너 ---
+
+    // 예약 생성 이벤트를 감지 후 투어 일지 생성
+    // 예약 트랜잭션이 성공적으로 커밋 후에만 실행
+    @TransactionalEventListener
+    public void handleReservationCreated(ReservationCreatedEvent event) {
+
+        Reservation reservation = event.getReservation();
+
+        // 드레스샵 예약일 때만 투어 일지 생성
+        if (reservation.getVendor().getVendorType() == VendorType.DRESS) {
+
+            log.info("[이벤트 수신] 드레스샵 예약 생성 감지. 투어 일지 생성을 시도합니다. reservationId: {}", reservation.getId());
+
+            if (tourRepository.existsByReservationId(reservation.getId())) {
+                log.warn("이미 투어 일지가 존재하는 예약입니다. 중복 생성을 방지합니다.");
+                return;
+            }
+
+            this.createTourFromReservation(
+                    reservation.getMember().getId(),
+                    reservation.getVendor().getId(),
+                    reservation.getId(),
+                    reservation.getVisitDateTime()
+            );
+        }
+    }
+
+    @TransactionalEventListener
+    public void handleReservationCancelled(ReservationCancelledEvent event) {
+        Reservation reservation = event.getReservation();
+
+        if (reservation.getVendor().getVendorType() == VendorType.DRESS) {
+
+            log.info("[이벤트 수신] 드레스샵 예약 취소 감지. 투어 일지 삭제를 시도합니다. reservationId: {}", reservation.getId());
+
+            tourRepository.findByReservationId(reservation.getId()).ifPresent(tour -> {
+
+                log.info("예약 취소로 인한 투어 일지 삭제 시도. tourId: {}", tour.getId());
+                this.deleteTour(tour.getId(), tour.getMember().getId());
+            });
+        }
     }
 
 

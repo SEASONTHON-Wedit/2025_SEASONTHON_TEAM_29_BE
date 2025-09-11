@@ -37,11 +37,15 @@ public class Tour extends BaseTimeEntity {
 	private Long neckLineOrder;
 	private Long lineOrder;
 
+    @Column(unique = true)
+    private Long reservationId; // 하나의 상담예약은 하나의 투어만 생성
+
     @Builder
-    public Tour(Member member, Vendor vendor, LocalDateTime visitDateTime) {
+    public Tour(Member member, Vendor vendor, LocalDateTime visitDateTime, Long reservationId) {
         this.member = member;
         this.vendor = vendor;
         this.visitDateTime = visitDateTime;
+        this.reservationId = reservationId;
         this.status = TourStatus.WAITING;
     }
 

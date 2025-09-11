@@ -61,6 +61,7 @@ public enum ErrorStatus {
     NOT_FOUND_REVIEW(HttpStatus.NOT_FOUND, "해당 리뷰를 찾을 수 없습니다."),
     NOT_FOUND_PRODUCT(HttpStatus.NOT_FOUND, "해당 상품을 찾을 수 없습니다."),
     NOT_FOUND_CART_ITEM(HttpStatus.NOT_FOUND, "해당 상품이 견적서에 없습니다."),
+    NOT_FOUND_RESERVATION(HttpStatus.NOT_FOUND, "해당 상담 예약은 존재하지 않습니다."),
 
     /// 409 CONFLICT
     CONFLICT_DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "중복된 리소스가 존재합니다."),

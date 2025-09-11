@@ -37,12 +37,16 @@ public class Reservation extends BaseTimeEntity {
     @Column(nullable = false)
     private ReservationStatus status;
 
+    @Column(nullable = false, unique = true)
+    private Long consultationSlotId;    // 하나의 상담 슬롯은 하나의 예약만 가짐
+
     @Builder
-    public Reservation(Vendor vendor, Member member, LocalDateTime visitDateTime) {
+    public Reservation(Vendor vendor, Member member, LocalDateTime visitDateTime, Long consultationSlotId) {
         this.vendor = vendor;
         this.member = member;
         this.visitDateTime = visitDateTime;
-        this.status = ReservationStatus.CONFIRMED; // 생성 시 확정
+        this.consultationSlotId = consultationSlotId;
+        this.status = ReservationStatus.CONFIRMED;
     }
 
     public void cancel() {

@@ -81,9 +81,7 @@ public class CartController {
 
     private Long extractMemberId(String reqToken) {
         String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
-        Long memberId = jwtService.extractMemberId(token)
+        return jwtService.extractMemberId(token)
                 .orElseThrow(() -> new UnauthorizedException(ErrorStatus.UNAUTHORIZED_INVALID_TOKEN.getMessage()));
-
-        return memberId;
     }
 }
