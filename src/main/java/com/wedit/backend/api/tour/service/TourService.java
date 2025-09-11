@@ -125,51 +125,6 @@ public class TourService {
         return TourDetailResponseDTO.from(tour);
     }
 
-    // --- 이벤트 리스너 ---
-
-    // 예약 생성 이벤트를 감지 후 투어 일지 생성
-    // 예약 트랜잭션이 성공적으로 커밋 후에만 실행
-    @TransactionalEventListener
-    public void handleReservationCreated(ReservationCreatedEvent event) {
-
-        ReservationEventPayload payload = event.getReservationPayload();
-
-        // 드레스샵 예약일 때만 투어 일지 생성
-        if (payload.vendorType() == VendorType.DRESS) {
-
-            log.info("[이벤트 수신] 드레스샵 예약 생성 감지. 투어 일지 생성을 시도합니다. reservationId: {}", payload.reservationId());
-
-            if (tourRepository.existsByReservationId(payload.reservationId())) {
-                log.warn("이미 투어 일지가 존재하는 예약입니다. 중복 생성을 방지합니다.");
-                return;
-            }
-
-            this.createTourFromReservation(
-                    payload.memberId(),
-                    payload.vendorId(),
-                    payload.reservationId(),
-                    payload.visitDateTime()
-            );
-        }
-    }
-
-    @TransactionalEventListener
-    public void handleReservationCancelled(ReservationCancelledEvent event) {
-
-        ReservationEventPayload payload = event.getReservationPayload();
-
-        if (payload.vendorType() == VendorType.DRESS) {
-
-            log.info("[이벤트 수신] 드레스샵 예약 취소 감지. 투어 일지 삭제를 시도합니다. reservationId: {}", payload.reservationId());
-
-            tourRepository.findByReservationId(payload.reservationId()).ifPresent(tour -> {
-
-                log.info("예약 취소로 인한 투어 일지 삭제 시도. tourId: {}", tour.getId());
-                this.deleteTour(tour.getId(), tour.getMember().getId());
-            });
-        }
-    }
-
 
     // --- 헬퍼 메서드 ---
 
