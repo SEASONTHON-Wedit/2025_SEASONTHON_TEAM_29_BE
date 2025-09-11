@@ -44,6 +44,10 @@ public enum SuccessStatus {
     VENDOR_SEARCH_SUCCESS(HttpStatus.OK, "업체 조건 검색 성공"),
     MEMBER_MYPAGE_GET_SUCCESS(HttpStatus.OK, "회원 내 정보 조회 성공"),
     VENDOR_REVIEW_STATS_SUCCESS(HttpStatus.OK, "업체 후기 통계 조회 성공"),
+    TODO_GET_SUCCESS(HttpStatus.OK, "할 일 조회 성공"),
+    TODO_LIST_GET_SUCCESS(HttpStatus.OK, "할 일 목록 조회 성공"),
+    TODO_PENDING_COUNT_GET_SUCCESS(HttpStatus.OK, "미완료 할 일 개수 조회 성공"),
+    TODO_UPDATE_SUCCESS(HttpStatus.OK, "할 일 수정 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),
@@ -54,6 +58,7 @@ public enum SuccessStatus {
     TOUR_CREATE_SUCCESS(HttpStatus.CREATED, "투어일지 생성 성공"),
     TOUR_DRESS_CREATE_SUCCESS(HttpStatus.CREATED, "투어일지 드레스 저장 성공"),
     ESTIMATE_CREATE_SUCCESS(HttpStatus.CREATED, "견적서 생성 성공"),
+    TODO_CREATE_SUCCESS(HttpStatus.CREATED, "할 일 생성 성공"),
 
 
     /// 204 NO CONTENT
@@ -62,6 +67,7 @@ public enum SuccessStatus {
     RESERVATION_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "일정 삭제 성공"),
     REVIEW_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "리뷰 삭제 성공"),
     S3_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "이미지 혹은 동영상 삭제 성공"),
+    TODO_DELETE_SUCCESS(HttpStatus.NO_CONTENT, "할 일 삭제 성공"),
 
 
     ;
