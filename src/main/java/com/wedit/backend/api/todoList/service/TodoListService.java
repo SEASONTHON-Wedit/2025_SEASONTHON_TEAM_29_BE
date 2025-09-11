@@ -52,8 +52,8 @@ public class TodoListService {
 
         // 완료된 항목 수 계산
         Integer completedCount = (int) memberTodos.stream()
-                .mapToLong(mt -> mt.getIsCompleted() ? 1L : 0L)
-                .sum();
+            .filter(MemberTodo::getIsCompleted)
+            .count();
 
         return TodoListResponseDTO.of(todoItems, completedCount);
     }
