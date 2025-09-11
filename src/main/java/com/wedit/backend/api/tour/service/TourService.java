@@ -7,6 +7,7 @@ import java.util.Optional;
 import com.wedit.backend.api.media.entity.Media;
 import com.wedit.backend.api.media.service.MediaService;
 import com.wedit.backend.api.member.entity.Couple;
+import com.wedit.backend.api.reservation.dto.ReservationEventPayload;
 import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.tour.dto.TourListResponseDTO;
 import com.wedit.backend.api.tour.dto.TourUpdateRequestDTO;
@@ -131,36 +132,37 @@ public class TourService {
     @TransactionalEventListener
     public void handleReservationCreated(ReservationCreatedEvent event) {
 
-        Reservation reservation = event.getReservation();
+        ReservationEventPayload payload = event.getReservationPayload();
 
         // 드레스샵 예약일 때만 투어 일지 생성
-        if (reservation.getVendor().getVendorType() == VendorType.DRESS) {
+        if (payload.vendorType() == VendorType.DRESS) {
 
-            log.info("[이벤트 수신] 드레스샵 예약 생성 감지. 투어 일지 생성을 시도합니다. reservationId: {}", reservation.getId());
+            log.info("[이벤트 수신] 드레스샵 예약 생성 감지. 투어 일지 생성을 시도합니다. reservationId: {}", payload.reservationId());
 
-            if (tourRepository.existsByReservationId(reservation.getId())) {
+            if (tourRepository.existsByReservationId(payload.reservationId())) {
                 log.warn("이미 투어 일지가 존재하는 예약입니다. 중복 생성을 방지합니다.");
                 return;
             }
 
             this.createTourFromReservation(
-                    reservation.getMember().getId(),
-                    reservation.getVendor().getId(),
-                    reservation.getId(),
-                    reservation.getVisitDateTime()
+                    payload.memberId(),
+                    payload.vendorId(),
+                    payload.reservationId(),
+                    payload.visitDateTime()
             );
         }
     }
 
     @TransactionalEventListener
     public void handleReservationCancelled(ReservationCancelledEvent event) {
-        Reservation reservation = event.getReservation();
 
-        if (reservation.getVendor().getVendorType() == VendorType.DRESS) {
+        ReservationEventPayload payload = event.getReservationPayload();
 
-            log.info("[이벤트 수신] 드레스샵 예약 취소 감지. 투어 일지 삭제를 시도합니다. reservationId: {}", reservation.getId());
+        if (payload.vendorType() == VendorType.DRESS) {
 
-            tourRepository.findByReservationId(reservation.getId()).ifPresent(tour -> {
+            log.info("[이벤트 수신] 드레스샵 예약 취소 감지. 투어 일지 삭제를 시도합니다. reservationId: {}", payload.reservationId());
+
+            tourRepository.findByReservationId(payload.reservationId()).ifPresent(tour -> {
 
                 log.info("예약 취소로 인한 투어 일지 삭제 시도. tourId: {}", tour.getId());
                 this.deleteTour(tour.getId(), tour.getMember().getId());

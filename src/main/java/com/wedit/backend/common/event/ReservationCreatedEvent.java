@@ -1,6 +1,6 @@
 package com.wedit.backend.common.event;
 
-import com.wedit.backend.api.reservation.entity.ReservationEventPayload;
+import com.wedit.backend.api.reservation.dto.ReservationEventPayload;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 

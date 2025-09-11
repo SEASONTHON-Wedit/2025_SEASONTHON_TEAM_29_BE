@@ -9,7 +9,7 @@ import com.wedit.backend.api.reservation.dto.ReservationRequestDTO;
 import com.wedit.backend.api.reservation.dto.SlotResponseDTO;
 import com.wedit.backend.api.reservation.entity.ConsultationSlot;
 import com.wedit.backend.api.reservation.entity.Reservation;
-import com.wedit.backend.api.reservation.entity.ReservationEventPayload;
+import com.wedit.backend.api.reservation.dto.ReservationEventPayload;
 import com.wedit.backend.api.reservation.entity.SlotStatus;
 import com.wedit.backend.api.reservation.repository.ConsultationSlotRepository;
 import com.wedit.backend.api.reservation.repository.ReservationRepository;
