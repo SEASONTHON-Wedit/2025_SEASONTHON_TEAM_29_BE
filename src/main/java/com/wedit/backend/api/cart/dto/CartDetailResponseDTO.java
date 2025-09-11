@@ -19,8 +19,8 @@ public class CartDetailResponseDTO {
     private List<CartItemDTO> makeups;
     private List<CartItemDTO> studios;
 
-
     @Builder
+    @Getter
     @AllArgsConstructor
     public static class CartItemDTO {
 

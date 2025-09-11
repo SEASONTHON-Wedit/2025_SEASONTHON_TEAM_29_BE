@@ -15,7 +15,7 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
             "JOIN FETCH ci.product p " +
             "JOIN FETCH p.vendor v " +
             "JOIN FETCH v.region r " +
-            "JOIN FETCH v.logoMedia " +
+            "LEFT JOIN FETCH v.logoMedia " +
             "WHERE ci.cart = :cart")
     List<CartItem> findAllWithDetailsByCart(@Param("cart") Cart cart);
 }

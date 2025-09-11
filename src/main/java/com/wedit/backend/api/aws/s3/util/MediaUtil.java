@@ -80,7 +80,7 @@ public class MediaUtil {
 
     /// 허용 Content-Length 및 Content-Type 검증
     public static boolean isValidFileSize(String contentType, Long size) {
-        if (isValidContentType(contentType)) {
+        if (isValidImageType(contentType)) {
             return isValidImageSize(size);
         }
         if (isValidVideoType(contentType)) {

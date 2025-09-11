@@ -91,59 +91,6 @@ public class S3Controller {
         return ApiResponse.success(SuccessStatus.S3_PUT_URL_CREATE_SUCCESS, dtos);
     }
 
-//    @Operation(summary = "단일 미디어 다운로드용 Presigned URL 발급",
-//            description = "S3에 저장된 단일 미디어 파일을 다운로드하기 위한 Presigned URL을 발급합니다.")
-//    @ApiResponses({
-//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "URL 발급 성공"),
-//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "유효하지 않은 토큰", content = @Content)
-//    })
-//    @Parameters({
-//            @Parameter(name = "domain", description = "다운로드 도메인", required = true, example = "review"),
-//            @Parameter(name = "reqToken", hidden = true)
-//    })
-//    @GetMapping("/{domain}/download-url")
-//    public ResponseEntity<ApiResponse<PresignedUrlResponseDTO>> getSingleDownloadUrl(
-//            @PathVariable MediaDomain domain,
-//            @Parameter(
-//                    description = "다운로드할 파일의 S3 객체 키 (파일 경로)",
-//                    required = true,
-//                    example = "review/1/images/10/a1b2c3d4_20250903_image.jpg"
-//            )
-//            @RequestParam String key,
-//            @RequestHeader("Authorization") String reqToken) {
-//
-//        extractMemberId(reqToken);
-//
-//        PresignedUrlResponseDTO dto = s3Service.generatePresignedGetUrl(key);
-//
-//        return ApiResponse.success(SuccessStatus.S3_GET_URL_CREATE_SUCCESS, dto);
-//    }
-//
-//    @Operation(summary = "복수 미디어 다운로드용 Presigned URL 발급",
-//            description = "S3에 저장된 여러 미디어 파일을 다운로드하기 위한 Presigned URL 리스트를 발급합니다.")
-//    @ApiResponses({
-//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "URL 목록 발급 성공"),
-//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "유효하지 않은 토큰", content = @Content)
-//    })
-//    @Parameters({
-//            @Parameter(name = "domain", description = "다운로드 도메인", required = true, example = "vendor"),
-//            @Parameter(name = "reqToken", hidden = true)
-//    })
-//    @PostMapping("/{domain}/download-urls")
-//    public ResponseEntity<ApiResponse<List<PresignedUrlResponseDTO>>> getMultipleDownloadUrl(
-//            @PathVariable MediaDomain domain,
-//            @RequestBody List<String> keys,
-//            @RequestHeader("Authorization") String reqToken) {
-//
-//        extractMemberId(reqToken);
-//
-//        List<PresignedUrlResponseDTO> dtos = keys.stream()
-//                .map(s3Service::generatePresignedGetUrl)
-//                .toList();
-//
-//        return ApiResponse.success(SuccessStatus.S3_GET_URL_CREATE_SUCCESS, dtos);
-//    }
-
 
     private Long extractMemberId(String reqToken) {
         String token =  reqToken.replace("Bearer ", "");

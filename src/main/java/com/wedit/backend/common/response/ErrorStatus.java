@@ -18,7 +18,6 @@ public enum ErrorStatus {
     BAD_REQUEST_INVALID_EMAIL(HttpStatus.BAD_REQUEST, "잘못된 이메일입니다."),
     BAD_REQUEST_INVALID_PHONE(HttpStatus.BAD_REQUEST, "잘못된 전화번호입니다."),
     BAD_REQUEST_RESERVATION_CONFLICT(HttpStatus.BAD_REQUEST, "예약 시간이 겹칩니다."),
-    BAD_REQUEST_ESTIMATE_CONFLICT(HttpStatus.BAD_REQUEST, "견적서 시간이 겹칩니다."),
     BAD_REQUEST_VALID_FAILED(HttpStatus.BAD_REQUEST, "DTO 유효성 검증에 실패했습니다."),
     BAD_REQUEST_NOT_SUPPORTED_MEDIA_TYPE(HttpStatus.BAD_REQUEST, "지원하지 않는 미디어 타입입니다."),
     BAD_REQUEST_INVALID_IMAGE_SIZE(HttpStatus.BAD_REQUEST, "이미지 파일 크기가 15MB 보다 큽니다."),
@@ -61,6 +60,7 @@ public enum ErrorStatus {
     NOT_FOUND_TOUR(HttpStatus.NOT_FOUND, "해당 투어를 찾을 수 없습니다."),
     NOT_FOUND_REVIEW(HttpStatus.NOT_FOUND, "해당 리뷰를 찾을 수 없습니다."),
     NOT_FOUND_PRODUCT(HttpStatus.NOT_FOUND, "해당 상품을 찾을 수 없습니다."),
+    NOT_FOUND_CART_ITEM(HttpStatus.NOT_FOUND, "해당 상품이 견적서에 없습니다."),
 
     /// 409 CONFLICT
     CONFLICT_DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "중복된 리소스가 존재합니다."),

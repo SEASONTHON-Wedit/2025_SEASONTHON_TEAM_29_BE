@@ -70,26 +70,6 @@ public class S3Service {
                 .build();
     }
 
-//    public PresignedUrlResponseDTO  generatePresignedGetUrl(String key) {
-//
-//        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-//                .bucket(bucketName)
-//                .key(key)
-//                .build();
-//
-//        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-//                .getObjectRequest(getObjectRequest)
-//                .signatureDuration(Duration.ofMinutes(durationMinutes))
-//                .build();
-//
-//        String url = s3Presigner.presignGetObject(presignRequest).url().toString();
-//
-//        return PresignedUrlResponseDTO.builder()
-//                .s3Key(key)
-//                .presignedUrl(url)
-//                .build();
-//    }
-
     // 단일 조회 CDN URL 변환
     public String toCdnUrl(String key) {
 
@@ -144,11 +124,12 @@ public class S3Service {
 
         // 미디어 타입 분류
         String mediaType;
-        if (contentType.toLowerCase().startsWith("image/")) {
+        String lowerContentType = contentType.toLowerCase();
+        if (lowerContentType.startsWith("image/")) {
             mediaType = "images";
-        } else if (contentType.toLowerCase().startsWith("video/")) {
+        } else if (lowerContentType.startsWith("video/")) {
             mediaType = "videos";
-        } else if (contentType.toLowerCase().startsWith("audio/")) {
+        } else if (lowerContentType.startsWith("audio/")) {
             mediaType = "audios";
         } else {
             mediaType = "others";

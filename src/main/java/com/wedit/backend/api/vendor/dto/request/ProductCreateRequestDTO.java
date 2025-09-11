@@ -26,6 +26,8 @@ public class ProductCreateRequestDTO {
 
     @Schema(description = "상품 이미지 목록 (S3 업로드 후 반환된 키)")
     private List<MediaRequestDTO> productImages;
+    @Schema(description = "해당 상품 소요시간 분 단위 (ex. 웨딩홀 2시간)")
+    private Integer durationInMinutes;
 
     // 선택 (없으면 기본값으로 들어감)
     @Schema(description = "기본 가격", example = "3000000")

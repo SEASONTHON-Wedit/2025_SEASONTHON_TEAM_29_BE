@@ -141,6 +141,7 @@ public class ProductService {
                     .hallMeal(request.getHallMeal())
                     .capacity(request.getCapacity())
                     .hasParking(request.getHasParking())
+                    .durationInMinutes(request.getDurationInMinutes())
                     .build();
             case STUDIO -> StudioProduct.builder()
                     .vendor(vendor)
@@ -149,6 +150,7 @@ public class ProductService {
                     .photoStyle(request.getPhotoStyle())
                     .specialShot(request.getSpecialShot())
                     .iphoneSnap(request.getIphoneSnap())
+                    .durationInMinutes(request.getDurationInMinutes())
                     .build();
             case MAKEUP -> MakeupProduct.builder()
                     .vendor(vendor)
@@ -156,6 +158,7 @@ public class ProductService {
                     .basePrice(request.getBasePrice())
                     .hasPrivateRoom(request.getHasPrivateRoom())
                     .isStylistDesignationAvailable(request.getIsStylistDesignationAvailable())
+                    .durationInMinutes(request.getDurationInMinutes())
                     .build();
             case DRESS -> DressProduct.builder()
                     .vendor(vendor)
@@ -163,6 +166,7 @@ public class ProductService {
                     .basePrice(request.getBasePrice())
                     .mainMaterial(request.getMainMaterial())
                     .dressOrigin(request.getDressOrigin())
+                    .durationInMinutes(request.getDurationInMinutes())
                     .build();
             default -> throw new IllegalArgumentException("지원하지 않는 상품 타입입니다.");
         };
