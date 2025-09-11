@@ -41,7 +41,6 @@ public class TodoListController {
 	@GetMapping
 	public ResponseEntity<ApiResponse<TodoListResponseDTO>> getTodoList(
 		@AuthenticationPrincipal UserDetails userDetails) {
-		System.out.println("userDetails = " + userDetails.getUsername());
 		TodoListResponseDTO response = todoListService.getTodoList(userDetails.getUsername());
 
 		return ApiResponse.success(SuccessStatus.TODO_LIST_GET_SUCCESS, response);

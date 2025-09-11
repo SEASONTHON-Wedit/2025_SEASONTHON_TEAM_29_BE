@@ -31,14 +31,14 @@ public class TodoListService {
     private final MemberTodoRepository memberTodoRepository;
     private final MemberRepository memberRepository;
 
-    public TodoListResponseDTO getTodoList(String memberEmails) {
-        log.info("멤버 투두 리스트 조회 시작 멤버 이메일 : {}", memberEmails);
+    public TodoListResponseDTO getTodoList(String memberEmail) {
+        log.info("멤버 투두 리스트 조회 시작 멤버 이메일 : {}", memberEmail);
 
         // 모든 템플릿을 ID 순서대로 조회
         List<TodoTemplate> templates = todoTemplateRepository.findAll();
         
         // 해당 회원의 완료 상태 조회
-        List<MemberTodo> memberTodos = memberTodoRepository.findByMemberEmail(memberEmails);
+        List<MemberTodo> memberTodos = memberTodoRepository.findByMemberEmail(memberEmail);
         Map<Long, MemberTodo> memberTodoMap = memberTodos.stream()
                 .collect(Collectors.toMap(
                     mt -> mt.getTodoTemplate().getId(),
