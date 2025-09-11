@@ -31,7 +31,6 @@
 ---
 ## 🪾 브랜치 전략
 - **Issue**를 통한 feature/bug/fix/refactor 브랜치 생성
-- 
 
 ----
 
@@ -103,7 +102,7 @@ http://localhost:8080/api/v3/api-docs
 
 | 이름      | 역할 | GitHub                                         | 담당 업무                  |
 |---------|------|------------------------------------------------|------------------------|
-| **김현빈** | Backend Lead | [@kimhyunbin](https://github.com/kimhyunbin)   | 아키텍처 설계, 인증 시스템, CI/CD |
+| **김현빈** | Backend Lead | [@kimhyunbin](https://github.com/wien0128)   | 아키텍처 설계, 인증 시스템, CI/CD |
 | **오현우** | Backend Developer | [@HyunWoo9930](https://github.com/HyunWoo9930) | API 개발, 소셜로그인          |
 
 <div align="center">
