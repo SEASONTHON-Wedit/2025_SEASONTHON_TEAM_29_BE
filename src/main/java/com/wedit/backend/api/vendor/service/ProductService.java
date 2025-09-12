@@ -106,13 +106,14 @@ public class ProductService {
             details.put("capacity", hall.getCapacity());
             details.put("hasParking", hall.getHasParking());
         } else if (product instanceof StudioProduct studio) {
-            details.put("photoStyle", studio.getPhotoStyle().getDisplayName());
+            details.put("studioStyle", studio.getStudioStyle().getDisplayName());
             details.put("specialShot", studio.getSpecialShot().getDisplayName());
             details.put("iphoneSnap", studio.getIphoneSnap());
         } else if (product instanceof DressProduct dress) {
-            details.put("mainMaterial", dress.getMainMaterial().getDisplayName());
+            details.put("dressStyle", dress.getDressStyle().getDisplayName());
             details.put("dressOrigin", dress.getDressOrigin().getDisplayName());
         } else if (product instanceof MakeupProduct makeup) {
+            details.put("makeupStyle", makeup.getMakeupStyle().getDisplayName());
             details.put("hasPrivateRoom", makeup.getHasPrivateRoom());
             details.put("isStylistDesignationAvailable", makeup.getIsStylistDesignationAvailable());
         }
@@ -147,7 +148,7 @@ public class ProductService {
                     .vendor(vendor)
                     .name(request.getName())
                     .basePrice(request.getBasePrice())
-                    .photoStyle(request.getPhotoStyle())
+                    .studioStyle(request.getStudioStyle())
                     .specialShot(request.getSpecialShot())
                     .iphoneSnap(request.getIphoneSnap())
                     .durationInMinutes(request.getDurationInMinutes())
@@ -156,6 +157,7 @@ public class ProductService {
                     .vendor(vendor)
                     .name(request.getName())
                     .basePrice(request.getBasePrice())
+                    .makeupStyle(request.getMakeupStyle())
                     .hasPrivateRoom(request.getHasPrivateRoom())
                     .isStylistDesignationAvailable(request.getIsStylistDesignationAvailable())
                     .durationInMinutes(request.getDurationInMinutes())
@@ -164,7 +166,7 @@ public class ProductService {
                     .vendor(vendor)
                     .name(request.getName())
                     .basePrice(request.getBasePrice())
-                    .mainMaterial(request.getMainMaterial())
+                    .dressStyle(request.getDressStyle())
                     .dressOrigin(request.getDressOrigin())
                     .durationInMinutes(request.getDurationInMinutes())
                     .build();

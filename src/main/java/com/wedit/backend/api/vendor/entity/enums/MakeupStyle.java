@@ -5,11 +5,12 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum DressMaterial {
+public enum MakeupStyle {
 
-    SILK("실크"),
-    LACE("레이스"),
-    BEADS("비즈");
+    INNOCENT("청순"),
+    ROMANTIC("로맨틱"),
+    NATURAL("내추럴"),
+    GLAM("글램");
 
     private final String displayName;
 }

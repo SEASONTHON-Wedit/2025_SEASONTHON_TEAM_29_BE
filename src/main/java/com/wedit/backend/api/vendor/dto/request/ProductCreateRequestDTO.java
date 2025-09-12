@@ -45,19 +45,21 @@ public class ProductCreateRequestDTO {
 
     // --- 스튜디오 속성 ---
     @Schema(description = "[스튜디오] 사진 스타일", example = "HANOK")
-    private StudioPhotoStyle photoStyle;
+    private StudioStyle studioStyle;
     @Schema(description = "[스튜디오] 특수 촬영 옵션", example = "PERSON_CENTERED")
     private StudioSpecialShot specialShot;
     @Schema(description = "[스튜디오] 아이폰 스냅 가능 여부", example = "true")
     private Boolean iphoneSnap;
 
     // --- 드레스 속성 ---
-    @Schema(description = "[드레스] 주력 소재", example = "SILK")
-    private DressMaterial mainMaterial;
+    @Schema(description = "[드레스] 드레스 스타일", example = "DANAH")
+    private DressStyle dressStyle;
     @Schema(description = "[드레스] 원산지 (국내/수입)", example = "IMPORTED")
     private DressOrigin dressOrigin;
 
     // --- 메이크업 속성 ---
+    @Schema(description = "[메이크업] 메이크업 스타일", example = "ROMANTIC")
+    private MakeupStyle makeupStyle;
     @Schema(description = "[메이크업] 단독룸 보유 여부", example = "true")
     private Boolean hasPrivateRoom;
     @Schema(description = "[메이크업] 스타일리스트 지정 가능 여부", example = "false")

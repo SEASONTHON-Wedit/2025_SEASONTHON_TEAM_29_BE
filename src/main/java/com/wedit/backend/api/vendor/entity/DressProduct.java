@@ -1,8 +1,8 @@
 package com.wedit.backend.api.vendor.entity;
 
 
-import com.wedit.backend.api.vendor.entity.enums.DressMaterial;
 import com.wedit.backend.api.vendor.entity.enums.DressOrigin;
+import com.wedit.backend.api.vendor.entity.enums.DressStyle;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -18,7 +18,7 @@ public class DressProduct extends Product {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private DressMaterial mainMaterial; // 소재(주력스타일)
+    private DressStyle dressStyle;      // 스타일
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -26,11 +26,11 @@ public class DressProduct extends Product {
 
     @Builder
     public DressProduct(Vendor vendor, String name, Long basePrice, String description,
-                        Integer durationInMinutes, DressMaterial mainMaterial,
+                        Integer durationInMinutes, DressStyle dressStyle,
                         DressOrigin dressOrigin) {
 
         super(vendor, name, basePrice, description, durationInMinutes);
-        this.mainMaterial = mainMaterial;
+        this.dressStyle = dressStyle;
         this.dressOrigin = dressOrigin;
     }
 }
