@@ -22,8 +22,8 @@
 **Wedit**은 예비 신랑신부들이 웨딩 준비 과정에서 필요한 모든 서비스를 한 곳에서 관리할 수 있는 플랫폼입니다.
 <table align="center">
   <tr>
-    <td><img width="400" alt="Image 1" src="https://github.com/user-attachments/assets/97266e71-5c60-4a34-970d-97db7f53e374" /></td>
     <td><img width="400" alt="Image 2" src="https://github.com/user-attachments/assets/2858f4a6-6bc5-46db-9509-c291120a7783" /></td>
+    <td><img width="400" alt="Image 1" src="https://github.com/user-attachments/assets/97266e71-5c60-4a34-970d-97db7f53e374" /></td>
   </tr>
 </table>
 
