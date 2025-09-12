@@ -208,4 +208,5 @@ public class ReviewController {
         return ApiResponse.success(SuccessStatus.VENDOR_REVIEW_LIST_GET_SUCCESS, response);
     }
 
+    // 사용자가 작성 가능한 후기 목록 리스팅 API
 }

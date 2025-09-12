@@ -1,23 +1,35 @@
 package com.wedit.backend.api.tour.dto;
 
-import com.wedit.backend.api.tour.entity.Status;
-import com.wedit.backend.api.vendor.entity.enums.Category;
+import com.wedit.backend.api.tour.entity.Tour;
+import com.wedit.backend.api.tour.entity.TourStatus;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 
+import java.time.LocalDateTime;
+
+@Getter
 @Builder
-@Data
+@Schema(description = "투어일지 상세 정보 DTO")
 public class TourDetailResponseDTO {
-	private Long id;
-	private Status status;
-	private Long memberId;
-	private Long vendorId;
-	private String vendorName;        // 업체 이름 추가
-	private String vendorDescription; // 업체 설명 추가
-	private Category vendorCategory;  // 업체 카테고리 추가
-	private String mainImageUrl;      // 대표 이미지 URL 추가
-	private Long materialOrder;
-	private Long neckLineOrder;
-	private Long lineOrder;
+    private Long tourId;
+    private String vendorName;
+    private LocalDateTime visitDateTime;
+    private TourStatus status;
+    private Long materialOrder;
+    private Long neckLineOrder;
+    private Long lineOrder;
+
+    public static TourDetailResponseDTO from(Tour tour) {
+        return TourDetailResponseDTO.builder()
+                .tourId(tour.getId())
+                .vendorName(tour.getVendor().getName())
+                .visitDateTime(tour.getVisitDateTime())
+                .status(tour.getStatus())
+                .materialOrder(tour.getMaterialOrder())
+                .neckLineOrder(tour.getNeckLineOrder())
+                .lineOrder(tour.getLineOrder())
+                .build();
+    }
 }

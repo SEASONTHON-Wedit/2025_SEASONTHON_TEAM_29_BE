@@ -42,8 +42,19 @@ public class Couple extends BaseTimeEntity {
 	@Column(unique = true, length = 10)
 	private String coupleCode;
 
-	// 커플 연동
-	public void connectPartner(Member partner) {
+    // 파트너 반환
+    public Member getPartner(Member requester) {
+        if (groom != null && groom.getId().equals(requester.getId())) {
+            return bride;
+        }
+        if (bride != null && bride.getId().equals(requester.getId())) {
+            return groom;
+        }
+        return null; // 파트너가 없거나 요청자가 커플 구성원이 아님
+    }
+
+    // 커플 연동
+    public void connectPartner(Member partner) {
 
 		// 1. 자기 자시과 연결 방지
 		if ((this.groom != null && this.groom.getId().equals(partner.getId()))
