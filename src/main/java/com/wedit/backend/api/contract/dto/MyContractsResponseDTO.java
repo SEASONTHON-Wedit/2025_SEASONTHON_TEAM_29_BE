@@ -22,13 +22,16 @@ public record MyContractsResponseDTO(
     public record MyContractItem(
             Long contractId,
             String vendorName,
+            String regionName,
             String productName,
             String logoImageUrl
     ) {
         public static MyContractItem from(Contract contract, String logoImageUrl) {
+
             return new MyContractItem(
                     contract.getId(),
                     contract.getProduct().getVendor().getName(),
+                    contract.getProduct().getVendor().getRegion().getName(),
                     contract.getProduct().getName(),
                     logoImageUrl
             );
@@ -36,6 +39,7 @@ public record MyContractsResponseDTO(
     }
 
     public static MyContractsResponseDTO from(Page<MyContractsByDate> page) {
+
         return new MyContractsResponseDTO(
                 page.getNumber(),
                 page.getTotalPages(),

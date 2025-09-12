@@ -4,6 +4,7 @@ import com.wedit.backend.api.contract.dto.*;
 import com.wedit.backend.api.contract.entity.Contract;
 import com.wedit.backend.api.contract.repository.AvailableSlotRepository;
 import com.wedit.backend.api.contract.repository.ContractRepository;
+import com.wedit.backend.api.media.service.MediaService;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.api.vendor.entity.AvailableSlot;
@@ -22,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +37,7 @@ public class ContractService {
     private final ContractRepository contractRepository;
     private final AvailableSlotRepository availableSlotRepository;
     private final MemberRepository memberRepository;
+    private final MediaService mediaService;
 
 
     // 사용자가 선택한 모든 달에 대해 계약 가능한 모든 슬롯 조회
@@ -49,7 +50,7 @@ public class ContractService {
                 .flatMap(month -> {
                     YearMonth yearMonth = YearMonth.of(currentYear, month);
                     LocalDateTime startOfMonth = yearMonth.atDay(1).atStartOfDay();
-                    LocalDateTime endOfMonth = yearMonth.atEndOfMonth().atTime(23, 59, 59);
+                    LocalDateTime endOfMonth = yearMonth.atEndOfMonth().atTime(java.time.LocalTime.MAX);
 
                     return availableSlotRepository.findByProductIdAndStatusAndStartTimeBetween(
                                     request.productId(), TimeSlotStatus.AVAILABLE, startOfMonth, endOfMonth)
@@ -76,62 +77,86 @@ public class ContractService {
 
         Contract savedContract = contractRepository.save(contract);
 
-        return new ContractCreateResponseDTO(savedContract.getId(), "");
+        return new ContractCreateResponseDTO(savedContract.getId());
     }
 
+    // 마이페이지 계약건 탭 페이징 조회
+    @Transactional(readOnly = true)
     public MyContractsResponseDTO getMyContracts(Long memberId, Pageable pageable) {
 
         Member member = findMemberById(memberId);
-        List<Contract> allContracts = contractRepository.findByMemberWithDetails(member);
+        Page<Contract> contractsPage = contractRepository.findAllContractsByMember(member, pageable);
 
-        Map<LocalDate, List<Contract>> groupedByDate = allContracts.stream()
+        // DB단에서 페이징 후 메모리에서 그룹핑
+        Map<LocalDate, List<MyContractsResponseDTO.MyContractItem>> groupedByDate = contractsPage.getContent().stream()
                 .collect(Collectors.groupingBy(
                         c -> c.getExecutionDateTime().toLocalDate(),
                         LinkedHashMap::new,
-                        Collectors.toList()
+                        Collectors.mapping(contract -> {
+                            String logoUrl = contract.getProduct().getVendor().getLogoMedia() != null
+                                    ? mediaService.toCdnUrl(contract.getProduct().getVendor().getLogoMedia().getMediaKey())
+                                    : null;
+                            return MyContractsResponseDTO.MyContractItem.from(contract, logoUrl);
+                        }, Collectors.toList())
                 ));
 
-        List<LocalDate> uniqueDates = new ArrayList<>(groupedByDate.keySet());
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), uniqueDates.size());
-
-        if (start >= end) {
-            return MyContractsResponseDTO.from(Page.empty(pageable));
-        }
-
-        List<MyContractsResponseDTO.MyContractsByDate> pageContent = uniqueDates.subList(start, end).stream()
-                .map(date -> {
-                    List<MyContractsResponseDTO.MyContractItem> items = groupedByDate.get(date).stream()
-                            .map(contract -> {
-                                String logoUrl = (contract.getProduct().getVendor().getLogoMedia() != null)
-                                        ? contract.getProduct().getVendor().getLogoMedia().getMediaKey()
-                                        : null;
-
-                                return MyContractsResponseDTO.MyContractItem.from(contract, logoUrl);
-                            })
-                            .toList();
-                    return new MyContractsResponseDTO.MyContractsByDate(date, items);
-                })
+        List<MyContractsResponseDTO.MyContractsByDate> pageContent = groupedByDate.entrySet().stream()
+                .map(entry -> new MyContractsResponseDTO.MyContractsByDate(entry.getKey(), entry.getValue()))
                 .toList();
 
-        Page<MyContractsResponseDTO.MyContractsByDate> pagedResult = new PageImpl<>(pageContent, pageable, uniqueDates.size());
+        Page<MyContractsResponseDTO.MyContractsByDate> pagedResult = new PageImpl<>(pageContent, pageable, contractsPage.getTotalElements());
 
         return MyContractsResponseDTO.from(pagedResult);
     }
 
+    // 후기 작성하러 가기 페이징 조회
+    @Transactional(readOnly = true)
+    public Page<ReviewableContractDTO> getReviewableContracts(Long memberId, Pageable pageable) {
+
+        Member member = findMemberById(memberId);
+        Page<Contract> pastContractsPage = contractRepository.findPastContractsByMember(member, pageable);
+
+        return pastContractsPage.map(contract -> {
+            String logoUrl = contract.getProduct().getVendor().getLogoMedia() != null
+                    ? mediaService.toCdnUrl(contract.getProduct().getVendor().getLogoMedia().getMediaKey())
+                    : null;
+
+            return ReviewableContractDTO.from(contract, logoUrl);
+        });
+    }
+
+    // 계약 상세 조회
+    @Transactional(readOnly = true)
+    public ContractDetailDTO getContractDetail(Long memberId, Long contractId) {
+
+        Contract contract = contractRepository.findContractDetailsByIdAndMemberId(contractId, memberId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_CONTRACT.getMessage()));
+
+        String repImageUrl = contract.getProduct().getVendor().getRepMedia() != null
+                ? mediaService.toCdnUrl(contract.getProduct().getVendor().getRepMedia().getMediaKey())
+                : null;
+
+        return ContractDetailDTO.from(contract, repImageUrl);
+    }
+
+
     // --- 헬퍼 메서드 ---
 
     private Member findMemberById(Long memberId) {
+
         return memberRepository.findById(memberId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
     }
 
     private AvailableSlot findAvailableSlotWithLock(Long slotId) {
+
         AvailableSlot slot = availableSlotRepository.findByIdWithLock(slotId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_SLOT.getMessage()));
+
         if (slot.getStatus() != TimeSlotStatus.AVAILABLE) {
             throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_BOOKED.getMessage());
         }
+
         return slot;
     }
 }

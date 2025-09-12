@@ -67,6 +67,7 @@ public enum ErrorStatus {
     NOT_FOUND_CART_ITEM(HttpStatus.NOT_FOUND, "해당 상품이 견적서에 없습니다."),
     NOT_FOUND_RESERVATION(HttpStatus.NOT_FOUND, "해당 상담 예약은 존재하지 않습니다."),
     NOT_FOUND_SLOT(HttpStatus.NOT_FOUND, "해당 슬롯은 존재하지 않습니다."),
+    NOT_FOUND_CONTRACT(HttpStatus.NOT_FOUND, "해당 계약은 존재하지 않습니다."),
 
     /// 409 CONFLICT
     CONFLICT_DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "중복된 리소스가 존재합니다."),
