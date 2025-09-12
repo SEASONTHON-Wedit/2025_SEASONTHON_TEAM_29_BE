@@ -5,11 +5,13 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum StudioPhotoStyle {
+public enum StudioStyle {
 
-    HANOK("한옥"),
-    PET("반려동물"),
-    UNDERWATER("수중");
+    PORTRAIT_FOCUSED("인물중심"),
+    NATURAL("자연"),
+    EMOTIONAL("감성"),
+    CLASSIC("클래식"),
+    BLACK_AND_WHITE("흑백");
 
     private final String displayName;
 }
