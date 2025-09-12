@@ -20,7 +20,14 @@
 ## 🚀 프로젝트 소개
 
 **Wedit**은 예비 신랑신부들이 웨딩 준비 과정에서 필요한 모든 서비스를 한 곳에서 관리할 수 있는 플랫폼입니다.
+<table align="center">
+  <tr>
+    <td><img width="400" alt="Image 2" src="https://github.com/user-attachments/assets/2858f4a6-6bc5-46db-9509-c291120a7783" /></td>
+    <td><img width="400" alt="Image 1" src="https://github.com/user-attachments/assets/97266e71-5c60-4a34-970d-97db7f53e374" /></td>
+  </tr>
+</table>
 
+--- 
 ### 🎯 핵심 가치
 
 - **📅 통합 예약 관리**: 웨딩홀, 드레스, 스튜디오, 메이크업 업체 예약을 한 번에
@@ -37,6 +44,7 @@
 ## 📊 데이터베이스 구조
 
 <img width="4236" height="3424" alt="Image" src="https://github.com/user-attachments/assets/cc7fc5a7-3816-4c4d-b494-77043e703102" />
+
 ---
 
 ## 📁 프로젝트 구조
@@ -94,8 +102,10 @@ http://localhost:8080/api/v3/api-docs
 
 ## 🏗 프로젝트 아키텍처
 
-<img width="552" height="355" alt="Image" src="https://github.com/user-attachments/assets/eb527460-b91a-4842-a73a-c89718061444" />
+<img width="4340" height="2776" alt="Image" src="https://github.com/user-attachments/assets/5fbcb83e-fef3-40ee-bb0f-86a37da2e44e" />
+
 ---- 
+
 ## 👥 팀원
 
 ### Backend 개발팀
