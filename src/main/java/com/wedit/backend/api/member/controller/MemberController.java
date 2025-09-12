@@ -134,6 +134,14 @@ public class MemberController {
         return ApiResponse.successOnly(SuccessStatus.MEMBER_SIGNUP_SUCCESS);
     }
 
+    @Operation(
+            summary = "마이페이지 조회 API",
+            description = "현재 회원의 이름, 커플 여부, D-Day 등을 조회합니다. <br>" +
+                    "액세스 토큰이 필요합니다.",
+            security = {
+                    @SecurityRequirement(name = "Authorization")
+            }
+    )
     @GetMapping("/mypage")
     public ResponseEntity<ApiResponse<MemberMyInfoResponseDTO>> getMyInfo(
             @RequestHeader("Authorization") String reqToken) {
