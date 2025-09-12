@@ -102,7 +102,7 @@ http://localhost:8080/api/v3/api-docs
 
 ## 🏗 프로젝트 아키텍처
 
-<img width="2500" height="355" alt="Image" src="https://github.com/user-attachments/assets/eb527460-b91a-4842-a73a-c89718061444" />
+<img width="4340" height="2776" alt="Image" src="https://github.com/user-attachments/assets/5fbcb83e-fef3-40ee-bb0f-86a37da2e44e" />
 
 ---- 
 
