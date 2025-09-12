@@ -1,5 +1,6 @@
 package com.wedit.backend.api.review.dto;
 
+import com.wedit.backend.api.review.entity.Review;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +19,7 @@ public class ReviewMainBannerResponseDTO {
     private String vendorName;
 
     @Schema(description = "후기의 대표 이미지 URL (첫 번째 이미지)")
-    private String reviewImageUrl;
+    private String mainImageUrl;
 
     @Schema(description = "대표 후기 내용 ('좋았던 점' 우선 노출)", example = "상담이 친절하고 드레스가 정말 예뻤어요!")
     private String content;
@@ -31,4 +32,16 @@ public class ReviewMainBannerResponseDTO {
 
     @Schema(description = "후기 작성 시각", example = "2025-09-03T21:30:00")
     private LocalDateTime createdAt;
+
+    public static ReviewMainBannerResponseDTO from(Review review, String mainImageUrl, String content, String maskedWriterName) {
+        return ReviewMainBannerResponseDTO.builder()
+                .reviewId(review.getId())
+                .vendorName(review.getVendor().getName())
+                .mainImageUrl(mainImageUrl)
+                .content(content)
+                .rating(review.getRating())
+                .writerName(maskedWriterName)
+                .createdAt(review.getCreatedAt())
+                .build();
+    }
 }

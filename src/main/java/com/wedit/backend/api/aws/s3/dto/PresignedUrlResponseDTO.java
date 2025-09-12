@@ -18,4 +18,8 @@ public class PresignedUrlResponseDTO {
     @Schema(description = "실제 파일 업로드/다운로드에 사용될, 일정 시간 동안만 유효한 임시 URL",
             example = "https://[your-bucket-name].s3.[region].amazonaws.com/[object-key]?X-Amz-Algorithm=...")
     private String presignedUrl;
+
+    private String contentType;
+
+    private Long contentLength;
 }

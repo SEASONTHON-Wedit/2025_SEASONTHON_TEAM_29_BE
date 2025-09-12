@@ -1,6 +1,7 @@
 package com.wedit.backend.api.review.dto;
 
 import com.wedit.backend.api.member.entity.Type;
+import com.wedit.backend.api.review.entity.Review;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -49,9 +50,27 @@ public class ReviewDetailResponseDTO {
     @Schema(description = "후기가 작성된 업체의 이름", example = "로즈로사")
     private String vendorName;
 
-    @Schema(description = "업체 대표 이미지 또는 로고 URL")
+    @Schema(description = "업체 로고 이미지 URL")
     private String vendorLogoUrl;
 
-    @Schema(description = "업체 카테고리", example = "WEDDING_HALL")
-    private String vendorCategory;
+    @Schema(description = "업체 타입", example = "WEDDING_HALL")
+    private String vendorType;
+
+    public static ReviewDetailResponseDTO from(Review review, List<String> imageUrls, String vendorLogoUrl, String dDay) {
+        return ReviewDetailResponseDTO.builder()
+                .reviewId(review.getId())
+                .rating(review.getRating())
+                .contentBest(review.getContentBest())
+                .contentWorst(review.getContentWorst())
+                .imagesUrls(imageUrls)
+                .createdAt(review.getCreatedAt())
+                .writerName(review.getMember().getName())
+                .writerType(review.getMember().getType())
+                .weddingDday(dDay)
+                .vendorId(review.getVendor().getId())
+                .vendorName(review.getVendor().getName())
+                .vendorLogoUrl(vendorLogoUrl)
+                .vendorType(review.getVendor().getVendorType().name())
+                .build();
+    }
 }

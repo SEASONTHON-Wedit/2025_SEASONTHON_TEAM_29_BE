@@ -43,18 +43,9 @@ public class Review extends BaseTimeEntity {
     @JoinColumn(name = "vendor_id")
     private Vendor vendor;
 
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ReviewImage> images = new ArrayList<>();
-
     public void update(int rating, String best, String worst) {
         this.rating = rating;
         this.contentBest = best;
         this.contentWorst = worst;
-    }
-
-    public void addImage(ReviewImage reviewImage) {
-        this.images.add(reviewImage);
-        reviewImage.setReview(this);
     }
 }

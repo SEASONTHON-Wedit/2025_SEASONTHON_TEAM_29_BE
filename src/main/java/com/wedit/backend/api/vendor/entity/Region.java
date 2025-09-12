@@ -4,8 +4,6 @@ package com.wedit.backend.api.vendor.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Entity
@@ -38,9 +36,4 @@ public class Region {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private Region parent;
-
-    // 하위 지역 목록
-    @OneToMany(mappedBy = "parent")
-    @Builder.Default
-    private List<Region> children = new ArrayList<>();
 }
