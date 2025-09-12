@@ -51,6 +51,7 @@ public enum ErrorStatus {
     /// 403 FORBIDDEN
     FORBIDDEN_RESOURCE_ACCESS(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
     FORBIDDEN_REVIEW_MODIFY(HttpStatus.FORBIDDEN, "리뷰 수정 권한이 없습니다."),
+    FORBIDDEN_TODO_ACCESS(HttpStatus.FORBIDDEN, "할 일 접근 권한이 없습니다."),
 
     /// 404 NOT FOUND
     NOT_FOUND_USER(HttpStatus.NOT_FOUND, "해당 유저를 찾을 수 없습니다."),
@@ -59,6 +60,8 @@ public enum ErrorStatus {
     NOT_FOUND_VENDOR(HttpStatus.NOT_FOUND, "해당 업체를 찾을 수 없습니다."),
     NOT_FOUND_TOUR(HttpStatus.NOT_FOUND, "해당 투어를 찾을 수 없습니다."),
     NOT_FOUND_REVIEW(HttpStatus.NOT_FOUND, "해당 리뷰를 찾을 수 없습니다."),
+    NOT_FOUND_MEMBER(HttpStatus.NOT_FOUND, "해당 회원을 찾을 수 없습니다."),
+    NOT_FOUND_TODO(HttpStatus.NOT_FOUND, "해당 할 일을 찾을 수 없습니다."),
     NOT_FOUND_PRODUCT(HttpStatus.NOT_FOUND, "해당 상품을 찾을 수 없습니다."),
     NOT_FOUND_CART_ITEM(HttpStatus.NOT_FOUND, "해당 상품이 견적서에 없습니다."),
     NOT_FOUND_RESERVATION(HttpStatus.NOT_FOUND, "해당 상담 예약은 존재하지 않습니다."),
