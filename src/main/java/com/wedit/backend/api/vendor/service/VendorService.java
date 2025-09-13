@@ -2,6 +2,7 @@ package com.wedit.backend.api.vendor.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,14 +14,19 @@ import com.wedit.backend.api.media.entity.Media;
 import com.wedit.backend.api.media.entity.enums.MediaDomain;
 import com.wedit.backend.api.media.service.MediaService;
 import com.wedit.backend.api.vendor.dto.request.VendorCreateRequestDTO;
+import com.wedit.backend.api.vendor.dto.response.ProductResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorBannerResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorDetailResponseDTO;
-import com.wedit.backend.api.vendor.dto.response.WeddingHallProductResponseDTO;
+import com.wedit.backend.api.vendor.entity.Product;
 import com.wedit.backend.api.vendor.entity.Region;
 import com.wedit.backend.api.vendor.entity.Vendor;
-import com.wedit.backend.api.vendor.entity.WeddingHallProduct;
+import com.wedit.backend.api.vendor.entity.enums.DressOrigin;
+import com.wedit.backend.api.vendor.entity.enums.DressStyle;
 import com.wedit.backend.api.vendor.entity.enums.HallMeal;
 import com.wedit.backend.api.vendor.entity.enums.HallStyle;
+import com.wedit.backend.api.vendor.entity.enums.MakeupStyle;
+import com.wedit.backend.api.vendor.entity.enums.StudioSpecialShot;
+import com.wedit.backend.api.vendor.entity.enums.StudioStyle;
 import com.wedit.backend.api.vendor.entity.enums.VendorType;
 import com.wedit.backend.api.vendor.repository.RegionRepository;
 import com.wedit.backend.api.vendor.repository.VendorProductQueryRepository;
@@ -142,22 +148,51 @@ public class VendorService {
 		});
 	}
 
-	public List<WeddingHallProductResponseDTO> searchWeddingHall(List<String> regionCodes, Integer price, List<HallStyle> hallStyles,
-		List<HallMeal> hallMeals, Integer capacity, Boolean hasParking) {
-		List<WeddingHallProduct> weddingHallProducts = vendorProductQueryRepository.searchWeddingHallProducts(
-			regionCodes, price, hallStyles, hallMeals, capacity,
-			hasParking);
+	public List<ProductResponseDTO> searchWeddingHall(List<String> regionCodes, Integer price,
+		List<HallStyle> hallStyles, List<HallMeal> hallMeals, Integer capacity, Boolean hasParking) {
+		return searchProducts(() -> vendorProductQueryRepository.searchWeddingHallProducts(
+			regionCodes, price, hallStyles, hallMeals, capacity, hasParking));
+	}
 
-		return weddingHallProducts.stream()
-			.map(weddingHall -> WeddingHallProductResponseDTO.builder()
-				.basePrice(weddingHall.getBasePrice())
-				.vendorId(weddingHall.getVendor().getId())
-				.vendorName(weddingHall.getVendor().getName())
-				.averageRating(weddingHall.getVendor().getAverageRating())
-				.reviewCount(weddingHall.getVendor().getReviewCount())
-				.logoMediaUrl(weddingHall.getVendor().getLogoMedia() != null ?
-					s3Service.toCdnUrl(weddingHall.getVendor().getLogoMedia().getMediaKey()) : null)
-				.build())
+	public List<ProductResponseDTO> searchStudio(List<String> regionCodes, Integer price,
+		List<StudioStyle> studioStyles,
+		List<StudioSpecialShot> studioSpecialShots, Boolean iphoneSnap) {
+		return searchProducts(() -> vendorProductQueryRepository.searchStudioProducts(
+			regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap));
+	}
+
+	public List<ProductResponseDTO> searchMakeup(List<String> regionCodes, Integer price,
+		List<MakeupStyle> makeupStyles,
+		Boolean isStylistDesignationAvailable, Boolean hasPrivateRoom) {
+		return searchProducts(() -> vendorProductQueryRepository.searchMakeupProducts(
+			regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom));
+	}
+
+	public List<ProductResponseDTO> searchDress(List<String> regionCodes, Integer price,
+		List<DressStyle> dressStyles, List<DressOrigin> dressOrigins) {
+		return searchProducts(() -> vendorProductQueryRepository.searchDressProducts(
+			regionCodes, price, dressStyles, dressOrigins));
+	}
+
+	private <T extends Product> List<ProductResponseDTO> searchProducts(
+		Supplier<List<T>> searchFunction) {
+
+		List<T> products = searchFunction.get();
+
+		return products.stream()
+			.map(this::convertToProductResponseDTO)
 			.toList();
+	}
+
+	private ProductResponseDTO convertToProductResponseDTO(Product product) {
+		return ProductResponseDTO.builder()
+			.basePrice(product.getBasePrice())
+			.vendorId(product.getVendor().getId())
+			.vendorName(product.getVendor().getName())
+			.averageRating(product.getVendor().getAverageRating())
+			.reviewCount(product.getVendor().getReviewCount())
+			.logoMediaUrl(product.getVendor().getLogoMedia() != null ?
+				s3Service.toCdnUrl(product.getVendor().getLogoMedia().getMediaKey()) : null)
+			.build();
 	}
 }
