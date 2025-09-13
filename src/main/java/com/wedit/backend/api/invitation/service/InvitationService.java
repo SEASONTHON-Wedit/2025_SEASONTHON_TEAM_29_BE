@@ -1,6 +1,8 @@
 package com.wedit.backend.api.invitation.service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -8,6 +10,9 @@ import com.wedit.backend.api.invitation.dto.InvitationCreateRequestDTO;
 import com.wedit.backend.api.invitation.dto.InvitationGetResponseDTO;
 import com.wedit.backend.api.invitation.entity.Invitation;
 import com.wedit.backend.api.invitation.repository.InvitationRepository;
+import com.wedit.backend.api.media.entity.Media;
+import com.wedit.backend.api.media.entity.enums.MediaDomain;
+import com.wedit.backend.api.media.service.MediaService;
 import com.wedit.backend.api.member.entity.Couple;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.repository.CoupleRepository;
@@ -27,6 +32,7 @@ public class InvitationService {
 	private final InvitationRepository invitationRepository;
 	private final MemberRepository memberRepository;
 	private final CoupleRepository coupleRepository;
+	private final MediaService mediaService;
 
 	@Transactional
 	public void createInvitation(String memberEmail, InvitationCreateRequestDTO createRequestDTO) {
@@ -61,7 +67,41 @@ public class InvitationService {
 			.member(member)
 			.build();
 
-		invitationRepository.save(invitation);
+		Invitation saved = invitationRepository.save(invitation);
+
+		// 메인 사진 저장
+		if (createRequestDTO.getMainMedia() != null) {
+			Media main = createRequestDTO.getMainMedia().toEntity(MediaDomain.INVITATION, saved.getId(), "main");
+			mediaService.save(main);
+		}
+
+		if (createRequestDTO.getFilmMedia() != null && !createRequestDTO.getFilmMedia().isEmpty()) {
+			List<Media> mediaToSave = createRequestDTO.getFilmMedia().stream()
+				.map(mediaDto -> mediaDto.toEntity(MediaDomain.INVITATION, saved.getId(), "film"))
+				.collect(Collectors.toList());
+			mediaService.saveAll(mediaToSave);
+		}
+
+		// 티켓 사진 저장
+		if (createRequestDTO.getTicketMedia() != null) {
+			Media main = createRequestDTO.getTicketMedia().toEntity(MediaDomain.INVITATION, saved.getId(), "ticket");
+			mediaService.save(main);
+		}
+
+		if (createRequestDTO.getMediaList() != null && !createRequestDTO.getMediaList().isEmpty()) {
+			List<Media> mediaToSave = createRequestDTO.getMediaList().stream()
+				.map(mediaDto -> {
+					String type = switch (mediaDto.getSortOrder() / 9) {  // Java 14+ switch expression
+						case 0 -> "first";   // 0-8
+						case 1 -> "second";  // 9-17
+						default -> "third";  // 18+
+					};
+					return mediaDto.toEntity(MediaDomain.INVITATION, saved.getId(), type);
+				})
+				.collect(Collectors.toList());
+
+			mediaService.saveAll(mediaToSave);
+		}
 	}
 
 	public InvitationGetResponseDTO getInvitation(String memberEmail) {
