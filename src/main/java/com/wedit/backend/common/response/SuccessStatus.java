@@ -56,9 +56,11 @@ public enum SuccessStatus {
     TOUR_UPDATE_SUCCESS(HttpStatus.OK, "투어일지 수정 성공"),
     RESERVATION_AVAILABILITY_GET_SUCCESS(HttpStatus.OK, "상담 예약 가능 시간 조회 성공"),
     MY_RESERVATION_GET_SUCCESS(HttpStatus.OK, "내 상담 예약 목록 조회 성공"),
+    INVITATION_GET_SUCCESS(HttpStatus.OK, "청첩장 조회 성공"),
     MY_CONTRACT_GET_SUCCESS(HttpStatus.OK, "내 계약 페이징 조회 성공"),
     CONTRACT_DETAIL_GET_SUCCESS(HttpStatus.OK, "계약 상세 조회 성공"),
     REVIEWABLE_CONTRACT_GET_SUCCESS(HttpStatus.OK, "후기 작성 가능 계약 목록 조회 성공"),
+    CONDITION_SEARCH_SUCCESS(HttpStatus.OK, "조건 검색 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),
@@ -68,6 +70,7 @@ public enum SuccessStatus {
     TOUR_CREATE_SUCCESS(HttpStatus.CREATED, "투어일지 생성 성공"),
     TOUR_DRESS_CREATE_SUCCESS(HttpStatus.CREATED, "투어일지 드레스 저장 성공"),
     ESTIMATE_CREATE_SUCCESS(HttpStatus.CREATED, "견적서 생성 성공"),
+    INVITATION_CREATE_SUCCESS(HttpStatus.CREATED, "청첩장 생성 성공"),
     TODO_CREATE_SUCCESS(HttpStatus.CREATED, "할 일 생성 성공"),
     CART_ITEM_ADD_SUCCESS(HttpStatus.CREATED, "견적서에 상품 등로 성공"),
     CONSULTATION_RESERVATION_CREATE_SUCCESS(HttpStatus.CREATED, "상담 예약 생성 성공"),

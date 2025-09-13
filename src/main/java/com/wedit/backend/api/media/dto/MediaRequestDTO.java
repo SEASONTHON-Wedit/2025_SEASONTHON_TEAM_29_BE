@@ -34,6 +34,18 @@ public class MediaRequestDTO {
                 .build();
     }
 
+    public Media toEntity(MediaDomain ownerDomain, Long ownerId, String groupTitle) {
+        return Media.builder()
+                .ownerDomain(ownerDomain)
+                .ownerId(ownerId)
+                .mediaKey(this.mediaKey)
+                .contentType(this.contentType)
+                .mediaType(determineMediaType(this.contentType))
+                .sortOrder(this.sortOrder)
+            	.groupTitle(groupTitle)
+                .build();
+    }
+
     private MediaType determineMediaType(String contentType) {
         if (contentType == null) return null;
         String lower = contentType.toLowerCase();

@@ -17,6 +17,9 @@ public class VendorCreateRequestDTO {
     @NotBlank(message = "업체 이름은 필수입니다.")
     private String name;                // 업체 이름
 
+    @Schema(description = "업체 전화번호")
+    private String phoneNumber;
+
     @Schema(description = "업체 타입", example = "WEDDING_HALL")
     @NotNull(message = "업체 타입은 필수입니다.")
     private VendorType vendorType;      // 업체 타입
@@ -29,6 +32,9 @@ public class VendorCreateRequestDTO {
     private MediaRequestDTO logoImage;  // 로고 이미지
     @Schema(description = "대표 이미지 정보 (S3 업로드 후 반환된 키)")
     private MediaRequestDTO mainImage;   // 대표 이미지
+
+    @Schema(description = "업체 소개글")
+    private String description;
 
     @Schema(description = "업체의 전체 주소 (도로명 또는 지번)", example = "서울 강남구 테헤란로 418")
     private String fullAddress = "전체 주소 입력 필요";    // 전체 주소 (지번 혹은 도로명)
