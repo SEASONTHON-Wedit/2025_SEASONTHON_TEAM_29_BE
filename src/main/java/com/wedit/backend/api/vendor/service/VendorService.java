@@ -13,14 +13,25 @@ import com.wedit.backend.api.media.entity.Media;
 import com.wedit.backend.api.media.entity.enums.MediaDomain;
 import com.wedit.backend.api.media.service.MediaService;
 import com.wedit.backend.api.vendor.dto.request.VendorCreateRequestDTO;
+import com.wedit.backend.api.vendor.dto.response.DressProductResponseDTO;
+import com.wedit.backend.api.vendor.dto.response.MakeUpProductResponseDTO;
+import com.wedit.backend.api.vendor.dto.response.StudioProductResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorBannerResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorDetailResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.WeddingHallProductResponseDTO;
+import com.wedit.backend.api.vendor.entity.DressProduct;
+import com.wedit.backend.api.vendor.entity.MakeupProduct;
 import com.wedit.backend.api.vendor.entity.Region;
+import com.wedit.backend.api.vendor.entity.StudioProduct;
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.entity.WeddingHallProduct;
+import com.wedit.backend.api.vendor.entity.enums.DressOrigin;
+import com.wedit.backend.api.vendor.entity.enums.DressStyle;
 import com.wedit.backend.api.vendor.entity.enums.HallMeal;
 import com.wedit.backend.api.vendor.entity.enums.HallStyle;
+import com.wedit.backend.api.vendor.entity.enums.MakeupStyle;
+import com.wedit.backend.api.vendor.entity.enums.StudioSpecialShot;
+import com.wedit.backend.api.vendor.entity.enums.StudioStyle;
 import com.wedit.backend.api.vendor.entity.enums.VendorType;
 import com.wedit.backend.api.vendor.repository.RegionRepository;
 import com.wedit.backend.api.vendor.repository.VendorProductQueryRepository;
@@ -157,6 +168,60 @@ public class VendorService {
 				.reviewCount(weddingHall.getVendor().getReviewCount())
 				.logoMediaUrl(weddingHall.getVendor().getLogoMedia() != null ?
 					s3Service.toCdnUrl(weddingHall.getVendor().getLogoMedia().getMediaKey()) : null)
+				.build())
+			.toList();
+	}
+
+	public List<StudioProductResponseDTO> searchStudio(List<String> regionCodes, Integer price, List<StudioStyle> studioStyles,
+		List<StudioSpecialShot> studioSpecialShots, Boolean iphoneSnap) {
+		List<StudioProduct> studioProducts = vendorProductQueryRepository.searchStudioProducts(
+			regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap);
+
+		return studioProducts.stream()
+			.map(studioProduct -> StudioProductResponseDTO.builder()
+				.basePrice(studioProduct.getBasePrice())
+				.vendorId(studioProduct.getVendor().getId())
+				.vendorName(studioProduct.getVendor().getName())
+				.averageRating(studioProduct.getVendor().getAverageRating())
+				.reviewCount(studioProduct.getVendor().getReviewCount())
+				.logoMediaUrl(studioProduct.getVendor().getLogoMedia() != null ?
+					s3Service.toCdnUrl(studioProduct.getVendor().getLogoMedia().getMediaKey()) : null)
+				.build())
+			.toList();
+	}
+
+	public List<MakeUpProductResponseDTO> searchMakeUp(List<String> regionCodes, Integer price, List<MakeupStyle> makeupStyles,
+		Boolean isStylistDesignationAvailable, Boolean hasPrivateRoom) {
+		List<MakeupProduct> makeupProducts = vendorProductQueryRepository.searchMakeUpProducts(
+			regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom);
+
+		return makeupProducts.stream()
+			.map(makeupProduct -> MakeUpProductResponseDTO.builder()
+				.basePrice(makeupProduct.getBasePrice())
+				.vendorId(makeupProduct.getVendor().getId())
+				.vendorName(makeupProduct.getVendor().getName())
+				.averageRating(makeupProduct.getVendor().getAverageRating())
+				.reviewCount(makeupProduct.getVendor().getReviewCount())
+				.logoMediaUrl(makeupProduct.getVendor().getLogoMedia() != null ?
+					s3Service.toCdnUrl(makeupProduct.getVendor().getLogoMedia().getMediaKey()) : null)
+				.build())
+			.toList();
+	}
+
+	public List<DressProductResponseDTO> searchDress(List<String> regionCodes, Integer price,
+		List<DressStyle> dressStyles, List<DressOrigin> dressOrigins) {
+		List<DressProduct> dressProducts = vendorProductQueryRepository.searchDressProducts(
+			regionCodes, price, dressStyles, dressOrigins);
+
+		return dressProducts.stream()
+			.map(dressProduct -> DressProductResponseDTO.builder()
+				.basePrice(dressProduct.getBasePrice())
+				.vendorId(dressProduct.getVendor().getId())
+				.vendorName(dressProduct.getVendor().getName())
+				.averageRating(dressProduct.getVendor().getAverageRating())
+				.reviewCount(dressProduct.getVendor().getReviewCount())
+				.logoMediaUrl(dressProduct.getVendor().getLogoMedia() != null ?
+					s3Service.toCdnUrl(dressProduct.getVendor().getLogoMedia().getMediaKey()) : null)
 				.build())
 			.toList();
 	}

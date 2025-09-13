@@ -1,8 +1,5 @@
 package com.wedit.backend.api.vendor.dto.response;
 
-import com.wedit.backend.api.vendor.entity.Vendor;
-import com.wedit.backend.api.vendor.entity.WeddingHallProduct;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 @NoArgsConstructor
-public class WeddingHallProductResponseDTO {
+public class DressProductResponseDTO {
 	private Long basePrice;
 	private Long vendorId;
 	private String vendorName;
@@ -18,7 +15,7 @@ public class WeddingHallProductResponseDTO {
 	private Integer reviewCount;
 	private String logoMediaUrl;
 
-	public WeddingHallProductResponseDTO(Long basePrice, Long vendorId, String vendorName, Double averageRating,
+	public DressProductResponseDTO(Long basePrice, Long vendorId, String vendorName, Double averageRating,
 		Integer reviewCount, String logoMediaUrl) {
 		this.basePrice = basePrice;
 		this.vendorId = vendorId;
