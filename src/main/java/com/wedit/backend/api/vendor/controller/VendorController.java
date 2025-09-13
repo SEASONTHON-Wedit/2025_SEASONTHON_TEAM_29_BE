@@ -49,7 +49,7 @@ public class VendorController {
                             {
                                 "name": "아펠가모 선릉",
                                 "vendorType": "WEDDING_HALL",
-                                "regionId": 1168010100,
+                                "regionCode": 1168010100,
                                 "logoImage": {
                                     "mediaKey": "vendor/logos/example-logo-key.png",
                                     "contentType": "image/png"
