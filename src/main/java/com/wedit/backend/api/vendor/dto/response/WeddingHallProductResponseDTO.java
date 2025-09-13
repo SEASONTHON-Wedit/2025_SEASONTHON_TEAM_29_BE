@@ -21,22 +21,16 @@ public class WeddingHallProductResponseDTO {
 	private Integer reviewCount;
 
 	// Media 정보
-	private Long logoMediaId;
 	private String logoMediaUrl;
-	private Long repMediaId;
-	private String repMediaUrl;
 
 	@Builder
 	public WeddingHallProductResponseDTO(Long basePrice, Long vendorId, String vendorName, Double averageRating,
-		Integer reviewCount, Long logoMediaId, String logoMediaUrl, Long repMediaId, String repMediaUrl) {
+		Integer reviewCount, String logoMediaUrl) {
 		this.basePrice = basePrice;
 		this.vendorId = vendorId;
 		this.vendorName = vendorName;
 		this.averageRating = averageRating;
 		this.reviewCount = reviewCount;
-		this.logoMediaId = logoMediaId;
 		this.logoMediaUrl = logoMediaUrl;
-		this.repMediaId = repMediaId;
-		this.repMediaUrl = repMediaUrl;
 	}
 }

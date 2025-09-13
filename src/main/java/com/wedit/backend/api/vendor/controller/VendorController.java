@@ -202,7 +202,7 @@ public class VendorController {
         summary = "웨딩홀 조건 검색 조회",
         description = "웨딩홀 조건 조회 합니다."
     )
-    @GetMapping("/search")
+    @GetMapping("/conditionSearch/weddingHall")
     public ResponseEntity<ApiResponse<List<WeddingHallProductResponseDTO>>> searchWeddingHallVendor(
         @RequestParam(value = "regionCode") List<String> regionCodes,
         @RequestParam(value = "price") Integer price,
