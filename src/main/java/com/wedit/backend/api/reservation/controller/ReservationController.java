@@ -35,7 +35,37 @@ public class ReservationController {
 
     @Operation(
             summary = "월별 상담 가능일자 조회",
-            description = "특정 업체의 해당 월의 날짜별 예약 가능 여부 목록을 조회합니다."
+            description = """
+                특정 업체의 해당 월의 날짜별 예약 가능 여부 목록을 조회합니다.
+                
+                **응답 정보:**
+                - 해당 월의 모든 날짜에 대한 예약 가능 여부
+                - 각 날짜별로 예약 가능한 슬롯이 1개 이상 있으면 `available: true`
+                - 모든 슬롯이 예약되었거나 슬롯이 없으면 `available: false`
+                
+                **예시 요청:**
+                ```
+                GET /api/v1/vendors/1/monthly-availability?year=2025&month=9
+                ```
+                
+                **예시 응답:**
+                ```json
+                {
+                  "code": 200,
+                  "message": "예약 가능일자 조회 성공",
+                  "data": [
+                    {
+                      "date": "2025-09-01",
+                      "available": true
+                    },
+                    {
+                      "date": "2025-09-02", 
+                      "available": false
+                    }
+                  ]
+                }
+                ```
+                """
     )
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -43,9 +73,9 @@ public class ReservationController {
     })
     @GetMapping("/vendors/{vendorId}/monthly-availability")
     public ResponseEntity<ApiResponse<List<DateAvailabilityDTO>>> getMonthlyAvailability(
-            @Parameter(description = "업체 ID", required = true) @PathVariable Long vendorId,
-            @Parameter(description = "조회할 연도 (예: 2025)", required = true) @RequestParam int year,
-            @Parameter(description = "조회할 월 (예: 9)", required = true) @RequestParam int month) {
+            @Parameter(description = "업체 ID", example = "1", required = true) @PathVariable Long vendorId,
+            @Parameter(description = "조회할 연도", example = "2025", required = true) @RequestParam int year,
+            @Parameter(description = "조회할 월 (1-12)", example = "9", required = true) @RequestParam int month) {
 
         List<DateAvailabilityDTO> availability = reservationService.getMonthlyAvailability(vendorId, year, month);
 
@@ -53,8 +83,42 @@ public class ReservationController {
     }
 
     @Operation(
-            summary = "일별 상당 가능 시간 슬롯 조회",
-            description = "특정 업체의 해당 일자의 시간대별 상담 가능 슬롯 목록을 조회합니다."
+            summary = "일별 상담 가능 시간 슬롯 조회",
+            description = """
+                특정 업체의 해당 일자의 시간대별 상담 가능 슬롯 목록을 조회합니다.
+                
+                **응답 정보:**
+                - 해당 날짜의 모든 상담 시간 슬롯 정보
+                - 각 슬롯의 예약 가능 여부 (AVAILABLE, RESERVED, UNAVAILABLE)
+                - 시간 정보는 HH:mm 형식으로 제공
+                
+                **예시 요청:**
+                ```
+                GET /api/v1/vendors/1/daily-slots?year=2025&month=9&day=15
+                ```
+                
+                **예시 응답:**
+                ```json
+                {
+                  "code": 200,
+                  "message": "예약 가능 시간 조회 성공",
+                  "data": [
+                    {
+                      "slotId": 1,
+                      "startTime": "10:00",
+                      "endTime": "11:00",
+                      "status": "AVAILABLE"
+                    },
+                    {
+                      "slotId": 2,
+                      "startTime": "11:00", 
+                      "endTime": "12:00",
+                      "status": "RESERVED"
+                    }
+                  ]
+                }
+                ```
+                """
     )
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공"),
@@ -62,10 +126,10 @@ public class ReservationController {
     })
     @GetMapping("/vendors/{vendorId}/daily-slots")
     public ResponseEntity<ApiResponse<List<SlotResponseDTO>>> getDailySlots(
-            @Parameter(description = "업체 ID", required = true) @PathVariable Long vendorId,
-            @Parameter(description = "조회할 연도", required = true) @RequestParam int year,
-            @Parameter(description = "조회할 월", required = true) @RequestParam int month,
-            @Parameter(description = "조회할 일", required = true) @RequestParam int day) {
+            @Parameter(description = "업체 ID", example = "1", required = true) @PathVariable Long vendorId,
+            @Parameter(description = "조회할 연도", example = "2025", required = true) @RequestParam int year,
+            @Parameter(description = "조회할 월 (1-12)", example = "9", required = true) @RequestParam int month,
+            @Parameter(description = "조회할 일 (1-31)", example = "15", required = true) @RequestParam int day) {
 
         List<SlotResponseDTO> slots = reservationService.getAvailableSlotsByDate(vendorId, year, month, day);
 
@@ -74,7 +138,31 @@ public class ReservationController {
 
     @Operation(
             summary = "상담 예약 생성",
-            description = "사용자가 선택한 상담 시간 슬롯(ConsultationSlot)에 대한 예약을 생성합니다."
+            description = """
+                사용자가 선택한 상담 시간 슬롯(ConsultationSlot)에 대한 예약을 생성합니다.
+                
+                **요청 정보:**
+                - JWT 토큰을 통한 사용자 인증 필요
+                - 예약하려는 상담 슬롯 ID 필요
+                - 해당 슬롯은 AVAILABLE 상태여야 함
+                
+                **요청 예시:**
+                ```json
+                {
+                  "consultationSlotId": 123,
+                  "memo": "웨딩홀 상담 문의드립니다."
+                }
+                ```
+                
+                **성공 응답:**
+                ```json
+                {
+                  "code": 201,
+                  "message": "상담 예약 생성 성공",
+                  "data": 456
+                }
+                ```
+                """
     )
     @ApiResponses(value = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "예약 생성 성공"),
@@ -84,7 +172,7 @@ public class ReservationController {
     })
     @PostMapping("/reservations")
     public ResponseEntity<ApiResponse<Long>> createReservation(
-            @RequestHeader("Authorization") String reqToken,
+            @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
             @Valid @RequestBody ReservationRequestDTO request) {
 
         Long memberId = extractMemberId(reqToken);

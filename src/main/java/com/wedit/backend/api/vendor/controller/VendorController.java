@@ -34,6 +34,7 @@ import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -197,12 +198,57 @@ public class VendorController {
 	// VendorType 별 페이징 조회 (업체 로고 이미지, 이름, 지역(동), 후기 평균 평점, 총 후기 개수)
 	@Operation(
 		summary = "메인 배너용 업체 목록 페이징 조회",
-		description = "**최근 2주 내 후기가 많은 순**으로 정렬된 업체 목록을 페이징하여 조회합니다. (클라이언트에서 별도 정렬 파라미터 필요 없음)"
+		description = """
+			메인 화면에 노출될 업체 목록을 조회합니다. **최근 2주 내 후기가 많은 순**으로 자동 정렬됩니다.
+			
+			**정렬 방식:**
+			- 최근 2주 내 작성된 후기 개수 기준 내림차순 (인기순)
+			- 클라이언트에서 별도 정렬 파라미터 불필요
+			
+			**응답 정보:**
+			- 업체 로고 이미지, 이름, 지역(동), 평균 평점, 총 후기 개수
+			
+			**예시 요청:**
+			```
+			GET /api/v1/vendor/vendors?vendorType=WEDDING_HALL&page=0&size=5
+			```
+			
+			**예시 응답:**
+			```json
+			{
+			  "code": 200,
+			  "message": "업체 목록 조회 성공",
+			  "data": {
+			    "content": [
+			      {
+			        "vendorId": 1,
+			        "vendorName": "아펠가모 선릉",
+			        "logoImageUrl": "https://cdn.example.com/logo1.png",
+			        "regionName": "역삼동",
+			        "averageRating": 4.5,
+			        "reviewCount": 28
+			      }
+			    ],
+			    "totalElements": 15,
+			    "totalPages": 3,
+			    "number": 0,
+			    "size": 5
+			  }
+			}
+			```
+			"""
 	)
 	@GetMapping("/vendors")
 	public ResponseEntity<ApiResponse<Page<VendorBannerResponseDTO>>> getVendorsForBanner(
-		@RequestParam VendorType vendorType,
-		@PageableDefault(size = 5) Pageable pageable) {
+		@Parameter(
+			description = "업체 타입",
+			example = "WEDDING_HALL",
+			required = true
+		) @RequestParam VendorType vendorType,
+		
+		@Parameter(
+			description = "페이징 정보 (기본 크기: 5개)"
+		) @PageableDefault(size = 5) Pageable pageable) {
 
 		Page<VendorBannerResponseDTO> rsp = vendorService.getVendorsForBanner(vendorType, pageable);
 
@@ -211,16 +257,60 @@ public class VendorController {
 
 	@Operation(
 		summary = "웨딩홀 조건 검색 조회",
-		description = "웨딩홀 조건 조회 합니다."
+		description = """
+			웨딩홀을 다양한 조건으로 검색합니다. 모든 조건은 AND 연산으로 적용되며, 결과는 가격 오름차순으로 정렬됩니다.
+			
+			**검색 조건:**
+			- **regionCode**: 지역 코드 (읍/면/동 단위, 여러 개 선택 가능)
+			- **price**: 최대 예산 (해당 금액 이하의 상품만 조회)
+			- **hallStyle**: 홀 스타일 (HOTEL, HOUSE, CONVENTION 등)
+			- **hallMeal**: 식사 타입 (BUFFET, COURSE 등)
+			- **capacity**: 최소 수용 인원 (해당 인원 이상 수용 가능한 홀만 조회)
+			- **hasParking**: 주차장 보유 여부
+			
+			**예시 요청:**
+			```
+			/api/v1/vendor/conditionSearch/weddingHall?regionCode=1168010100,1168010200&price=20000000&hallStyle=HOTEL,HOUSE&hallMeal=COURSE&capacity=150&hasParking=true
+			```
+			"""
 	)
 	@GetMapping("/conditionSearch/weddingHall")
 	public ResponseEntity<ApiResponse<List<ProductResponseDTO>>> searchWeddingHallVendor(
-		@RequestParam(value = "regionCode") List<String> regionCodes,
-		@RequestParam(value = "price") Integer price,
-		@RequestParam(value = "hallStyle") List<HallStyle> hallStyles,
-		@RequestParam(value = "hallMeal") List<HallMeal> hallMeals,
-		@RequestParam(value = "capacity") Integer capacity,
-		@RequestParam(value = "hasParking") Boolean hasParking
+		@Parameter(
+			description = "지역 코드 목록 (읍/면/동 단위)",
+			example = "1168010100,1168010200",
+			required = true
+		) @RequestParam(value = "regionCode") List<String> regionCodes,
+		
+		@Parameter(
+			description = "최대 예산 (원 단위)",
+			example = "20000000",
+			required = true
+		) @RequestParam(value = "price") Integer price,
+		
+		@Parameter(
+			description = "홀 스타일 목록",
+			example = "HOTEL,HOUSE",
+			required = true
+		) @RequestParam(value = "hallStyle") List<HallStyle> hallStyles,
+		
+		@Parameter(
+			description = "식사 타입 목록",
+			example = "COURSE,BUFFET",
+			required = true
+		) @RequestParam(value = "hallMeal") List<HallMeal> hallMeals,
+		
+		@Parameter(
+			description = "최소 수용 인원",
+			example = "150",
+			required = true
+		) @RequestParam(value = "capacity") Integer capacity,
+		
+		@Parameter(
+			description = "주차장 보유 여부",
+			example = "true",
+			required = true
+		) @RequestParam(value = "hasParking") Boolean hasParking
 	) {
 		List<ProductResponseDTO> weddingHallProductResponseDTOS = vendorService.searchWeddingHall(
 			regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
@@ -229,15 +319,53 @@ public class VendorController {
 
 	@Operation(
 		summary = "스튜디오 조건 검색 조회",
-		description = "스튜디오 조건 조회 합니다."
+		description = """
+			스튜디오를 다양한 조건으로 검색합니다. 모든 조건은 AND 연산으로 적용되며, 결과는 가격 오름차순으로 정렬됩니다.
+			
+			**검색 조건:**
+			- **regionCode**: 지역 코드 (읍/면/동 단위, 여러 개 선택 가능)
+			- **price**: 최대 예산 (해당 금액 이하의 상품만 조회)
+			- **studioStyle**: 스튜디오 스타일 (PORTRAIT_FOCUSED, CONCEPT_FOCUSED 등)
+			- **specialShots**: 특수 촬영 옵션 (HANOK, BEACH, STUDIO 등)
+			- **iphoneSnap**: 아이폰 스냅 촬영 제공 여부
+			
+			**예시 요청:**
+			```
+			/api/v1/vendor/conditionSearch/studio?regionCode=1168010100&price=3000000&studioStyle=PORTRAIT_FOCUSED,CONCEPT_FOCUSED&specialShots=HANOK,BEACH&iphoneSnap=true
+			```
+			"""
 	)
 	@GetMapping("/conditionSearch/studio")
 	public ResponseEntity<ApiResponse<List<ProductResponseDTO>>> searchStudioVendor(
-		@RequestParam(value = "regionCode") List<String> regionCodes,
-		@RequestParam(value = "price") Integer price,
-		@RequestParam(value = "studioStyle") List<StudioStyle> studioStyles,
-		@RequestParam(value = "specialShots") List<StudioSpecialShot> studioSpecialShots,
-		@RequestParam(value = "iphoneSnap") Boolean iphoneSnap
+		@Parameter(
+			description = "지역 코드 목록 (읍/면/동 단위)",
+			example = "1168010100,1168010200",
+			required = true
+		) @RequestParam(value = "regionCode") List<String> regionCodes,
+		
+		@Parameter(
+			description = "최대 예산 (원 단위)",
+			example = "3000000",
+			required = true
+		) @RequestParam(value = "price") Integer price,
+		
+		@Parameter(
+			description = "스튜디오 스타일 목록",
+			example = "PORTRAIT_FOCUSED,CONCEPT_FOCUSED",
+			required = true
+		) @RequestParam(value = "studioStyle") List<StudioStyle> studioStyles,
+		
+		@Parameter(
+			description = "특수 촬영 옵션 목록",
+			example = "HANOK,BEACH,STUDIO",
+			required = true
+		) @RequestParam(value = "specialShots") List<StudioSpecialShot> studioSpecialShots,
+		
+		@Parameter(
+			description = "아이폰 스냅 촬영 제공 여부",
+			example = "true",
+			required = true
+		) @RequestParam(value = "iphoneSnap") Boolean iphoneSnap
 	) {
 		List<ProductResponseDTO> studioProductResponseDTOS = vendorService.searchStudio(
 			regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap);
@@ -246,15 +374,53 @@ public class VendorController {
 
 	@Operation(
 		summary = "메이크업 조건 검색 조회",
-		description = "메이크업 조건 조회 합니다."
+		description = """
+			메이크업 업체를 다양한 조건으로 검색합니다. 모든 조건은 AND 연산으로 적용되며, 결과는 가격 오름차순으로 정렬됩니다.
+			
+			**검색 조건:**
+			- **regionCode**: 지역 코드 (읍/면/동 단위, 여러 개 선택 가능)
+			- **price**: 최대 예산 (해당 금액 이하의 상품만 조회)
+			- **makeupStyle**: 메이크업 스타일 (NATURAL, GLAM, VINTAGE 등)
+			- **isStylistDesignationAvailable**: 담당 스타일리스트 지정 가능 여부
+			- **hasPrivateRoom**: 개인실 보유 여부
+			
+			**예시 요청:**
+			```
+			/api/v1/vendor/conditionSearch/makeup?regionCode=1168010100&price=800000&makeupStyle=NATURAL,GLAM&isStylistDesignationAvailable=true&hasPrivateRoom=true
+			```
+			"""
 	)
 	@GetMapping("/conditionSearch/makeup")
 	public ResponseEntity<ApiResponse<List<ProductResponseDTO>>> searchMakeUpVendor(
-		@RequestParam(value = "regionCode") List<String> regionCodes,
-		@RequestParam(value = "price") Integer price,
-		@RequestParam(value = "makeupStyle") List<MakeupStyle> makeupStyles,
-		@RequestParam(value = "isStylistDesignationAvailable") Boolean isStylistDesignationAvailable,
-		@RequestParam(value = "hasPrivateRoom") Boolean hasPrivateRoom
+		@Parameter(
+			description = "지역 코드 목록 (읍/면/동 단위)",
+			example = "1168010100,1168010200",
+			required = true
+		) @RequestParam(value = "regionCode") List<String> regionCodes,
+		
+		@Parameter(
+			description = "최대 예산 (원 단위)",
+			example = "800000",
+			required = true
+		) @RequestParam(value = "price") Integer price,
+		
+		@Parameter(
+			description = "메이크업 스타일 목록",
+			example = "NATURAL,GLAM",
+			required = true
+		) @RequestParam(value = "makeupStyle") List<MakeupStyle> makeupStyles,
+		
+		@Parameter(
+			description = "담당 스타일리스트 지정 가능 여부",
+			example = "true",
+			required = true
+		) @RequestParam(value = "isStylistDesignationAvailable") Boolean isStylistDesignationAvailable,
+		
+		@Parameter(
+			description = "개인실 보유 여부",
+			example = "true",
+			required = true
+		) @RequestParam(value = "hasPrivateRoom") Boolean hasPrivateRoom
 	) {
 		List<ProductResponseDTO> makeUpProductResponseDTOS = vendorService.searchMakeup(
 			regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom);
@@ -263,14 +429,46 @@ public class VendorController {
 
 	@Operation(
 		summary = "드레스 조건 검색 조회",
-		description = "드레스 조건 조회 합니다."
+		description = """
+			드레스 업체를 다양한 조건으로 검색합니다. 모든 조건은 AND 연산으로 적용되며, 결과는 가격 오름차순으로 정렬됩니다.
+			
+			**검색 조건:**
+			- **regionCode**: 지역 코드 (읍/면/동 단위, 여러 개 선택 가능)
+			- **price**: 최대 예산 (해당 금액 이하의 상품만 조회)
+			- **dressStyles**: 드레스 스타일 (ROMANTIC, MODERN, VINTAGE 등)
+			- **dressOrigins**: 드레스 제작 원산지 (IMPORTED, DOMESTIC)
+			
+			**예시 요청:**
+			```
+			/api/v1/vendor/conditionSearch/dress?regionCode=1168010100,1168010200&price=5000000&dressStyles=ROMANTIC,MODERN&dressOrigins=IMPORTED
+			```
+			"""
 	)
 	@GetMapping("/conditionSearch/dress")
 	public ResponseEntity<ApiResponse<List<ProductResponseDTO>>> searchDressVendor(
-		@RequestParam(value = "regionCode") List<String> regionCodes,
-		@RequestParam(value = "price") Integer price,
-		@RequestParam(value = "dressStyles") List<DressStyle> dressStyles,
-		@RequestParam(value = "dressOrigins") List<DressOrigin> dressOrigins
+		@Parameter(
+			description = "지역 코드 목록 (읍/면/동 단위)",
+			example = "1168010100,1168010200",
+			required = true
+		) @RequestParam(value = "regionCode") List<String> regionCodes,
+		
+		@Parameter(
+			description = "최대 예산 (원 단위)",
+			example = "5000000",
+			required = true
+		) @RequestParam(value = "price") Integer price,
+		
+		@Parameter(
+			description = "드레스 스타일 목록",
+			example = "ROMANTIC,MODERN",
+			required = true
+		) @RequestParam(value = "dressStyles") List<DressStyle> dressStyles,
+		
+		@Parameter(
+			description = "드레스 제작 원산지 목록",
+			example = "IMPORTED,DOMESTIC",
+			required = true
+		) @RequestParam(value = "dressOrigins") List<DressOrigin> dressOrigins
 	) {
 		List<ProductResponseDTO> dressProductResponseDTOS = vendorService.searchDress(
 			regionCodes, price, dressStyles, dressOrigins);
