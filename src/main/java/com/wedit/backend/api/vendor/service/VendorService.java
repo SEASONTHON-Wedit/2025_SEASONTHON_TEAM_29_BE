@@ -53,6 +53,8 @@ public class VendorService {
         Vendor vendor = Vendor.builder()
                 .name(request.getName())
                 .vendorType(request.getVendorType())
+                .phoneNumber(request.getPhoneNumber())
+                .description(request.getDescription())
                 .region(region)
                 .fullAddress(request.getFullAddress())
                 .addressDetail(request.getAddressDetail())

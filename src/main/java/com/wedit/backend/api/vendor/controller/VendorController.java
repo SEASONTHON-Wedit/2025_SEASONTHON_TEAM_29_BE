@@ -37,7 +37,7 @@ public class VendorController {
     @Operation(
             summary = "신규 업체 생성",
             description = "새로운 업체를 시스템에 등록합니다. " +
-                    "**지역(regionId)은 반드시 '읍/면/동' 레벨(level=3)의 ID**여야 합니다."
+                    "**지역(regionCode)은 반드시 '읍/면/동' 레벨(level=3)의 CODE**여야 합니다."
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "생성할 업체의 정보",
@@ -48,8 +48,9 @@ public class VendorController {
                     examples = @ExampleObject(value = """
                             {
                                 "name": "아펠가모 선릉",
+                                "phoneNumber": "010-7568-1325",
                                 "vendorType": "WEDDING_HALL",
-                                "regionCode": 1168010100,
+                                "regionCode": "1168010100",
                                 "logoImage": {
                                     "mediaKey": "vendor/logos/example-logo-key.png",
                                     "contentType": "image/png"
@@ -58,6 +59,7 @@ public class VendorController {
                                     "mediaKey": "vendor/reps/example-rep-key.png",
                                     "contentType": "image/jpeg"
                                 },
+                                "description": "업체 소개글",
                                 "fullAddress": "서울 강남구 테헤란로 322",
                                 "addressDetail": "한신인터벨리24 빌딩 4층",
                                 "latitude": 37.503395,
@@ -95,7 +97,7 @@ public class VendorController {
                                     "basePrice": 3000000,
                                     "durationInMinutes": 120,
                                     "dressStyle": "ROMANTIC",
-                                    "dressProduction": "IMPORTED"
+                                    "dressOrigin": "IMPORTED"
                                 }
                                 """),
                             @ExampleObject(name = "스튜디오(STUDIO)", summary = "스튜디오 상품 생성 예시", value = """
