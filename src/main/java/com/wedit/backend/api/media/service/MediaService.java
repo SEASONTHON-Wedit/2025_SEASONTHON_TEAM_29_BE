@@ -39,6 +39,17 @@ public class MediaService {
                 .collect(Collectors.toList());
     }
 
+    public List<String> findMediaUrls(MediaDomain ownerDomain, Long ownerId, String groupTitle) {
+
+        List<Media> mediaList = mediaRepository
+                .findByOwnerDomainAndOwnerIdAndGroupTitleOrderBySortOrderAsc(ownerDomain, ownerId, groupTitle);
+
+        return mediaList.stream()
+                .map(Media::getMediaKey)
+                .map(s3Service::toCdnUrl)
+                .collect(Collectors.toList());
+    }
+
     /**
      * 새로운 Media 엔티티를 생성하고 DB에 저장합니다.
      * 파일 업로드 후, Vendor나 Review 등을 생성/수정할 때 호출됩니다.

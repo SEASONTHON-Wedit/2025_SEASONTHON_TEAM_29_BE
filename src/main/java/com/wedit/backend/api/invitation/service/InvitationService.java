@@ -75,6 +75,7 @@ public class InvitationService {
 			mediaService.save(main);
 		}
 
+		// 필름 사진 저장
 		if (createRequestDTO.getFilmMedia() != null && !createRequestDTO.getFilmMedia().isEmpty()) {
 			List<Media> mediaToSave = createRequestDTO.getFilmMedia().stream()
 				.map(mediaDto -> mediaDto.toEntity(MediaDomain.INVITATION, saved.getId(), "film"))
@@ -90,14 +91,7 @@ public class InvitationService {
 
 		if (createRequestDTO.getMediaList() != null && !createRequestDTO.getMediaList().isEmpty()) {
 			List<Media> mediaToSave = createRequestDTO.getMediaList().stream()
-				.map(mediaDto -> {
-					String type = switch (mediaDto.getSortOrder() / 9) {  // Java 14+ switch expression
-						case 0 -> "first";   // 0-8
-						case 1 -> "second";  // 9-17
-						default -> "third";  // 18+
-					};
-					return mediaDto.toEntity(MediaDomain.INVITATION, saved.getId(), type);
-				})
+				.map(mediaDto -> mediaDto.toEntity(MediaDomain.INVITATION, saved.getId(), "media"))
 				.collect(Collectors.toList());
 
 			mediaService.saveAll(mediaToSave);
@@ -112,6 +106,19 @@ public class InvitationService {
 
 		Optional<Invitation> invitation = invitationRepository.findByMember(member);
 		if (invitation.isPresent()) {
+			String mainMediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.get().getId(), "main")
+				.getFirst();
+
+			List<String> filmMediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.get().getId(),
+				"film");
+
+			String ticketMediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.get().getId(),
+					"ticket")
+				.getFirst();
+
+			List<String> mediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.get().getId(),
+				"media");
+
 			return InvitationGetResponseDTO.builder()
 				.id(invitation.get().getId())
 				.basicInformation(invitation.get().getBasicInformation())
@@ -123,6 +130,10 @@ public class InvitationService {
 				.account(invitation.get().getAccount())
 				.background(invitation.get().getBackground())
 				.memberId(invitation.get().getMember().getId())
+				.mainMediaUrl(mainMediaUrl)
+				.filmMediaUrl(filmMediaUrl)
+				.ticketMediaUrl(ticketMediaUrl)
+				.mediaUrls(mediaUrl)
 				.build();
 		}
 
@@ -130,6 +141,19 @@ public class InvitationService {
 			Member otherMember = couple.get().getOtherMember(member);
 			invitation = invitationRepository.findByMember(otherMember);
 			if (invitation.isPresent()) {
+				String mainMediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.get().getId(), "main")
+					.getFirst();
+
+				List<String> filmMediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.get().getId(),
+					"film");
+
+				String ticketMediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.get().getId(),
+						"ticket")
+					.getFirst();
+
+				List<String> mediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.get().getId(),
+					"media");
+
 				return InvitationGetResponseDTO.builder()
 					.id(invitation.get().getId())
 					.basicInformation(invitation.get().getBasicInformation())
@@ -141,6 +165,10 @@ public class InvitationService {
 					.account(invitation.get().getAccount())
 					.background(invitation.get().getBackground())
 					.memberId(invitation.get().getMember().getId())
+					.mainMediaUrl(mainMediaUrl)
+					.filmMediaUrl(filmMediaUrl)
+					.ticketMediaUrl(ticketMediaUrl)
+					.mediaUrls(mediaUrl)
 					.build();
 			}
 		}

@@ -1,5 +1,7 @@
 package com.wedit.backend.api.invitation.dto;
 
+import java.util.List;
+
 import com.wedit.backend.api.invitation.entity.Account;
 import com.wedit.backend.api.invitation.entity.Background;
 import com.wedit.backend.api.invitation.entity.BasicInformation;
@@ -34,4 +36,10 @@ public class InvitationGetResponseDTO {
 	private Account account;
 	private Background background;
 	private Long memberId;
+
+	private String mainMediaUrl;
+	private List<String> filmMediaUrl;
+	private String ticketMediaUrl;
+
+	private List<String> mediaUrls;
 }
