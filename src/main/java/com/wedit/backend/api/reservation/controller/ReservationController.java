@@ -13,7 +13,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.wedit.backend.api.reservation.service.ReservationService;
@@ -26,6 +30,7 @@ import java.util.List;
 @Tag(name = "Reservation", description = "상담 예약 관련 API")
 @RestController
 @RequiredArgsConstructor
+@Validated
 @RequestMapping("/api/v1")
 public class ReservationController {
 
@@ -73,9 +78,9 @@ public class ReservationController {
     })
     @GetMapping("/vendors/{vendorId}/monthly-availability")
     public ResponseEntity<ApiResponse<List<DateAvailabilityDTO>>> getMonthlyAvailability(
-            @Parameter(description = "업체 ID", example = "1", required = true) @PathVariable Long vendorId,
-            @Parameter(description = "조회할 연도", example = "2025", required = true) @RequestParam int year,
-            @Parameter(description = "조회할 월 (1-12)", example = "9", required = true) @RequestParam int month) {
+            @Parameter(description = "업체 ID", example = "1", required = true) @PathVariable @Positive Long vendorId,
+            @Parameter(description = "조회할 연도", example = "2025", required = true) @RequestParam @Min(value = 2020, message = "연도는 2020년 이상이어야 합니다") @Max(value = 2030, message = "연도는 2030년 이하여야 합니다") int year,
+            @Parameter(description = "조회할 월 (1-12)", example = "9", required = true) @RequestParam @Min(value = 1, message = "월은 1 이상이어야 합니다") @Max(value = 12, message = "월은 12 이하여야 합니다") int month) {
 
         List<DateAvailabilityDTO> availability = reservationService.getMonthlyAvailability(vendorId, year, month);
 
@@ -126,10 +131,10 @@ public class ReservationController {
     })
     @GetMapping("/vendors/{vendorId}/daily-slots")
     public ResponseEntity<ApiResponse<List<SlotResponseDTO>>> getDailySlots(
-            @Parameter(description = "업체 ID", example = "1", required = true) @PathVariable Long vendorId,
-            @Parameter(description = "조회할 연도", example = "2025", required = true) @RequestParam int year,
-            @Parameter(description = "조회할 월 (1-12)", example = "9", required = true) @RequestParam int month,
-            @Parameter(description = "조회할 일 (1-31)", example = "15", required = true) @RequestParam int day) {
+            @Parameter(description = "업체 ID", example = "1", required = true) @PathVariable @Positive Long vendorId,
+            @Parameter(description = "조회할 연도", example = "2025", required = true) @RequestParam @Min(value = 2020, message = "연도는 2020년 이상이어야 합니다") @Max(value = 2030, message = "연도는 2030년 이하여야 합니다") int year,
+            @Parameter(description = "조회할 월 (1-12)", example = "9", required = true) @RequestParam @Min(value = 1, message = "월은 1 이상이어야 합니다") @Max(value = 12, message = "월은 12 이하여야 합니다") int month,
+            @Parameter(description = "조회할 일 (1-31)", example = "15", required = true) @RequestParam @Min(value = 1, message = "일은 1 이상이어야 합니다") @Max(value = 31, message = "일은 31 이하여야 합니다") int day) {
 
         List<SlotResponseDTO> slots = reservationService.getAvailableSlotsByDate(vendorId, year, month, day);
 
@@ -213,8 +218,8 @@ public class ReservationController {
     })
     @DeleteMapping("/reservations/{reservationId}")
     public ResponseEntity<ApiResponse<Void>> cancelReservation(
-            @RequestHeader("Authorization") String reqToken,
-            @Parameter(description = "취소할 예약 ID", required = true) @PathVariable Long reservationId) {
+            @Parameter(description = "취소할 예약 ID", example = "12", required = true) @PathVariable @Positive Long reservationId,
+            @Parameter(hidden = true) @RequestHeader String reqToken) {
 
         Long memberId = extractMemberId(reqToken);
 

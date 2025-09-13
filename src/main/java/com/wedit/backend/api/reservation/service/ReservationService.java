@@ -47,20 +47,27 @@ public class ReservationService {
     // 인메모리가 아닌 DB 조회로 서버 부담 감소
     @Transactional(readOnly = true)
     public List<SlotResponseDTO> getAvailableSlots(Long vendorId, int year, int month) {
+        
+        log.debug("상담 가능 슬롯 조회 시작 - vendorId: {}, year: {}, month: {}", vendorId, year, month);
 
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDateTime start = yearMonth.atDay(1).atStartOfDay();
         LocalDateTime end = yearMonth.atEndOfMonth().atTime(23, 59, 59);
 
-        return consultationSlotRepository.findByVendorIdAndStartTimeBetween(vendorId, start, end)
+        List<SlotResponseDTO> slots = consultationSlotRepository.findByVendorIdAndStartTimeBetween(vendorId, start, end)
                 .stream()
                 .map(SlotResponseDTO::from)
                 .collect(Collectors.toList());
+                
+        log.info("상담 가능 슬롯 조회 완료 - vendorId: {}, {} 개 슬롯 반환", vendorId, slots.size());
+        return slots;
     }
 
     // 상담 예약 생성
     // 동시성 문제 때문에 비관적 락 검
     public Long createReservation(Long memberId, ReservationRequestDTO request) {
+        
+        log.info("상담 예약 생성 시작 - memberId: {}, slotId: {}", memberId, request.slotId());
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
@@ -96,11 +103,15 @@ public class ReservationService {
 
     // 내 예약 취소
     public void cancelReservation(Long memberId, Long reservationId) {
+        
+        log.info("상담 예약 취소 시작 - memberId: {}, reservationId: {}", memberId, reservationId);
 
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_RESERVATION.getMessage()));
 
         if (!reservation.getMember().getId().equals(memberId)) {
+            log.warn("예약 취소 권한 없음 - reservationId: {}, 요청자: {}, 예약자: {}", 
+                    reservationId, memberId, reservation.getMember().getId());
             throw new ForbiddenException("자신만 예약을 취소할 수 있습니다.");
         }
 
@@ -110,29 +121,36 @@ public class ReservationService {
 
         reservation.cancel();
 
-        // 에약 취소 이벤트 발행
+        // 예약 취소 이벤트 발행
         ReservationEventPayload payload = ReservationEventPayload.from(reservation);
         eventPublisher.publishEvent(new ReservationCancelledEvent(this, payload));
 
         // 추후 커플 캘린더 구현 시, 커플 캘린더 일정 취소 이벤트 발행
         
-        log.info("상당 예약 취소 완료 및 이벤트 발행. reservationId: {}, memberId: {}",  reservationId, memberId);
+        log.info("상담 예약 취소 완료 및 이벤트 발행. reservationId: {}, memberId: {}",  reservationId, memberId);
     }
 
     // 내 예약 목록 조회
     @Transactional(readOnly = true)
     public List<MyReservationResponseDTO> getMyReservations(Long memberId) {
+        
+        log.debug("내 예약 목록 조회 시작 - memberId: {}", memberId);
 
         List<Reservation> reservations = reservationRepository.findAllByMemberIdWithVendor(memberId);
-
-        return reservations.stream()
+        
+        List<MyReservationResponseDTO> result = reservations.stream()
                 .map(MyReservationResponseDTO::from)
                 .collect(Collectors.toList());
+                
+        log.info("내 예약 목록 조회 완료 - memberId: {}, {} 개 예약 반환", memberId, result.size());
+        return result;
     }
 
     // 특정 업체의 월간 예약 현황(날짜별 예약 가능 여부) 조회
     @Transactional(readOnly = true)
     public List<DateAvailabilityDTO> getMonthlyAvailability(Long vendorId, int year, int month) {
+        
+        log.debug("월별 예약 현황 조회 시작 - vendorId: {}, year: {}, month: {}", vendorId, year, month);
 
         YearMonth yearMonth = YearMonth.of(year, month);
         LocalDateTime startOfMonth = yearMonth.atDay(1).atStartOfDay();
@@ -146,7 +164,7 @@ public class ReservationService {
                 .collect(Collectors.groupingBy(slot -> slot.getStartTime().toLocalDate()));
 
         // 해당 월의 모든 날짜에 대해 DTO 생성
-        return yearMonth.atDay(1).datesUntil(yearMonth.atEndOfMonth().plusDays(1))
+        List<DateAvailabilityDTO> result = yearMonth.atDay(1).datesUntil(yearMonth.atEndOfMonth().plusDays(1))
                 .map(date -> {
                     List<ConsultationSlot> dailySlots = slotsByDate.getOrDefault(date, List.of());
 
@@ -158,19 +176,27 @@ public class ReservationService {
                     return new DateAvailabilityDTO(date, availableSlots > 0, totalSlots, availableSlots);
                 })
                 .collect(Collectors.toList());
+                
+        log.info("월별 예약 현황 조회 완료 - vendorId: {}, {} 일 정보 반환", vendorId, result.size());
+        return result;
     }
 
     // 특정 업체의 일간 예약 현황(시간별 예약 가능 여부) 조회
     @Transactional(readOnly = true)
     public List<SlotResponseDTO> getAvailableSlotsByDate(Long vendorId, int year, int month, int day) {
+        
+        log.debug("일별 예약 현황 조회 시작 - vendorId: {}, date: {}-{}-{}", vendorId, year, month, day);
 
         LocalDate date = LocalDate.of(year, month, day);
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(23, 59, 59);
 
-        return consultationSlotRepository.findByVendorIdAndStartTimeBetween(vendorId, start, end)
+        List<SlotResponseDTO> slots = consultationSlotRepository.findByVendorIdAndStartTimeBetween(vendorId, start, end)
                 .stream()
                 .map(SlotResponseDTO::from)
                 .collect(Collectors.toList());
+                
+        log.info("일별 예약 현황 조회 완료 - vendorId: {}, {} 개 슬롯 반환", vendorId, slots.size());
+        return slots;
     }
 }

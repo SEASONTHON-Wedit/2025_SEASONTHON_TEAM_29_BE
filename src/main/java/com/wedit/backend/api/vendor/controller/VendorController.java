@@ -13,6 +13,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 import com.wedit.backend.api.vendor.dto.request.ProductCreateRequestDTO;
 import com.wedit.backend.api.vendor.dto.request.VendorCreateRequestDTO;
@@ -45,6 +51,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/vendor")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Vendor & Product", description = "Vendor 및 Product 관련 어드민 API 입니다.")
 public class VendorController {
 
@@ -159,7 +166,7 @@ public class VendorController {
 	)
 	@PostMapping("/{vendorId}/product")
 	public ResponseEntity<ApiResponse<String>> createProduct(
-		@PathVariable Long vendorId,
+		@PathVariable @Positive Long vendorId,
 		@Valid @RequestBody ProductCreateRequestDTO request) {
 
 		Long productId = productService.createProduct(vendorId, request);
@@ -174,7 +181,7 @@ public class VendorController {
 	)
 	@GetMapping("/{vendorId}")
 	public ResponseEntity<ApiResponse<VendorDetailResponseDTO>> getVendorDetail(
-		@PathVariable Long vendorId) {
+		@PathVariable @Positive Long vendorId) {
 
 		VendorDetailResponseDTO rsp = vendorService.getVendorDetail(vendorId);
 
@@ -188,7 +195,7 @@ public class VendorController {
 	)
 	@GetMapping("/product/{productId}")
 	public ResponseEntity<ApiResponse<ProductDetailResponseDTO>> getProductDetail(
-		@PathVariable Long productId) {
+		@PathVariable @Positive Long productId) {
 
 		ProductDetailResponseDTO rsp = productService.getProductDetail(productId);
 
@@ -244,7 +251,7 @@ public class VendorController {
 			description = "업체 타입",
 			example = "WEDDING_HALL",
 			required = true
-		) @RequestParam VendorType vendorType,
+		) @RequestParam @NotNull VendorType vendorType,
 		
 		@Parameter(
 			description = "페이징 정보 (기본 크기: 5개)"
@@ -280,37 +287,37 @@ public class VendorController {
 			description = "지역 코드 목록 (읍/면/동 단위)",
 			example = "1168010100,1168010200",
 			required = true
-		) @RequestParam(value = "regionCode") List<String> regionCodes,
+		) @RequestParam(value = "regionCode") @NotEmpty(message = "지역 코드는 최소 1개 이상 선택해야 합니다") List<String> regionCodes,
 		
 		@Parameter(
 			description = "최대 예산 (원 단위)",
 			example = "20000000",
 			required = true
-		) @RequestParam(value = "price") Integer price,
+		) @RequestParam(value = "price") @Positive(message = "가격은 0보다 커야 합니다") Integer price,
 		
 		@Parameter(
 			description = "홀 스타일 목록",
 			example = "HOTEL,HOUSE",
 			required = true
-		) @RequestParam(value = "hallStyle") List<HallStyle> hallStyles,
+		) @RequestParam(value = "hallStyle") @NotEmpty(message = "홀 스타일은 최소 1개 이상 선택해야 합니다") List<HallStyle> hallStyles,
 		
 		@Parameter(
 			description = "식사 타입 목록",
 			example = "COURSE,BUFFET",
 			required = true
-		) @RequestParam(value = "hallMeal") List<HallMeal> hallMeals,
+		) @RequestParam(value = "hallMeal") @NotEmpty(message = "식사 타입은 최소 1개 이상 선택해야 합니다") List<HallMeal> hallMeals,
 		
 		@Parameter(
 			description = "최소 수용 인원",
 			example = "150",
 			required = true
-		) @RequestParam(value = "capacity") Integer capacity,
+		) @RequestParam(value = "capacity") @Positive(message = "수용 인원은 1명 이상이어야 합니다") Integer capacity,
 		
 		@Parameter(
 			description = "주차장 보유 여부",
 			example = "true",
 			required = true
-		) @RequestParam(value = "hasParking") Boolean hasParking
+		) @RequestParam(value = "hasParking") @NotNull(message = "주차장 보유 여부는 필수입니다") Boolean hasParking
 	) {
 		List<ProductResponseDTO> weddingHallProductResponseDTOS = vendorService.searchWeddingHall(
 			regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
@@ -341,31 +348,31 @@ public class VendorController {
 			description = "지역 코드 목록 (읍/면/동 단위)",
 			example = "1168010100,1168010200",
 			required = true
-		) @RequestParam(value = "regionCode") List<String> regionCodes,
+		) @RequestParam(value = "regionCode") @NotEmpty(message = "지역 코드는 최소 1개 이상 선택해야 합니다") List<String> regionCodes,
 		
 		@Parameter(
 			description = "최대 예산 (원 단위)",
 			example = "3000000",
 			required = true
-		) @RequestParam(value = "price") Integer price,
+		) @RequestParam(value = "price") @Positive(message = "가격은 0보다 커야 합니다") Integer price,
 		
 		@Parameter(
 			description = "스튜디오 스타일 목록",
 			example = "PORTRAIT_FOCUSED,CONCEPT_FOCUSED",
 			required = true
-		) @RequestParam(value = "studioStyle") List<StudioStyle> studioStyles,
+		) @RequestParam(value = "studioStyle") @NotEmpty(message = "스튜디오 스타일은 최소 1개 이상 선택해야 합니다") List<StudioStyle> studioStyles,
 		
 		@Parameter(
 			description = "특수 촬영 옵션 목록",
 			example = "HANOK,BEACH,STUDIO",
 			required = true
-		) @RequestParam(value = "specialShots") List<StudioSpecialShot> studioSpecialShots,
+		) @RequestParam(value = "specialShots") @NotEmpty(message = "특수 촬영 옵션은 최소 1개 이상 선택해야 합니다") List<StudioSpecialShot> studioSpecialShots,
 		
 		@Parameter(
 			description = "아이폰 스냅 촬영 제공 여부",
 			example = "true",
 			required = true
-		) @RequestParam(value = "iphoneSnap") Boolean iphoneSnap
+		) @RequestParam(value = "iphoneSnap") @NotNull(message = "아이폰 스냅 제공 여부는 필수입니다") Boolean iphoneSnap
 	) {
 		List<ProductResponseDTO> studioProductResponseDTOS = vendorService.searchStudio(
 			regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap);
@@ -396,31 +403,31 @@ public class VendorController {
 			description = "지역 코드 목록 (읍/면/동 단위)",
 			example = "1168010100,1168010200",
 			required = true
-		) @RequestParam(value = "regionCode") List<String> regionCodes,
+		) @RequestParam(value = "regionCode") @NotEmpty(message = "지역 코드는 최소 1개 이상 선택해야 합니다") List<String> regionCodes,
 		
 		@Parameter(
 			description = "최대 예산 (원 단위)",
 			example = "800000",
 			required = true
-		) @RequestParam(value = "price") Integer price,
+		) @RequestParam(value = "price") @Positive(message = "가격은 0보다 커야 합니다") Integer price,
 		
 		@Parameter(
 			description = "메이크업 스타일 목록",
 			example = "NATURAL,GLAM",
 			required = true
-		) @RequestParam(value = "makeupStyle") List<MakeupStyle> makeupStyles,
+		) @RequestParam(value = "makeupStyle") @NotEmpty(message = "메이크업 스타일은 최소 1개 이상 선택해야 합니다") List<MakeupStyle> makeupStyles,
 		
 		@Parameter(
 			description = "담당 스타일리스트 지정 가능 여부",
 			example = "true",
 			required = true
-		) @RequestParam(value = "isStylistDesignationAvailable") Boolean isStylistDesignationAvailable,
+		) @RequestParam(value = "isStylistDesignationAvailable") @NotNull(message = "스타일리스트 지정 가능 여부는 필수입니다") Boolean isStylistDesignationAvailable,
 		
 		@Parameter(
 			description = "개인실 보유 여부",
 			example = "true",
 			required = true
-		) @RequestParam(value = "hasPrivateRoom") Boolean hasPrivateRoom
+		) @RequestParam(value = "hasPrivateRoom") @NotNull(message = "개인실 보유 여부는 필수입니다") Boolean hasPrivateRoom
 	) {
 		List<ProductResponseDTO> makeUpProductResponseDTOS = vendorService.searchMakeup(
 			regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom);
@@ -450,25 +457,25 @@ public class VendorController {
 			description = "지역 코드 목록 (읍/면/동 단위)",
 			example = "1168010100,1168010200",
 			required = true
-		) @RequestParam(value = "regionCode") List<String> regionCodes,
+		) @RequestParam(value = "regionCode") @NotEmpty(message = "지역 코드는 최소 1개 이상 선택해야 합니다") List<String> regionCodes,
 		
 		@Parameter(
 			description = "최대 예산 (원 단위)",
 			example = "5000000",
 			required = true
-		) @RequestParam(value = "price") Integer price,
+		) @RequestParam(value = "price") @Positive(message = "가격은 0보다 커야 합니다") Integer price,
 		
 		@Parameter(
 			description = "드레스 스타일 목록",
 			example = "ROMANTIC,MODERN",
 			required = true
-		) @RequestParam(value = "dressStyles") List<DressStyle> dressStyles,
+		) @RequestParam(value = "dressStyles") @NotEmpty(message = "드레스 스타일은 최소 1개 이상 선택해야 합니다") List<DressStyle> dressStyles,
 		
 		@Parameter(
 			description = "드레스 제작 원산지 목록",
 			example = "IMPORTED,DOMESTIC",
 			required = true
-		) @RequestParam(value = "dressOrigins") List<DressOrigin> dressOrigins
+		) @RequestParam(value = "dressOrigins") @NotEmpty(message = "드레스 원산지는 최소 1개 이상 선택해야 합니다") List<DressOrigin> dressOrigins
 	) {
 		List<ProductResponseDTO> dressProductResponseDTOS = vendorService.searchDress(
 			regionCodes, price, dressStyles, dressOrigins);

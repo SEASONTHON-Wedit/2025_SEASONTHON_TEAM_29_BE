@@ -89,11 +89,14 @@ public class VendorService {
 			savedVendor.setRepMedia(savedRep);
 		}
 
+		log.info("업체 생성 완료. ID: {}, 업체명: '{}'", savedVendor.getId(), savedVendor.getName());
 		return savedVendor.getId();
 	}
 
 	@Transactional(readOnly = true)
 	public VendorDetailResponseDTO getVendorDetail(Long vendorId) {
+		
+		log.debug("업체 상세 조회 시작 - vendorId: {}", vendorId);
 
 		Vendor vendor = vendorRepository.findById(vendorId)
 			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + " : " + vendorId));
@@ -104,6 +107,7 @@ public class VendorService {
 			? s3Service.toCdnUrl(vendor.getRepMedia().getMediaKey())
 			: null;
 
+		log.info("업체 상세 조회 완료 - vendorId: {}, 상품 개수: {}", vendorId, products.size());
 		return VendorDetailResponseDTO.builder()
 			.vendorId(vendor.getId())
 			.vendorName(vendor.getName())
@@ -150,28 +154,76 @@ public class VendorService {
 
 	public List<ProductResponseDTO> searchWeddingHall(List<String> regionCodes, Integer price,
 		List<HallStyle> hallStyles, List<HallMeal> hallMeals, Integer capacity, Boolean hasParking) {
-		return searchProducts(() -> vendorProductQueryRepository.searchWeddingHallProducts(
-			regionCodes, price, hallStyles, hallMeals, capacity, hasParking));
+		
+		log.debug("웨딩홀 검색 시작 - regionCodes: {}, price: {}, hallStyles: {}, hallMeals: {}, capacity: {}, hasParking: {}", 
+				regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
+		
+		try {
+			List<ProductResponseDTO> results = searchProducts(() -> vendorProductQueryRepository.searchWeddingHallProducts(
+				regionCodes, price, hallStyles, hallMeals, capacity, hasParking));
+			
+			log.info("웨딩홀 검색 성공 - {} 개 결과 반환", results.size());
+			return results;
+		} catch (Exception e) {
+			log.error("웨딩홀 검색 실패 - regionCodes: {}, price: {}", regionCodes, price, e);
+			throw e;
+		}
 	}
 
 	public List<ProductResponseDTO> searchStudio(List<String> regionCodes, Integer price,
 		List<StudioStyle> studioStyles,
 		List<StudioSpecialShot> studioSpecialShots, Boolean iphoneSnap) {
-		return searchProducts(() -> vendorProductQueryRepository.searchStudioProducts(
-			regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap));
+		
+		log.debug("스튜디오 검색 시작 - regionCodes: {}, price: {}, studioStyles: {}, specialShots: {}, iphoneSnap: {}", 
+				regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap);
+		
+		try {
+			List<ProductResponseDTO> results = searchProducts(() -> vendorProductQueryRepository.searchStudioProducts(
+				regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap));
+			
+			log.info("스튜디오 검색 성공 - {} 개 결과 반환", results.size());
+			return results;
+		} catch (Exception e) {
+			log.error("스튜디오 검색 실패 - regionCodes: {}, price: {}", regionCodes, price, e);
+			throw e;
+		}
 	}
 
 	public List<ProductResponseDTO> searchMakeup(List<String> regionCodes, Integer price,
 		List<MakeupStyle> makeupStyles,
 		Boolean isStylistDesignationAvailable, Boolean hasPrivateRoom) {
-		return searchProducts(() -> vendorProductQueryRepository.searchMakeupProducts(
-			regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom));
+		
+		log.debug("메이크업 검색 시작 - regionCodes: {}, price: {}, makeupStyles: {}, stylistDesignation: {}, privateRoom: {}", 
+				regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom);
+		
+		try {
+			List<ProductResponseDTO> results = searchProducts(() -> vendorProductQueryRepository.searchMakeupProducts(
+				regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom));
+			
+			log.info("메이크업 검색 성공 - {} 개 결과 반환", results.size());
+			return results;
+		} catch (Exception e) {
+			log.error("메이크업 검색 실패 - regionCodes: {}, price: {}", regionCodes, price, e);
+			throw e;
+		}
 	}
 
 	public List<ProductResponseDTO> searchDress(List<String> regionCodes, Integer price,
 		List<DressStyle> dressStyles, List<DressOrigin> dressOrigins) {
-		return searchProducts(() -> vendorProductQueryRepository.searchDressProducts(
-			regionCodes, price, dressStyles, dressOrigins));
+		
+		log.debug("드레스 검색 시작 - regionCodes: {}, price: {}, dressStyles: {}, dressOrigins: {}", 
+				regionCodes, price, dressStyles, dressOrigins);
+		
+		try {
+			List<ProductResponseDTO> results = searchProducts(() -> vendorProductQueryRepository.searchDressProducts(
+				regionCodes, price, dressStyles, dressOrigins));
+			
+			log.info("드레스 검색 성공 - {} 개 결과 반환", results.size());
+			return results;
+		} catch (Exception e) {
+			log.error("드레스 검색 실패 - regionCodes: {}, price: {}", regionCodes, price, e);
+			throw e;
+		}
 	}
 
 	private <T extends Product> List<ProductResponseDTO> searchProducts(

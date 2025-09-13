@@ -3,6 +3,7 @@ package com.wedit.backend.api.invitation.controller;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,6 +19,10 @@ import com.wedit.backend.common.response.SuccessStatus;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,24 +30,83 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/v1/invitation")
 @Slf4j
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Invitation", description = "Invitation 관련 API 입니다.")
 public class InvitationController {
 	private final InvitationService invitationService;
 
 	@Operation(
-		summary = "초청장 생성 API", description = "현재는 ending, account, background는 없어서 빼고 보내주시면 됩니다!"
+		summary = "초청장 생성 API", 
+		description = """
+			초청장을 생성합니다. 사용자 인증이 필요합니다.
+			
+			**요청 정보:**
+			- 기본 정보: 신랑/신부 이름, 결혼식 장소 및 날짜
+			- 인사말, 갤러리 이미지 등 포함
+			- 현재는 ending, account, background는 없어서 빼고 보내주시면 됩니다!
+			
+			**요청 예시:**
+			```json
+			{
+			  "groomName": "김철수",
+			  "brideName": "이영희", 
+			  "marriagePlace": "아펜가모 선릉점",
+			  "marriageDate": "2025-10-15",
+			  "greetings": "저희 두 사람이 사랑의 결실을 맺게 되었습니다..."
+			}
+			```
+			""",
+		security = @SecurityRequirement(name = "Bearer Authentication")
 	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "초청장 생성 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "이미 초청장이 존재하거나 잘못된 요청", content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content)
+	})
 	@PostMapping
 	public ResponseEntity<ApiResponse<Void>> createInvitation(
 		@AuthenticationPrincipal UserDetails userDetails,
-		@RequestBody InvitationCreateRequestDTO createRequestDTO) {
+		@Valid @RequestBody InvitationCreateRequestDTO createRequestDTO) {
+		
 		invitationService.createInvitation(userDetails.getUsername(), createRequestDTO);
 		return ApiResponse.successOnly(SuccessStatus.INVITATION_CREATE_SUCCESS);
 	}
 
 	@Operation(
-		summary = "초청장 조회 API", description = "초청정 조회 API"
+		summary = "초청장 조회 API", 
+		description = """
+			현재 사용자의 초청장 정보를 조회합니다. 사용자 인증이 필요합니다.
+			
+			**응답 정보:**
+			- 신랑/신부 기본 정보
+			- 결혼식 장소 및 날짜/시간
+			- 인사말 및 갤러리 이미지
+			- 템플릿 및 테마 정보
+			
+			**예시 응답:**
+			```json
+			{
+			  "code": 200,
+			  "message": "초청장 조회 성공",
+			  "data": {
+			    "groomName": "김철수",
+			    "brideName": "이영희",
+			    "marriagePlace": "아펠가모 선릉점",
+			    "marriageDate": "2025-10-15",
+			    "marriageTime": "14:00",
+			    "greetings": "저희 두 사람이 사랑의 결실을 맺게 되었습니다...",
+			    "galleryImages": ["https://cdn.example.com/image1.jpg"]
+			  }
+			}
+			```
+			""",
+		security = @SecurityRequirement(name = "Bearer Authentication")
 	)
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "초청장 조회 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "초청장을 찾을 수 없습니다", content = @Content)
+	})
 	@GetMapping
 	public ResponseEntity<ApiResponse<InvitationGetResponseDTO>> getInvitation(
 		@AuthenticationPrincipal UserDetails userDetails

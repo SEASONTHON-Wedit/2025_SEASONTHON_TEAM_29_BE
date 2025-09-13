@@ -21,11 +21,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 @Tag(name = "Review", description = "Review 관련 API 입니다.")
 @RestController
 @RequiredArgsConstructor
+@Validated
 @RequestMapping("/api/v1/review")
 public class ReviewController {
 
@@ -81,7 +87,7 @@ public class ReviewController {
     })
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<ReviewCreateResponseDTO>> createReview(
-            @RequestBody ReviewCreateRequestDTO requestDTO,
+            @Valid @RequestBody ReviewCreateRequestDTO requestDTO,
             @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken) {
 
         String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
@@ -107,8 +113,8 @@ public class ReviewController {
     @PutMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<ReviewUpdateResponseDTO>> updateReview(
             @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
-            @Parameter(description = "수정할 후기의 ID", example = "12") @PathVariable Long reviewId,
-            @RequestBody ReviewUpdateRequestDTO requestDTO) {
+            @Parameter(description = "수정할 후기의 ID", example = "12") @PathVariable @Positive Long reviewId,
+            @Valid @RequestBody ReviewUpdateRequestDTO requestDTO) {
 
         String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
         Long memberId = jwtService.extractMemberId(token)
@@ -129,7 +135,7 @@ public class ReviewController {
     })
     @GetMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<ReviewDetailResponseDTO>> getReviewDetail(
-            @Parameter(description = "조회할 후기의 ID", example = "12") @PathVariable Long reviewId) {
+            @Parameter(description = "조회할 후기의 ID", example = "12") @PathVariable @Positive Long reviewId) {
 
         ReviewDetailResponseDTO dto = reviewService.getReviewDetail(reviewId);
 
@@ -188,8 +194,8 @@ public class ReviewController {
     })
     @GetMapping("/all-reviews")
     public ResponseEntity<ApiResponse<Page<ReviewMainBannerResponseDTO>>> getAllReviewList(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size) {
+            @RequestParam(defaultValue = "0") @PositiveOrZero int page,
+            @RequestParam(defaultValue = "5") @Min(value = 1, message = "페이지 크기는 1 이상이어야 합니다") int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<ReviewMainBannerResponseDTO> dtos = reviewService.getMainBannerReviewList(pageable);
@@ -209,8 +215,8 @@ public class ReviewController {
     @GetMapping("/my-reviews")
     public ResponseEntity<ApiResponse<Page<MyReviewResponseDTO>>> getMyReviewList(
             @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size) {
+            @RequestParam(defaultValue = "0") @PositiveOrZero int page,
+            @RequestParam(defaultValue = "5") @Min(value = 1, message = "페이지 크기는 1 이상이어야 합니다") int size) {
 
         String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
         Long memberId = jwtService.extractMemberId(token)
@@ -235,7 +241,7 @@ public class ReviewController {
     })
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(
-            @Parameter(description = "삭제할 후기의 ID", example = "12") @PathVariable Long reviewId,
+            @Parameter(description = "삭제할 후기의 ID", example = "12") @PathVariable @Positive Long reviewId,
             @Parameter(hidden = true) @RequestHeader String reqToken) {
 
         String token = reqToken.startsWith("Bearer ") ? reqToken.substring(7) : reqToken;
@@ -289,7 +295,7 @@ public class ReviewController {
     @GetMapping("/{vendorId}/stats")
     public ResponseEntity<ApiResponse<ReviewStatsResponseDTO>> getReviewStats(
             @Parameter(description = "업체 ID", example = "1")
-            @PathVariable Long vendorId) {
+            @PathVariable @Positive Long vendorId) {
 
         ReviewStatsResponseDTO response = reviewService.getReviewStats(vendorId);
 
@@ -346,7 +352,7 @@ public class ReviewController {
     @GetMapping("/{vendorId}/reviews")
     public ResponseEntity<ApiResponse<ReviewListResponseDTO>> getReviewsByVendor(
             @Parameter(description = "업체 ID", example = "1")
-            @PathVariable Long vendorId,
+            @PathVariable @Positive Long vendorId,
             @Parameter(description = "페이징 정보 (페이지 크기: 2, 기본 정렬: 최신순)")
             @PageableDefault(size = 2, sort = "createdAt", direction = Sort.Direction.DESC)
             Pageable pageable) {

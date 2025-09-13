@@ -16,11 +16,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.List;
 @Tag(name = "Contract", description = "Contract 계약 관련 API 입니다.")
 @RestController
 @RequiredArgsConstructor
+@Validated
 @RequestMapping("/api/v1/contracts")
 public class ContractController {
 
@@ -66,7 +69,7 @@ public class ContractController {
     })
     @PostMapping
     public ResponseEntity<ApiResponse<ContractCreateResponseDTO>> createContract(
-            @RequestHeader("Authorization") String reqToken,
+            @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
             @Valid @RequestBody ContractCreateRequestDTO request) {
 
         Long memberId = extractMemberId(reqToken);
@@ -88,7 +91,7 @@ public class ContractController {
     })
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<MyContractsResponseDTO>> getMyContracts(
-            @RequestHeader("Authorization") String reqToken,
+            @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
             @PageableDefault(size = 5) Pageable pageable) {
 
         Long memberId = extractMemberId(reqToken);
@@ -108,8 +111,8 @@ public class ContractController {
     })
     @GetMapping("/{contractId}")
     public ResponseEntity<ApiResponse<ContractDetailDTO>> getContractDetail(
-            @RequestHeader("Authorization") String reqToken,
-            @PathVariable Long contractId) {
+            @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
+            @Parameter(description = "계약 ID", example = "1") @PathVariable @Positive Long contractId) {
 
         Long memberId = extractMemberId(reqToken);
 
@@ -124,7 +127,7 @@ public class ContractController {
     )
     @GetMapping("/my/reviewable")
     public ResponseEntity<ApiResponse<Page<ReviewableContractDTO>>> getReviewableContracts(
-            @RequestHeader("Authorization") String reqToken,
+            @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
             @PageableDefault(size = 5) Pageable pageable) {
 
         Long memberId = extractMemberId(reqToken);
