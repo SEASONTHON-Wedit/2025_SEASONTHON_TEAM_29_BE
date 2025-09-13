@@ -81,26 +81,62 @@ public class VendorController {
             description = "특정 업체에 새로운 상품을 추가합니다. **vendorType에 따라 필요한 속성만 채워서** 보내면 됩니다."
     )
     @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "생성할 상품의 정보. WEDDING_HALL 타입의 예시입니다.",
+            description = "생성할 상품의 정보. 드롭다운에서 상품 타입을 선택하여 예시를 확인하세요.",
             required = true,
             content = @Content(
                     mediaType = "application/json",
                     schema = @Schema(implementation = ProductCreateRequestDTO.class),
-                    examples = @ExampleObject(value = """
-                            {
-                                "vendorType": "WEDDING_HALL",
-                                "name": "웨딩홀 A",
-                                "productImages": [
-                                    { "mediaKey": "product/images/example-key-1.jpg", "contentType": "image/jpeg", "sortOrder": 0 },
-                                    { "mediaKey": "product/images/example-key-2.jpg", "contentType": "image/jpeg", "sortOrder": 1 }
-                                ],
-                                "basePrice": 77000000,
-                                "hallStyle": "HOTEL",
-                                "hallMeal": "BUFFET",
-                                "capacity": 150,
-                                "hasParking": true
-                            }
-                            """))
+                    examples = {
+                            @ExampleObject(name = "드레스(DRESS)", summary = "드레스 상품 생성 예시", value = """
+                                {
+                                    "vendorType": "DRESS",
+                                    "name": "시그니처 블랙라벨 드레스",
+                                    "productImages": [],
+                                    "basePrice": 3000000,
+                                    "durationInMinutes": 120,
+                                    "dressStyle": "ROMANTIC",
+                                    "dressProduction": "IMPORTED"
+                                }
+                                """),
+                            @ExampleObject(name = "스튜디오(STUDIO)", summary = "스튜디오 상품 생성 예시", value = """
+                                {
+                                    "vendorType": "STUDIO",
+                                    "name": "인물중심 프리미엄 촬영",
+                                    "productImages": [],
+                                    "basePrice": 2500000,
+                                    "durationInMinutes": 240,
+                                    "studioStyle": "PORTRAIT_FOCUSED",
+                                    "specialShot": "HANOK",
+                                    "iphoneSnap": true
+                                }
+                                """),
+                            @ExampleObject(name = "메이크업(MAKEUP)", summary = "메이크업 상품 생성 예시", value = """
+                                {
+                                    "vendorType": "MAKEUP",
+                                    "name": "신부 화보 메이크업",
+                                    "productImages": [],
+                                    "basePrice": 700000,
+                                    "durationInMinutes": 180,
+                                    "makeupStyle": "NATURAL",
+                                    "isStylistDesignationAvailable": true,
+                                    "hasPrivateRoom": true
+                                }
+                                """),
+                            @ExampleObject(name = "웨딩홀(WEDDING_HALL)", summary = "웨딩홀 상품 생성 예시", value = """
+                                {
+                                    "vendorType": "WEDDING_HALL",
+                                    "name": "그랜드 볼룸",
+                                    "productImages": [],
+                                    "basePrice": 15000000,
+                                    "durationInMinutes": 180,
+                                    "hallStyle": "HOTEL",
+                                    "hallMeal": "COURSE",
+                                    "capacity": 200,
+                                    "hasParking": true
+                                }
+                                """)
+                    }
+            )
     )
     @PostMapping("/{vendorId}/product")
     public ResponseEntity<ApiResponse<String>> createProduct(

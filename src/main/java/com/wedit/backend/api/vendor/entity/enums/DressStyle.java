@@ -5,11 +5,14 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum StudioSpecialShot {
+public enum DressStyle {
 
-    HANOK("한옥"),
-    UNDERWATER("수중"),
-    WITH_PET("반려동물");
+    MODERN("모던"),
+    CLASSIC("클래식"),
+    ROMANTIC("로맨틱"),
+    DANAH("단아"),
+    UNIQUE("유니크"),
+    HIGH_END("하이엔드");
 
     private final String displayName;
 }

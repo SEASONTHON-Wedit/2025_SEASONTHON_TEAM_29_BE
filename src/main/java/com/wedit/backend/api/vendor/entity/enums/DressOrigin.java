@@ -8,8 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum DressOrigin {
 
     DOMESTIC("국내"),
-    IMPORTED("수입"),
-    DOMESTIC_AND_IMPORTED("국내+수입");
+    IMPORTED("수입");
 
     private final String displayName;
 }

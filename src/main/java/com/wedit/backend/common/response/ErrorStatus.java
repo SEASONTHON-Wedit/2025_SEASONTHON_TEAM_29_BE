@@ -35,7 +35,8 @@ public enum ErrorStatus {
     BAD_REQUEST_COUPLE_CONNECT_MYSELF(HttpStatus.BAD_REQUEST, "자기 자신과는 연결할 수 없습니다."),
     BAD_REQUEST_CONNECT_BRIDE_TO_GROOM(HttpStatus.BAD_REQUEST, "잘못된 연결 요청입니다. 신부를 등록할 수 없는 상태입니다."),
     BAD_REQUEST_CONNECT_GROOM_TO_BRIDE(HttpStatus.BAD_REQUEST, "잘못된 연결 요청입니다. 신랑을 등록할 수 없는 상태입니다."),
-    BAD_REQUEST_REQUIRED_LEAST_REGION_CODE(HttpStatus.BAD_REQUEST, "업체 지역은 읍/면/동 단위(level=3)여야 합니다."), /// 400 BAD REQUEST
+    BAD_REQUEST_REQUIRED_LEAST_REGION_CODE(HttpStatus.BAD_REQUEST, "업체 지역은 읍/면/동 단위(level=3)여야 합니다."),
+    BAD_REQUEST_ALREADY_BOOKED(HttpStatus.BAD_REQUEST, "이미 예약된 슬롯입니다. 다른 시간을 선택해주세요."),
 	BAD_REQUEST_ESTIMATE_CONFLICT(HttpStatus.BAD_REQUEST, "견적서 시간이 겹칩니다."),
 	BAD_REQUEST_ALREADY_HAVE_INVITATION(HttpStatus.BAD_REQUEST, "이미 청첩장을 가지고 있습니다."),
 	BAD_REQUEST_ALREADY_OTHER_MEMBER_HAVE_INVITATION(HttpStatus.BAD_REQUEST, "이미 다른 멤버가 청첩장을 가지고 있습니다."),
@@ -69,6 +70,8 @@ public enum ErrorStatus {
     NOT_FOUND_PRODUCT(HttpStatus.NOT_FOUND, "해당 상품을 찾을 수 없습니다."),
     NOT_FOUND_CART_ITEM(HttpStatus.NOT_FOUND, "해당 상품이 견적서에 없습니다."),
     NOT_FOUND_RESERVATION(HttpStatus.NOT_FOUND, "해당 상담 예약은 존재하지 않습니다."),
+    NOT_FOUND_SLOT(HttpStatus.NOT_FOUND, "해당 슬롯은 존재하지 않습니다."),
+    NOT_FOUND_CONTRACT(HttpStatus.NOT_FOUND, "해당 계약은 존재하지 않습니다."),
 	NOT_FOUND_INVITATION(HttpStatus.NOT_FOUND, "초청장을 찾을 수 없습니다."),
 
 	/// 409 CONFLICT
