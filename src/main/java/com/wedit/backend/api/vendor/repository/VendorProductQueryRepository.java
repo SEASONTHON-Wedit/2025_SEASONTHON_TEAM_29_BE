@@ -10,7 +10,6 @@ import com.wedit.backend.api.vendor.entity.DressProduct;
 import com.wedit.backend.api.vendor.entity.MakeupProduct;
 import com.wedit.backend.api.vendor.entity.QDressProduct;
 import com.wedit.backend.api.vendor.entity.QMakeupProduct;
-import com.wedit.backend.api.vendor.entity.QRegion;
 import com.wedit.backend.api.vendor.entity.QStudioProduct;
 import com.wedit.backend.api.vendor.entity.QVendor;
 import com.wedit.backend.api.vendor.entity.QWeddingHallProduct;
@@ -130,7 +129,7 @@ public class VendorProductQueryRepository {
 			.fetch();
 	}
 
-	public List<MakeupProduct> searchMakeUpProducts(
+	public List<MakeupProduct> searchMakeupProducts(
 		List<String> regionCodes,
 		Integer price,
 		List<MakeupStyle> makeupStyles,

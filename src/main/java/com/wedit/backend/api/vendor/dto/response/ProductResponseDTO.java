@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 @NoArgsConstructor
-public class DressProductResponseDTO {
+public class ProductResponseDTO {
 	private Long basePrice;
 	private Long vendorId;
 	private String vendorName;
@@ -15,8 +15,9 @@ public class DressProductResponseDTO {
 	private Integer reviewCount;
 	private String logoMediaUrl;
 
-	public DressProductResponseDTO(Long basePrice, Long vendorId, String vendorName, Double averageRating,
-		Integer reviewCount, String logoMediaUrl) {
+	public ProductResponseDTO(Long basePrice, Long vendorId, String vendorName, Double averageRating,
+		Integer reviewCount,
+		String logoMediaUrl) {
 		this.basePrice = basePrice;
 		this.vendorId = vendorId;
 		this.vendorName = vendorName;

@@ -16,13 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.wedit.backend.api.vendor.dto.request.ProductCreateRequestDTO;
 import com.wedit.backend.api.vendor.dto.request.VendorCreateRequestDTO;
-import com.wedit.backend.api.vendor.dto.response.DressProductResponseDTO;
-import com.wedit.backend.api.vendor.dto.response.MakeUpProductResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.ProductDetailResponseDTO;
-import com.wedit.backend.api.vendor.dto.response.StudioProductResponseDTO;
+import com.wedit.backend.api.vendor.dto.response.ProductResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorBannerResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorDetailResponseDTO;
-import com.wedit.backend.api.vendor.dto.response.WeddingHallProductResponseDTO;
 import com.wedit.backend.api.vendor.entity.enums.DressOrigin;
 import com.wedit.backend.api.vendor.entity.enums.DressStyle;
 import com.wedit.backend.api.vendor.entity.enums.HallMeal;
@@ -217,15 +214,15 @@ public class VendorController {
 		description = "웨딩홀 조건 조회 합니다."
 	)
 	@GetMapping("/conditionSearch/weddingHall")
-	public ResponseEntity<ApiResponse<List<WeddingHallProductResponseDTO>>> searchWeddingHallVendor(
+	public ResponseEntity<ApiResponse<List<ProductResponseDTO>>> searchWeddingHallVendor(
 		@RequestParam(value = "regionCode") List<String> regionCodes,
 		@RequestParam(value = "price") Integer price,
-		@RequestParam(value = "hall_style") List<HallStyle> hallStyles,
+		@RequestParam(value = "hallStyle") List<HallStyle> hallStyles,
 		@RequestParam(value = "meal") List<HallMeal> hallMeals,
 		@RequestParam(value = "capacity") Integer capacity,
-		@RequestParam(value = "has_parking") Boolean hasParking
+		@RequestParam(value = "hasParking") Boolean hasParking
 	) {
-		List<WeddingHallProductResponseDTO> weddingHallProductResponseDTOS = vendorService.searchWeddingHall(
+		List<ProductResponseDTO> weddingHallProductResponseDTOS = vendorService.searchWeddingHall(
 			regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
 		return ApiResponse.success(SuccessStatus.CONDITION_SEARCH_SUCCESS, weddingHallProductResponseDTOS);
 	}
@@ -235,14 +232,14 @@ public class VendorController {
 		description = "스튜디오 조건 조회 합니다."
 	)
 	@GetMapping("/conditionSearch/studio")
-	public ResponseEntity<ApiResponse<List<StudioProductResponseDTO>>> searchStudioVendor(
+	public ResponseEntity<ApiResponse<List<ProductResponseDTO>>> searchStudioVendor(
 		@RequestParam(value = "regionCode") List<String> regionCodes,
 		@RequestParam(value = "price") Integer price,
-		@RequestParam(value = "studio_style") List<StudioStyle> studioStyles,
-		@RequestParam(value = "special_shots") List<StudioSpecialShot> studioSpecialShots,
+		@RequestParam(value = "studioStyle") List<StudioStyle> studioStyles,
+		@RequestParam(value = "specialShots") List<StudioSpecialShot> studioSpecialShots,
 		@RequestParam(value = "iphoneSnap") Boolean iphoneSnap
 	) {
-		List<StudioProductResponseDTO> studioProductResponseDTOS = vendorService.searchStudio(
+		List<ProductResponseDTO> studioProductResponseDTOS = vendorService.searchStudio(
 			regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap);
 		return ApiResponse.success(SuccessStatus.CONDITION_SEARCH_SUCCESS, studioProductResponseDTOS);
 	}
@@ -252,14 +249,14 @@ public class VendorController {
 		description = "메이크업 조건 조회 합니다."
 	)
 	@GetMapping("/conditionSearch/makeUp")
-	public ResponseEntity<ApiResponse<List<MakeUpProductResponseDTO>>> searchMakeUpVendor(
+	public ResponseEntity<ApiResponse<List<ProductResponseDTO>>> searchMakeUpVendor(
 		@RequestParam(value = "regionCode") List<String> regionCodes,
 		@RequestParam(value = "price") Integer price,
-		@RequestParam(value = "makeup_style") List<MakeupStyle> makeupStyles,
+		@RequestParam(value = "makeupStyle") List<MakeupStyle> makeupStyles,
 		@RequestParam(value = "isStylistDesignationAvailable") Boolean isStylistDesignationAvailable,
 		@RequestParam(value = "hasPrivateRoom") Boolean hasPrivateRoom
 	) {
-		List<MakeUpProductResponseDTO> makeUpProductResponseDTOS = vendorService.searchMakeUp(
+		List<ProductResponseDTO> makeUpProductResponseDTOS = vendorService.searchMakeup(
 			regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom);
 		return ApiResponse.success(SuccessStatus.CONDITION_SEARCH_SUCCESS, makeUpProductResponseDTOS);
 	}
@@ -269,13 +266,13 @@ public class VendorController {
 		description = "드레스 조건 조회 합니다."
 	)
 	@GetMapping("/conditionSearch/dress")
-	public ResponseEntity<ApiResponse<List<DressProductResponseDTO>>> searchDressVendor(
+	public ResponseEntity<ApiResponse<List<ProductResponseDTO>>> searchDressVendor(
 		@RequestParam(value = "regionCode") List<String> regionCodes,
 		@RequestParam(value = "price") Integer price,
-		@RequestParam(value = "dress_styles") List<DressStyle> dressStyles,
-		@RequestParam(value = "dress_origins") List<DressOrigin> dressOrigins
+		@RequestParam(value = "dressStyles") List<DressStyle> dressStyles,
+		@RequestParam(value = "dressOrigins") List<DressOrigin> dressOrigins
 	) {
-		List<DressProductResponseDTO> dressProductResponseDTOS = vendorService.searchDress(
+		List<ProductResponseDTO> dressProductResponseDTOS = vendorService.searchDress(
 			regionCodes, price, dressStyles, dressOrigins);
 		return ApiResponse.success(SuccessStatus.CONDITION_SEARCH_SUCCESS, dressProductResponseDTOS);
 	}
