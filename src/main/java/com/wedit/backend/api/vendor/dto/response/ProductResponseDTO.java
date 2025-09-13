@@ -1,5 +1,6 @@
 package com.wedit.backend.api.vendor.dto.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class ProductResponseDTO {
 	private Long basePrice;
 	private Long vendorId;
@@ -14,15 +16,4 @@ public class ProductResponseDTO {
 	private Double averageRating;
 	private Integer reviewCount;
 	private String logoMediaUrl;
-
-	public ProductResponseDTO(Long basePrice, Long vendorId, String vendorName, Double averageRating,
-		Integer reviewCount,
-		String logoMediaUrl) {
-		this.basePrice = basePrice;
-		this.vendorId = vendorId;
-		this.vendorName = vendorName;
-		this.averageRating = averageRating;
-		this.reviewCount = reviewCount;
-		this.logoMediaUrl = logoMediaUrl;
-	}
 }

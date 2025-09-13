@@ -218,7 +218,7 @@ public class VendorController {
 		@RequestParam(value = "regionCode") List<String> regionCodes,
 		@RequestParam(value = "price") Integer price,
 		@RequestParam(value = "hallStyle") List<HallStyle> hallStyles,
-		@RequestParam(value = "meal") List<HallMeal> hallMeals,
+		@RequestParam(value = "hallMeal") List<HallMeal> hallMeals,
 		@RequestParam(value = "capacity") Integer capacity,
 		@RequestParam(value = "hasParking") Boolean hasParking
 	) {
@@ -248,7 +248,7 @@ public class VendorController {
 		summary = "메이크업 조건 검색 조회",
 		description = "메이크업 조건 조회 합니다."
 	)
-	@GetMapping("/conditionSearch/makeUp")
+	@GetMapping("/conditionSearch/makeup")
 	public ResponseEntity<ApiResponse<List<ProductResponseDTO>>> searchMakeUpVendor(
 		@RequestParam(value = "regionCode") List<String> regionCodes,
 		@RequestParam(value = "price") Integer price,
