@@ -42,8 +42,8 @@ public class VendorService {
     public Long createVendor(VendorCreateRequestDTO request) {
         log.info("업체 생성을 시작합니다. 업체명: '{}', 타입: {}", request.getName(), request.getVendorType());
 
-        Region region = regionRepository.findById(request.getRegionId())
-                .orElseThrow(() -> new NotFoundException("지역 code를 찾을 수 없습니다: " + request.getRegionId()));
+        Region region = regionRepository.findByCode(request.getRegionCode())
+                .orElseThrow(() -> new NotFoundException("지역 code를 찾을 수 없습니다: " + request.getRegionCode()));
 
         if (region.getLevel() != 3) {
             log.warn("잘못된 지역 레벨입니다. 최소 단위(level 3) 지역 코드가 필요합니다. regionId: {}, level: {}", region.getId(), region.getLevel());

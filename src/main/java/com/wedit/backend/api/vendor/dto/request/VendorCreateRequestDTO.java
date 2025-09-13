@@ -23,7 +23,7 @@ public class VendorCreateRequestDTO {
 
     @Schema(description = "업체가 속한 지역(읍/면/동)의 CODE", example = "1126010500")
     @NotNull(message = "지역 CODE는 필수입니다.")
-    private Long regionId;              // 지역 코드
+    private String regionCode;              // 지역 코드
 
     @Schema(description = "로고 이미지 정보 (S3 업로드 후 반환된 키)")
     private MediaRequestDTO logoImage;  // 로고 이미지
