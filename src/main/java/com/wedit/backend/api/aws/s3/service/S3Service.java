@@ -141,6 +141,9 @@ public class S3Service {
         // UUID 생성
         String uuid = UUID.randomUUID().toString();
 
+        // 도메인 ID, 없으면 0
+        Long finalDomainId = (domainId != null) ? domainId : 0L;
+
         // 확장자 추출
         String extension = "";
         if (originalFileName != null && originalFileName.contains(".")) {
@@ -149,7 +152,7 @@ public class S3Service {
         String safeFileName = uuid + "_" + currentDateTime + extension;
 
         // 최종 PreSigned URL 발급 후 반환
-        // {domain}/{memberId}/{mediaType}/{domainId}/{uuid}_{currentDateTime}.{extension}
-        return String.format("%s/%d/%s/%d/%s", domain, memberId, mediaType, domainId, safeFileName);
+        // {domain}/{memberId}/{mediaType}/{finalDomainId}/{uuid}_{currentDateTime}.{extension}
+        return String.format("%s/%d/%s/%d/%s", domain, memberId, mediaType, finalDomainId, safeFileName);
     }
 }
