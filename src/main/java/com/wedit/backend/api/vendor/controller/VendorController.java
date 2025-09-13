@@ -1,10 +1,15 @@
 package com.wedit.backend.api.vendor.controller;
 
+import java.util.List;
+
 import com.wedit.backend.api.vendor.dto.request.ProductCreateRequestDTO;
 import com.wedit.backend.api.vendor.dto.request.VendorCreateRequestDTO;
 import com.wedit.backend.api.vendor.dto.response.ProductDetailResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorDetailResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorBannerResponseDTO;
+import com.wedit.backend.api.vendor.dto.response.WeddingHallProductResponseDTO;
+import com.wedit.backend.api.vendor.entity.enums.HallMeal;
+import com.wedit.backend.api.vendor.entity.enums.HallStyle;
 import com.wedit.backend.api.vendor.entity.enums.VendorType;
 import com.wedit.backend.api.vendor.service.ProductService;
 import com.wedit.backend.common.response.ApiResponse;
@@ -191,5 +196,23 @@ public class VendorController {
         Page<VendorBannerResponseDTO> rsp = vendorService.getVendorsForBanner(vendorType, pageable);
 
         return ApiResponse.success(SuccessStatus.VENDOR_LIST_GET_SUCCESS, rsp);
+    }
+
+    @Operation(
+        summary = "웨딩홀 조건 검색 조회",
+        description = "웨딩홀 조건 조회 합니다."
+    )
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<List<WeddingHallProductResponseDTO>>> searchWeddingHallVendor(
+        @RequestParam(value = "regionCode") List<String> regionCodes,
+        @RequestParam(value = "price") Integer price,
+        @RequestParam(value = "hall_style") List<HallStyle> hallStyles,
+        @RequestParam(value = "meal") List<HallMeal> hallMeals,
+        @RequestParam(value = "capacity") Integer capacity,
+        @RequestParam(value = "has_parking") Boolean hasParking
+    ) {
+        List<WeddingHallProductResponseDTO> weddingHallProductResponseDTOS = vendorService.searchWeddingHall(
+            regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
+        return ApiResponse.success(SuccessStatus.CONDITION_SEARCH_SUCCESS, weddingHallProductResponseDTOS);
     }
 }

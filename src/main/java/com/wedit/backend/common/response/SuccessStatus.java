@@ -60,6 +60,7 @@ public enum SuccessStatus {
     MY_CONTRACT_GET_SUCCESS(HttpStatus.OK, "내 계약 페이징 조회 성공"),
     CONTRACT_DETAIL_GET_SUCCESS(HttpStatus.OK, "계약 상세 조회 성공"),
     REVIEWABLE_CONTRACT_GET_SUCCESS(HttpStatus.OK, "후기 작성 가능 계약 목록 조회 성공"),
+    CONDITION_SEARCH_SUCCESS(HttpStatus.OK, "조건 검색 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),
