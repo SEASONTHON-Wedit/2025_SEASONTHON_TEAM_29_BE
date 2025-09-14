@@ -64,6 +64,7 @@ public enum ErrorStatus {
     NOT_FOUND_EMAIL(HttpStatus.NOT_FOUND, "해당 이메일을 찾을 수 없습니다."),
     NOT_FOUND_VENDOR(HttpStatus.NOT_FOUND, "해당 업체를 찾을 수 없습니다."),
     NOT_FOUND_TOUR(HttpStatus.NOT_FOUND, "해당 투어를 찾을 수 없습니다."),
+    NOT_FOUND_TOUR_ROMANCE(HttpStatus.NOT_FOUND, "해당 투어로망을 찾을 수 없습니다."),
     NOT_FOUND_REVIEW(HttpStatus.NOT_FOUND, "해당 리뷰를 찾을 수 없습니다."),
     NOT_FOUND_MEMBER(HttpStatus.NOT_FOUND, "해당 회원을 찾을 수 없습니다."),
     NOT_FOUND_TODO(HttpStatus.NOT_FOUND, "해당 할 일을 찾을 수 없습니다."),
