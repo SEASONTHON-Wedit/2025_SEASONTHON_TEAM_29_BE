@@ -32,7 +32,7 @@ public class VendorProductQueryRepository {
 	public static class VendorWithMinPrice {
 		public final Vendor vendor;
 		public final Long minPrice;
-
+		
 		public VendorWithMinPrice(Vendor vendor, Long minPrice) {
 			this.vendor = vendor;
 			this.minPrice = minPrice;
@@ -87,9 +87,9 @@ public class VendorProductQueryRepository {
 				weddingHall.basePrice.min()
 			))
 			.from(weddingHall)
-			.leftJoin(weddingHall.vendor, vendor).fetchJoin()
-			.leftJoin(vendor.region).fetchJoin()
-			.leftJoin(vendor.logoMedia).fetchJoin()
+			.join(weddingHall.vendor, vendor)
+			.join(vendor.region)
+			.leftJoin(vendor.logoMedia)
 			.where(builder)
 			.groupBy(vendor.id)
 			.orderBy(weddingHall.basePrice.min().asc())
@@ -139,9 +139,9 @@ public class VendorProductQueryRepository {
 				studioProduct.basePrice.min()
 			))
 			.from(studioProduct)
-			.leftJoin(studioProduct.vendor, vendor).fetchJoin()
-			.leftJoin(vendor.region).fetchJoin()
-			.leftJoin(vendor.logoMedia).fetchJoin()
+			.join(studioProduct.vendor, vendor)
+			.join(vendor.region)
+			.leftJoin(vendor.logoMedia)
 			.where(builder)
 			.groupBy(vendor.id)
 			.orderBy(studioProduct.basePrice.min().asc())
@@ -191,9 +191,9 @@ public class VendorProductQueryRepository {
 				makeupProduct.basePrice.min()
 			))
 			.from(makeupProduct)
-			.leftJoin(makeupProduct.vendor, vendor).fetchJoin()
-			.leftJoin(vendor.region).fetchJoin()
-			.leftJoin(vendor.logoMedia).fetchJoin()
+			.join(makeupProduct.vendor, vendor)
+			.join(vendor.region)
+			.leftJoin(vendor.logoMedia)
 			.where(builder)
 			.groupBy(vendor.id)
 			.orderBy(makeupProduct.basePrice.min().asc())
@@ -237,9 +237,9 @@ public class VendorProductQueryRepository {
 				dressProduct.basePrice.min()
 			))
 			.from(dressProduct)
-			.leftJoin(dressProduct.vendor, vendor).fetchJoin()
-			.leftJoin(vendor.region).fetchJoin()
-			.leftJoin(vendor.logoMedia).fetchJoin()
+			.join(dressProduct.vendor, vendor)
+			.join(vendor.region)
+			.leftJoin(vendor.logoMedia)
 			.where(builder)
 			.groupBy(vendor.id)
 			.orderBy(dressProduct.basePrice.min().asc())
