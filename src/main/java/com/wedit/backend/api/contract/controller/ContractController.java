@@ -134,6 +134,19 @@ public class ContractController {
         return ApiResponse.success(SuccessStatus.REVIEWABLE_CONTRACT_GET_SUCCESS, response);
     }
 
+    @Operation(
+            summary = "계약 가능 시간 슬롯 일괄 생성",
+            description = "특정 상품의 계약 가능 시간(AvailableSlot)들을 한 번에 등록합니다."
+    )
+    @PostMapping("/available-slots")
+    public ResponseEntity<ApiResponse<Void>> createAvailableSlots(
+            @Valid @RequestBody AvailableSlotCreateRequestDTO request) {
+
+        contractService.createSlots(request);
+
+        return ApiResponse.successOnly(SuccessStatus.AVAILABLE_TIME_SLOT_CREATE_SUCCESS);
+    }
+
     // --- 헬퍼 메서드 ---
 
     private Long extractMemberId(String reqToken) {

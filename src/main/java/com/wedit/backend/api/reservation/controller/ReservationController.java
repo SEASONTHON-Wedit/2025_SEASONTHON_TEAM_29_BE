@@ -1,10 +1,7 @@
 package com.wedit.backend.api.reservation.controller;
 
 import com.wedit.backend.api.member.jwt.service.JwtService;
-import com.wedit.backend.api.reservation.dto.DateAvailabilityDTO;
-import com.wedit.backend.api.reservation.dto.MyReservationResponseDTO;
-import com.wedit.backend.api.reservation.dto.ReservationRequestDTO;
-import com.wedit.backend.api.reservation.dto.SlotResponseDTO;
+import com.wedit.backend.api.reservation.dto.*;
 import com.wedit.backend.common.exception.UnauthorizedException;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.ErrorStatus;
@@ -133,6 +130,19 @@ public class ReservationController {
         reservationService.cancelReservation(memberId, reservationId);
 
         return ApiResponse.successOnly(SuccessStatus.CONSULTATION_RESERVATION_CANCEL_SUCCESS);
+    }
+
+    @Operation(
+            summary = "상담 가능 시간 일괄 등록",
+            description = "특정 업체의 상담 가능 시간(ConsultationSlot)들을 한 번에 여러 개 등록합니다."
+    )
+    @PostMapping("/slots")
+    public ResponseEntity<ApiResponse<Void>> createConsultationSlots(
+            @Valid @RequestBody ConsultationSlotCreateRequestDTO request) {
+
+        reservationService.createSlots(request);
+
+        return ApiResponse.successOnly(SuccessStatus.CONSULTATION_TIME_SLOT_CREATE_SUCCESS);
     }
 
 

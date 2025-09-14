@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -18,4 +19,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             "WHERE r.member.id = :memberId " +
             "ORDER BY r.visitDateTime DESC")
     List<Reservation> findAllByMemberIdWithVendor(@Param("memberId") Long memberId);
+
+    List<Reservation> findByMemberIdInAndVisitDateTimeBetween(List<Long> memberIds, LocalDateTime start, LocalDateTime end);
+
 }
