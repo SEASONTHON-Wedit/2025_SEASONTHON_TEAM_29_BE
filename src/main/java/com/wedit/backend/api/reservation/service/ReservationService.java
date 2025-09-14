@@ -3,16 +3,14 @@ package com.wedit.backend.api.reservation.service;
 
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.repository.MemberRepository;
-import com.wedit.backend.api.reservation.dto.DateAvailabilityDTO;
-import com.wedit.backend.api.reservation.dto.MyReservationResponseDTO;
-import com.wedit.backend.api.reservation.dto.ReservationRequestDTO;
-import com.wedit.backend.api.reservation.dto.SlotResponseDTO;
+import com.wedit.backend.api.reservation.dto.*;
 import com.wedit.backend.api.reservation.entity.ConsultationSlot;
 import com.wedit.backend.api.reservation.entity.Reservation;
-import com.wedit.backend.api.reservation.dto.ReservationEventPayload;
 import com.wedit.backend.api.reservation.entity.SlotStatus;
 import com.wedit.backend.api.reservation.repository.ConsultationSlotRepository;
 import com.wedit.backend.api.reservation.repository.ReservationRepository;
+import com.wedit.backend.api.vendor.entity.Vendor;
+import com.wedit.backend.api.vendor.repository.VendorRepository;
 import com.wedit.backend.common.event.ReservationCancelledEvent;
 import com.wedit.backend.common.event.ReservationCreatedEvent;
 import com.wedit.backend.common.exception.ForbiddenException;
@@ -42,6 +40,7 @@ public class ReservationService {
     private final ConsultationSlotRepository consultationSlotRepository;
     private final MemberRepository memberRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final VendorRepository vendorRepository;
 
     // 특정 업체의 해당 월 상담 가능 시간 목록을 모두 조회
     // 인메모리가 아닌 DB 조회로 서버 부담 감소
@@ -198,5 +197,25 @@ public class ReservationService {
                 
         log.info("일별 예약 현황 조회 완료 - vendorId: {}, {} 개 슬롯 반환", vendorId, slots.size());
         return slots;
+    }
+
+    public void createSlots(ConsultationSlotCreateRequestDTO request) {
+
+        Vendor vendor = vendorRepository.findById(request.vendorId())
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + " : " + request.vendorId()));
+
+        List<ConsultationSlot> slots = request.startTimes().stream()
+                .distinct()
+                .map(startTime -> ConsultationSlot.builder()
+                        .vendor(vendor)
+                        .startTime(startTime)
+                        .endTime(startTime.plusMinutes(30))
+                        .build())
+                .toList();
+
+        consultationSlotRepository.saveAll(slots);
+
+        log.info("{}개의 상담 슬롯이 업체 '{}'(ID:{})에 성공적으로 등록되었습니다.",
+                slots.size(), vendor.getName(), vendor.getId());
     }
 }

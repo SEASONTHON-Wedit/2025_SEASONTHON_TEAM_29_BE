@@ -31,14 +31,18 @@ public class AvailableSlot extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDateTime startTime;   // 슬롯 시작 시간
 
+    @Column(nullable = false)
+    private LocalDateTime endTime;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TimeSlotStatus status;    // 예약 가능, 예약 확정
 
     @Builder
-    public AvailableSlot(Product product, LocalDateTime startTime) {
+    public AvailableSlot(Product product, LocalDateTime startTime, LocalDateTime endTime) {
         this.product = product;
         this.startTime = startTime;
+        this.endTime = endTime;
         this.status = TimeSlotStatus.AVAILABLE; // 생성 시 기본 상태는 '예약 가능'
     }
 
@@ -48,11 +52,6 @@ public class AvailableSlot extends BaseTimeEntity {
             return; // 이미 확정된 경우 추가 동작 X
         }
         this.status = TimeSlotStatus.BOOKED;
-    }
-
-    // 종료 시간 계산
-    public LocalDateTime getEndTime() {
-        return this.startTime.plusMinutes(this.product.getDurationInMinutes());
     }
 
 //    // 임시 선점(가계약) 상태로 변경

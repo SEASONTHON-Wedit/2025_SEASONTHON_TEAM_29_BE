@@ -75,6 +75,8 @@ public enum SuccessStatus {
     CART_ITEM_ADD_SUCCESS(HttpStatus.CREATED, "견적서에 상품 등로 성공"),
     CONSULTATION_RESERVATION_CREATE_SUCCESS(HttpStatus.CREATED, "상담 예약 생성 성공"),
     CONTRACT_CREATE_SUCCESS(HttpStatus.CREATED, "계약 생성 성공"),
+    CONSULTATION_TIME_SLOT_CREATE_SUCCESS(HttpStatus.CREATED, "상담 가능 시간 슬롯 생성 성공"),
+    AVAILABLE_TIME_SLOT_CREATE_SUCCESS(HttpStatus.CREATED, "계약 가능 시간 슬롯 생성 성공"),
 
 
     /// 204 NO CONTENT

@@ -24,6 +24,8 @@ public class ProductCreateRequestDTO {
     @NotBlank
     private String name;
 
+    private String description;
+
     @Schema(description = "상품 이미지 목록 (S3 업로드 후 반환된 키)")
     private List<MediaRequestDTO> productImages;
     @Schema(description = "해당 상품 소요시간 분 단위 (ex. 웨딩홀 2시간)")

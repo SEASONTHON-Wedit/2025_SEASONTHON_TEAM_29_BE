@@ -8,7 +8,9 @@ import com.wedit.backend.api.media.service.MediaService;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.api.vendor.entity.AvailableSlot;
+import com.wedit.backend.api.vendor.entity.Product;
 import com.wedit.backend.api.vendor.entity.enums.TimeSlotStatus;
+import com.wedit.backend.api.vendor.repository.ProductRepository;
 import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.response.ErrorStatus;
@@ -38,6 +40,7 @@ public class ContractService {
     private final AvailableSlotRepository availableSlotRepository;
     private final MemberRepository memberRepository;
     private final MediaService mediaService;
+    private final ProductRepository productRepository;
 
 
     // 사용자가 선택한 모든 달에 대해 계약 가능한 모든 슬롯 조회
@@ -137,6 +140,31 @@ public class ContractService {
                 : null;
 
         return ContractDetailDTO.from(contract, repImageUrl);
+    }
+
+    public void createSlots(AvailableSlotCreateRequestDTO request) {
+
+        Product product = productRepository.findById(request.productId())
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_PRODUCT.getMessage() + " : " + request.productId()));
+
+        final int durationInMinutes = product.getDurationInMinutes();
+        if (durationInMinutes <= 0) {
+            throw new BadRequestException("상품의 이용 시간이 올바르지 않습니다.");
+        }
+
+        List<AvailableSlot> slots = request.startTimes().stream()
+                .distinct()
+                .map(startTime -> AvailableSlot.builder()
+                        .product(product)
+                        .startTime(startTime)
+                        .endTime(startTime.plusMinutes(durationInMinutes))
+                        .build())
+                .toList();
+
+        availableSlotRepository.saveAll(slots);
+
+        log.info("{}개의 계약 가능 슬롯이 상품 '{}'(ID:{})에 성공적으로 등록되었습니다.",
+                slots.size(), product.getName(), product.getId());
     }
 
 
