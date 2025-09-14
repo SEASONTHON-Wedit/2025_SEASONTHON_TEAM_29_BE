@@ -154,7 +154,7 @@ public class VendorService {
 	public List<ProductResponseDTO> searchWeddingHall(List<String> regionCodes, Integer price,
 		List<HallStyle> hallStyles, List<HallMeal> hallMeals, Integer capacity, Boolean hasParking) {
 		
-		log.debug("웨딩홀 검색 시작 - regionCodes: {}, price: {}, hallStyles: {}, hallMeals: {}, capacity: {}, hasParking: {}", 
+		log.info("웨딩홀 검색 시작 - regionCodes: {}, price: {}, hallStyles: {}, hallMeals: {}, capacity: {}, hasParking: {}",
 				regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
 		
 		try {
@@ -179,7 +179,7 @@ public class VendorService {
 		List<StudioStyle> studioStyles,
 		List<StudioSpecialShot> studioSpecialShots, Boolean iphoneSnap) {
 		
-		log.debug("스튜디오 검색 시작 - regionCodes: {}, price: {}, studioStyles: {}, specialShots: {}, iphoneSnap: {}", 
+		log.info("스튜디오 검색 시작 - regionCodes: {}, price: {}, studioStyles: {}, specialShots: {}, iphoneSnap: {}",
 				regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap);
 		
 		try {
@@ -204,7 +204,7 @@ public class VendorService {
 		List<MakeupStyle> makeupStyles,
 		Boolean isStylistDesignationAvailable, Boolean hasPrivateRoom) {
 		
-		log.debug("메이크업 검색 시작 - regionCodes: {}, price: {}, makeupStyles: {}, stylistDesignation: {}, privateRoom: {}", 
+		log.info("메이크업 검색 시작 - regionCodes: {}, price: {}, makeupStyles: {}, stylistDesignation: {}, privateRoom: {}",
 				regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom);
 		
 		try {
@@ -228,7 +228,7 @@ public class VendorService {
 	public List<ProductResponseDTO> searchDress(List<String> regionCodes, Integer price,
 		List<DressStyle> dressStyles, List<DressOrigin> dressOrigins) {
 		
-		log.debug("드레스 검색 시작 - regionCodes: {}, price: {}, dressStyles: {}, dressOrigins: {}", 
+		log.info("드레스 검색 시작 - regionCodes: {}, price: {}, dressStyles: {}, dressOrigins: {}",
 				regionCodes, price, dressStyles, dressOrigins);
 		
 		try {

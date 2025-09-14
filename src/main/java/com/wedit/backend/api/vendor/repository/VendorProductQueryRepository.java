@@ -57,7 +57,7 @@ public class VendorProductQueryRepository {
 		}
 
 		// 가격 조건 (기본가 이하)
-		if (price != null) {
+		if (price != null && price != 10000000) {
 			builder.and(weddingHall.basePrice.loe(price.longValue()));
 		}
 
