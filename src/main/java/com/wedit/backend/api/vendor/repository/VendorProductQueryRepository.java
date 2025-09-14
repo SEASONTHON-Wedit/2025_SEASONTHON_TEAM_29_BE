@@ -5,16 +5,14 @@ import java.util.List;
 import org.springframework.stereotype.Repository;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.wedit.backend.api.vendor.entity.DressProduct;
-import com.wedit.backend.api.vendor.entity.MakeupProduct;
 import com.wedit.backend.api.vendor.entity.QDressProduct;
 import com.wedit.backend.api.vendor.entity.QMakeupProduct;
 import com.wedit.backend.api.vendor.entity.QStudioProduct;
 import com.wedit.backend.api.vendor.entity.QVendor;
 import com.wedit.backend.api.vendor.entity.QWeddingHallProduct;
-import com.wedit.backend.api.vendor.entity.StudioProduct;
-import com.wedit.backend.api.vendor.entity.WeddingHallProduct;
+import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.entity.enums.DressOrigin;
 import com.wedit.backend.api.vendor.entity.enums.DressStyle;
 import com.wedit.backend.api.vendor.entity.enums.HallMeal;
@@ -30,7 +28,18 @@ import lombok.RequiredArgsConstructor;
 public class VendorProductQueryRepository {
 	private final JPAQueryFactory queryFactory;
 
-	public List<WeddingHallProduct> searchWeddingHallProducts(
+	// 최저가와 함께 업체 정보를 담을 DTO 클래스
+	public static class VendorWithMinPrice {
+		public final Vendor vendor;
+		public final Long minPrice;
+
+		public VendorWithMinPrice(Vendor vendor, Long minPrice) {
+			this.vendor = vendor;
+			this.minPrice = minPrice;
+		}
+	}
+
+	public List<VendorWithMinPrice> searchWeddingHallVendors(
 		List<String> regionCodes,
 		Integer price,
 		List<HallStyle> hallStyles,
@@ -73,16 +82,21 @@ public class VendorProductQueryRepository {
 		}
 
 		return queryFactory
-			.selectFrom(weddingHall)
+			.select(Projections.constructor(VendorWithMinPrice.class,
+				vendor,
+				weddingHall.basePrice.min()
+			))
+			.from(weddingHall)
 			.leftJoin(weddingHall.vendor, vendor).fetchJoin()
 			.leftJoin(vendor.region).fetchJoin()
 			.leftJoin(vendor.logoMedia).fetchJoin()
 			.where(builder)
-			.orderBy(weddingHall.basePrice.asc())
+			.groupBy(vendor.id)
+			.orderBy(weddingHall.basePrice.min().asc())
 			.fetch();
 	}
 
-	public List<StudioProduct> searchStudioProducts(
+	public List<VendorWithMinPrice> searchStudioVendors(
 		List<String> regionCodes,
 		Integer price,
 		List<StudioStyle> studioStyles,
@@ -120,16 +134,21 @@ public class VendorProductQueryRepository {
 		}
 
 		return queryFactory
-			.selectFrom(studioProduct)
+			.select(Projections.constructor(VendorWithMinPrice.class,
+				vendor,
+				studioProduct.basePrice.min()
+			))
+			.from(studioProduct)
 			.leftJoin(studioProduct.vendor, vendor).fetchJoin()
 			.leftJoin(vendor.region).fetchJoin()
 			.leftJoin(vendor.logoMedia).fetchJoin()
 			.where(builder)
-			.orderBy(studioProduct.basePrice.asc())
+			.groupBy(vendor.id)
+			.orderBy(studioProduct.basePrice.min().asc())
 			.fetch();
 	}
 
-	public List<MakeupProduct> searchMakeupProducts(
+	public List<VendorWithMinPrice> searchMakeupVendors(
 		List<String> regionCodes,
 		Integer price,
 		List<MakeupStyle> makeupStyles,
@@ -167,16 +186,21 @@ public class VendorProductQueryRepository {
 		}
 
 		return queryFactory
-			.selectFrom(makeupProduct)
+			.select(Projections.constructor(VendorWithMinPrice.class,
+				vendor,
+				makeupProduct.basePrice.min()
+			))
+			.from(makeupProduct)
 			.leftJoin(makeupProduct.vendor, vendor).fetchJoin()
 			.leftJoin(vendor.region).fetchJoin()
 			.leftJoin(vendor.logoMedia).fetchJoin()
 			.where(builder)
-			.orderBy(makeupProduct.basePrice.asc())
+			.groupBy(vendor.id)
+			.orderBy(makeupProduct.basePrice.min().asc())
 			.fetch();
 	}
 
-	public List<DressProduct> searchDressProducts(
+	public List<VendorWithMinPrice> searchDressVendors(
 		List<String> regionCodes,
 		Integer price,
 		List<DressStyle> dressStyles,
@@ -208,13 +232,17 @@ public class VendorProductQueryRepository {
 		}
 
 		return queryFactory
-			.selectFrom(dressProduct)
+			.select(Projections.constructor(VendorWithMinPrice.class,
+				vendor,
+				dressProduct.basePrice.min()
+			))
+			.from(dressProduct)
 			.leftJoin(dressProduct.vendor, vendor).fetchJoin()
 			.leftJoin(vendor.region).fetchJoin()
 			.leftJoin(vendor.logoMedia).fetchJoin()
 			.where(builder)
-			.orderBy(dressProduct.basePrice.asc())
+			.groupBy(vendor.id)
+			.orderBy(dressProduct.basePrice.min().asc())
 			.fetch();
 	}
-
 }

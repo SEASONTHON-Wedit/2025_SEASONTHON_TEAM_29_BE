@@ -2,7 +2,6 @@ package com.wedit.backend.api.vendor.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.function.Supplier;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,7 +16,6 @@ import com.wedit.backend.api.vendor.dto.request.VendorCreateRequestDTO;
 import com.wedit.backend.api.vendor.dto.response.ProductResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorBannerResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorDetailResponseDTO;
-import com.wedit.backend.api.vendor.entity.Product;
 import com.wedit.backend.api.vendor.entity.Region;
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.entity.enums.DressOrigin;
@@ -30,6 +28,7 @@ import com.wedit.backend.api.vendor.entity.enums.StudioStyle;
 import com.wedit.backend.api.vendor.entity.enums.VendorType;
 import com.wedit.backend.api.vendor.repository.RegionRepository;
 import com.wedit.backend.api.vendor.repository.VendorProductQueryRepository;
+import com.wedit.backend.api.vendor.repository.VendorProductQueryRepository.VendorWithMinPrice;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
 import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.NotFoundException;
@@ -159,10 +158,16 @@ public class VendorService {
 				regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
 		
 		try {
-			List<ProductResponseDTO> results = searchProducts(() -> vendorProductQueryRepository.searchWeddingHallProducts(
-				regionCodes, price, hallStyles, hallMeals, capacity, hasParking));
+			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice = 
+				vendorProductQueryRepository.searchWeddingHallVendors(
+					regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
 			
-			log.info("웨딩홀 검색 성공 - {} 개 결과 반환", results.size());
+			List<ProductResponseDTO> results = vendorsWithPrice.stream()
+				.map(vendorWithPrice -> convertToProductResponseDTO(
+					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
+				.toList();
+			
+			log.info("웨딩홀 검색 성공 - {} 개 업체 결과 반환", results.size());
 			return results;
 		} catch (Exception e) {
 			log.error("웨딩홀 검색 실패 - regionCodes: {}, price: {}", regionCodes, price, e);
@@ -178,10 +183,16 @@ public class VendorService {
 				regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap);
 		
 		try {
-			List<ProductResponseDTO> results = searchProducts(() -> vendorProductQueryRepository.searchStudioProducts(
-				regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap));
+			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice = 
+				vendorProductQueryRepository.searchStudioVendors(
+					regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap);
 			
-			log.info("스튜디오 검색 성공 - {} 개 결과 반환", results.size());
+			List<ProductResponseDTO> results = vendorsWithPrice.stream()
+				.map(vendorWithPrice -> convertToProductResponseDTO(
+					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
+				.toList();
+			
+			log.info("스튜디오 검색 성공 - {} 개 업체 결과 반환", results.size());
 			return results;
 		} catch (Exception e) {
 			log.error("스튜디오 검색 실패 - regionCodes: {}, price: {}", regionCodes, price, e);
@@ -197,10 +208,16 @@ public class VendorService {
 				regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom);
 		
 		try {
-			List<ProductResponseDTO> results = searchProducts(() -> vendorProductQueryRepository.searchMakeupProducts(
-				regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom));
+			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice = 
+				vendorProductQueryRepository.searchMakeupVendors(
+					regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom);
 			
-			log.info("메이크업 검색 성공 - {} 개 결과 반환", results.size());
+			List<ProductResponseDTO> results = vendorsWithPrice.stream()
+				.map(vendorWithPrice -> convertToProductResponseDTO(
+					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
+				.toList();
+			
+			log.info("메이크업 검색 성공 - {} 개 업체 결과 반환", results.size());
 			return results;
 		} catch (Exception e) {
 			log.error("메이크업 검색 실패 - regionCodes: {}, price: {}", regionCodes, price, e);
@@ -215,10 +232,16 @@ public class VendorService {
 				regionCodes, price, dressStyles, dressOrigins);
 		
 		try {
-			List<ProductResponseDTO> results = searchProducts(() -> vendorProductQueryRepository.searchDressProducts(
-				regionCodes, price, dressStyles, dressOrigins));
+			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice = 
+				vendorProductQueryRepository.searchDressVendors(
+					regionCodes, price, dressStyles, dressOrigins);
 			
-			log.info("드레스 검색 성공 - {} 개 결과 반환", results.size());
+			List<ProductResponseDTO> results = vendorsWithPrice.stream()
+				.map(vendorWithPrice -> convertToProductResponseDTO(
+					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
+				.toList();
+			
+			log.info("드레스 검색 성공 - {} 개 업체 결과 반환", results.size());
 			return results;
 		} catch (Exception e) {
 			log.error("드레스 검색 실패 - regionCodes: {}, price: {}", regionCodes, price, e);
@@ -226,25 +249,15 @@ public class VendorService {
 		}
 	}
 
-	private <T extends Product> List<ProductResponseDTO> searchProducts(
-		Supplier<List<T>> searchFunction) {
-
-		List<T> products = searchFunction.get();
-
-		return products.stream()
-			.map(this::convertToProductResponseDTO)
-			.toList();
-	}
-
-	private ProductResponseDTO convertToProductResponseDTO(Product product) {
+	private ProductResponseDTO convertToProductResponseDTO(Vendor vendor, Long minPrice) {
 		return ProductResponseDTO.builder()
-			.basePrice(product.getBasePrice())
-			.vendorId(product.getVendor().getId())
-			.vendorName(product.getVendor().getName())
-			.averageRating(product.getVendor().getAverageRating())
-			.reviewCount(product.getVendor().getReviewCount())
-			.logoMediaUrl(product.getVendor().getLogoMedia() != null ?
-				s3Service.toCdnUrl(product.getVendor().getLogoMedia().getMediaKey()) : null)
+			.basePrice(minPrice)
+			.vendorId(vendor.getId())
+			.vendorName(vendor.getName())
+			.averageRating(vendor.getAverageRating())
+			.reviewCount(vendor.getReviewCount())
+			.logoMediaUrl(vendor.getLogoMedia() != null ?
+				s3Service.toCdnUrl(vendor.getLogoMedia().getMediaKey()) : null)
 			.build();
 	}
 }
