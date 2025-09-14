@@ -229,7 +229,7 @@ public class ReservationController {
             summary = "상담 가능 시간 일괄 등록",
             description = "특정 업체의 상담 가능 시간(ConsultationSlot)들을 한 번에 여러 개 등록합니다."
     )
-    @PostMapping("/slots")
+    @PostMapping("/reservation/slots")
     public ResponseEntity<ApiResponse<Void>> createConsultationSlots(
             @Valid @RequestBody ConsultationSlotCreateRequestDTO request) {
 

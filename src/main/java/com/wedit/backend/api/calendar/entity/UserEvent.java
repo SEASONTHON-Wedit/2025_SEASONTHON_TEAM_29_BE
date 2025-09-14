@@ -2,15 +2,14 @@ package com.wedit.backend.api.calendar.entity;
 
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.common.entity.BaseTimeEntity;
+import com.wedit.backend.common.exception.BadRequestException;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
 @Table(name = "user_events")
 @Builder
 @AllArgsConstructor
@@ -28,7 +27,7 @@ public class UserEvent extends BaseTimeEntity {
     @Column(nullable = false, length = 100)
     private String title;
 
-    @Lob
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -42,4 +41,17 @@ public class UserEvent extends BaseTimeEntity {
 
     @Column(nullable = false)
     private boolean isAllDay = false;
+
+    @Column(unique = true)
+    private Long reservationId;
+
+    public void update(String title, String description, EventCategory category) {
+        if (this.reservationId != null) {
+            throw new BadRequestException("시스템이 생성한 일정은 수정할 수 없습니다.");
+        }
+
+        this.title = title;
+        this.description = description;
+        this.eventCategory = category;
+    }
 }

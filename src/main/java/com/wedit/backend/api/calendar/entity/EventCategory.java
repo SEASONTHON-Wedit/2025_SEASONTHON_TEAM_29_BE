@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum EventCategory {
+
     INVITATION("청첩장"),          // 편지 아이콘
     STUDIO("스튜디오"),             // 카메라 아이콘
     WEDDING_HALL("웨딩홀"),        // 건물 아이콘
