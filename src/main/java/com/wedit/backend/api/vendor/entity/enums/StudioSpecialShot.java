@@ -9,7 +9,8 @@ public enum StudioSpecialShot {
 
     HANOK("한옥"),
     UNDERWATER("수중"),
-    WITH_PET("반려동물");
+    WITH_PET("반려동물"),
+    NONE("특수촬영안함");
 
     private final String displayName;
 }
