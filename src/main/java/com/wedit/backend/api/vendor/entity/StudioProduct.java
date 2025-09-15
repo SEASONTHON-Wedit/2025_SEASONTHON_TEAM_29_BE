@@ -2,10 +2,7 @@ package com.wedit.backend.api.vendor.entity;
 
 import com.wedit.backend.api.vendor.entity.enums.StudioStyle;
 import com.wedit.backend.api.vendor.entity.enums.StudioSpecialShot;
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,9 +15,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StudioProduct extends Product {
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StudioStyle studioStyle;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StudioSpecialShot specialShot;
 
