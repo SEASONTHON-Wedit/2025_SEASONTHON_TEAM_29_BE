@@ -42,41 +42,6 @@ public class ReviewController {
             summary = "후기 작성",
             description = """
                 신규 후기를 작성합니다. JWT 토큰을 통한 사용자 인증이 필요합니다.
-                
-                **요청 정보:**
-                - **vendorId**: 후기를 작성할 업체 ID
-                - **rating**: 별점 (1~5점, 정수)
-                - **content**: 후기 내용 (최대 1000자)
-                - **reviewImages**: 후기 이미지 목록 (선택사항)
-                
-                **요청 예시:**
-                ```json
-                {
-                  "vendorId": 1,
-                  "rating": 5,
-                  "content": "정말 만족스러운 서비스였습니다. 직원분들도 친절하고 시설도 깔끔했어요!",
-                  "reviewImages": [
-                    {
-                      "mediaKey": "reviews/image1.jpg",
-                      "contentType": "image/jpeg"
-                    }
-                  ]
-                }
-                ```
-                
-                **성공 응답:**
-                ```json
-                {
-                  "code": 201,
-                  "message": "후기 작성 성공",
-                  "data": {
-                    "reviewId": 123,
-                    "rating": 5,
-                    "content": "정말 만족스러운 서비스였습니다...",
-                    "createdAt": "2025-09-14T15:30:00"
-                  }
-                }
-                ```
                 """,
             security = @SecurityRequirement(name = "Bearer Authentication")
     )
