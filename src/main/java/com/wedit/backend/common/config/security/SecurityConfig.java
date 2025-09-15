@@ -84,6 +84,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/actuator/health",
                                 "/actuator/info",
+                                "/actuator/prometheus",
                                 "/api/webjars/**",
                                 "/webjars/**",
                                 "/uploads/**",

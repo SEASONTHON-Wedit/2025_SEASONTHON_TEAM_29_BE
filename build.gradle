@@ -31,6 +31,8 @@ dependencies {
 
     // Spring Actuator
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // Prometheus
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 
     // AWS S3 PreSigner
     implementation platform('software.amazon.awssdk:bom:2.20.142')
