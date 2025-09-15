@@ -28,9 +28,9 @@ public interface ContractRepository extends JpaRepository<Contract,Long> {
 
     // 후기 작성하러 가기 페이지  - 지난 계약만 조회
     @Query(value = "SELECT c FROM Contract c " +
-            "JOIN FETCH c.product p " +
-            "JOIN FETCH p.vendor v " +
-            "LEFT JOIN FETCH v.logoMedia " +
+//            "JOIN FETCH c.product p " +
+//            "JOIN FETCH p.vendor v " +
+//            "LEFT JOIN FETCH v.logoMedia " +
             "WHERE c.member = :member AND c.executionDateTime < CURRENT_TIMESTAMP " +
             "ORDER BY c.executionDateTime DESC",
             countQuery = "SELECT count(c) FROM Contract c WHERE c.member = :member AND c.executionDateTime < CURRENT_TIMESTAMP")
