@@ -31,9 +31,9 @@ public interface ContractRepository extends JpaRepository<Contract,Long> {
             "JOIN FETCH c.product p " +
             "JOIN FETCH p.vendor v " +
             "LEFT JOIN FETCH v.logoMedia " +
-            "WHERE c.member = :member AND c.executionDateTime < CURRENT_DATE " +
+            "WHERE c.member = :member AND c.executionDateTime < CURRENT_TIMESTAMP " +
             "ORDER BY c.executionDateTime DESC",
-            countQuery = "SELECT count(c) FROM Contract c WHERE c.member = :member AND c.executionDateTime < CURRENT_DATE")
+            countQuery = "SELECT count(c) FROM Contract c WHERE c.member = :member AND c.executionDateTime < CURRENT_TIMESTAMP")
     Page<Contract> findPastContractsByMember(@Param("member") Member member, Pageable pageable);
 
 
