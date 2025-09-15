@@ -16,13 +16,13 @@ public interface TourRepository extends JpaRepository<Tour, Long> {
             "JOIN FETCH t.vendor v " +
             "WHERE t.member.id = :memberId " +
             "OR t.member.id = :partnerId " +
-            "ORDER BY t.visitDateTime DESC")
+            "ORDER BY t.visitDateTime DESC, t.id DESC")
     Page<Tour> findToursByMemberAndPartner(@Param("memberId") Long memberId, @Param("partnerId") Long partnerId, Pageable pageable);
 
     @Query("SELECT t FROM Tour t " +
             "JOIN FETCH t.vendor v " +
             "WHERE t.member.id = :memberId " +
-            "ORDER BY t.visitDateTime DESC")
+            "ORDER BY t.visitDateTime DESC, t.id DESC")
     Page<Tour> findToursByMember(@Param("memberId") Long memberId, Pageable pageable);
 
     boolean existsByReservationId(Long reservationId);
