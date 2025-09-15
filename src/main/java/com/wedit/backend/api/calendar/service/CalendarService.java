@@ -124,6 +124,7 @@ public class CalendarService {
     }
 
     // 관리자 일정 생성
+    @Transactional
     public Long createAdminEvent(AdminEventRequestDTO request) {
 
         AdminEvent newEvent = AdminEvent.builder()
