@@ -83,7 +83,8 @@ public enum SuccessStatus {
     CONTRACT_CREATE_SUCCESS(HttpStatus.CREATED, "계약 생성 성공"),
     CONSULTATION_TIME_SLOT_CREATE_SUCCESS(HttpStatus.CREATED, "상담 가능 시간 슬롯 생성 성공"),
     AVAILABLE_TIME_SLOT_CREATE_SUCCESS(HttpStatus.CREATED, "계약 가능 시간 슬롯 생성 성공"),
-    CALENDAR_CREATE_SUCCESS(HttpStatus.CREATED, "캘린더 사용자 일정 생성"),
+    CALENDAR_CREATE_SUCCESS(HttpStatus.CREATED, "캘린더 사용자 일정 생성 성공"),
+    CALENDAR_ADMIN_EVENT_CREATE_SUCCESS(HttpStatus.CREATED, "캘린더 관리자 일정 생성 성공"),
 
 
     /// 204 NO CONTENT
