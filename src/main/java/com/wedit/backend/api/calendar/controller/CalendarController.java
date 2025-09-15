@@ -1,5 +1,6 @@
 package com.wedit.backend.api.calendar.controller;
 
+import com.wedit.backend.api.calendar.dto.AdminEventRequestDTO;
 import com.wedit.backend.api.calendar.dto.CalendarEventResponseDTO;
 import com.wedit.backend.api.calendar.dto.UserEventRequestDTO;
 import com.wedit.backend.api.calendar.dto.UserEventUpdateDTO;
@@ -94,6 +95,19 @@ public class CalendarController {
         calendarService.deleteUserEvent(memberId, eventId);
 
         return ApiResponse.successOnly(SuccessStatus.CALENDAR_DELETE_SUCCESS);
+    }
+
+    @Operation(
+            summary = "관리자 일정 생성",
+            description = "관리자 행사 일정을 생성합니다."
+    )
+    @PostMapping("/admin")
+    public ResponseEntity<ApiResponse<Long>> createAdminEvent(
+            @RequestBody AdminEventRequestDTO request) {
+
+        Long eventId = calendarService.createAdminEvent(request);
+
+        return ApiResponse.success(SuccessStatus.CALENDAR_ADMIN_EVENT_CREATE_SUCCESS, eventId);
     }
 
 

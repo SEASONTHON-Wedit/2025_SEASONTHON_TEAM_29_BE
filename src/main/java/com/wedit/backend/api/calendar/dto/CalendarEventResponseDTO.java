@@ -21,6 +21,7 @@ public class CalendarEventResponseDTO {
     private String description;
     private LocalDateTime endDateTime;
     private boolean isAllDay;
+    private String eventUrl;
 
     // --- Reservation ---
     private Long vendorId;

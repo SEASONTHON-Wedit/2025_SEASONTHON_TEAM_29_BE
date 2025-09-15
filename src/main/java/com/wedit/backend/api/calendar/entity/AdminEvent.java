@@ -2,14 +2,14 @@ package com.wedit.backend.api.calendar.entity;
 
 import com.wedit.backend.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Builder
+@AllArgsConstructor
 @Table(name = "admin_events")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AdminEvent extends BaseTimeEntity {

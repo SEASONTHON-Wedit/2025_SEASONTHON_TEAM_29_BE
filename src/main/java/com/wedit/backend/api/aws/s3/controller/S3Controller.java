@@ -100,6 +100,7 @@ public class S3Controller {
             @Parameter(description = "업로드 도메인", example = "VENDOR") @PathVariable @NotNull MediaDomain domain,
             @Valid @RequestBody @NotEmpty(message = "파일 목록은 비어있을 수 없습니다") List<PresignedUrlRequestDTO> reqDtos,
             @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken) {
+
         Long memberId = extractMemberId(reqToken);
 
         for (var req : reqDtos) {

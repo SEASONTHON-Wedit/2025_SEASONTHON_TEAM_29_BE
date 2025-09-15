@@ -364,7 +364,7 @@ public class VendorController {
 		
 		@Parameter(
 			description = "특수 촬영 옵션 목록",
-			example = "HANOK,BEACH,STUDIO",
+			example = "HANOK,BEACH,STUDIO,NONE",
 			required = true
 		) @RequestParam(value = "specialShots") @NotEmpty(message = "특수 촬영 옵션은 최소 1개 이상 선택해야 합니다") List<StudioSpecialShot> studioSpecialShots,
 		

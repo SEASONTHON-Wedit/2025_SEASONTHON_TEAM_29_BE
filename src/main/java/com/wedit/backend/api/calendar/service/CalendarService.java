@@ -1,5 +1,6 @@
 package com.wedit.backend.api.calendar.service;
 
+import com.wedit.backend.api.calendar.dto.AdminEventRequestDTO;
 import com.wedit.backend.api.calendar.dto.CalendarEventResponseDTO;
 import com.wedit.backend.api.calendar.dto.UserEventRequestDTO;
 import com.wedit.backend.api.calendar.dto.UserEventUpdateDTO;
@@ -122,6 +123,27 @@ public class CalendarService {
                 .toList();
     }
 
+    // 관리자 일정 생성
+    @Transactional
+    public Long createAdminEvent(AdminEventRequestDTO request) {
+
+        AdminEvent newEvent = AdminEvent.builder()
+                .title(request.title())
+                .description(request.description())
+                .eventCategory(request.eventCategory())
+                .startDateTime(request.startDateTime())
+                .endDateTime(request.endDateTime())
+                .isAllDay(request.isAllDay())
+                .eventUrl(request.eventUrl())
+                .build();
+
+        AdminEvent savedEvent = adminEventRepository.save(newEvent);
+
+        log.info("새로운 관리자 일정이 생성되었습니다. eventId: {}, 제목: {}", savedEvent.getId(), savedEvent.getTitle());
+
+        return savedEvent.getId();
+    }
+
     // --- 헬퍼 메서드 ---
 
     private Stream<CalendarEventResponseDTO> findAdminEvents(LocalDate start, LocalDate end) {
@@ -140,7 +162,7 @@ public class CalendarService {
     }
 
     private Stream<CalendarEventResponseDTO> findReservationEvents(List<Long> memberIds, LocalDate start, LocalDate end) {
-        // 예약 기반으로 생성된 UserEvent를 조회
+        // 상담 예약 기반으로 생성된 UserEvent를 조회
         return userEventRepository
                 .findByMemberIdInAndStartDateTimeBetween(memberIds, start.atStartOfDay(), end.plusDays(1).atStartOfDay())
                 .stream()
@@ -153,7 +175,7 @@ public class CalendarService {
                 .id(event.getId()).title(event.getTitle()).startDateTime(event.getStartDateTime())
                 .eventCategory(event.getEventCategory()).eventSourceType(EventSourceType.ADMIN)
                 .description(event.getDescription()).endDateTime(event.getEndDateTime())
-                .isAllDay(event.isAllDay()).build();
+                .isAllDay(event.isAllDay()).eventUrl(event.getEventUrl()).build();
     }
 
     private CalendarEventResponseDTO mapUserEventToDto(UserEvent event) {
