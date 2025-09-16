@@ -125,7 +125,6 @@ public class CartService {
 
     
     // 사용자의 견적서 상세 정보 조회
-    @Transactional(readOnly = true)
     public CartDetailResponseDTO getCartDetails(Long memberId) {
 
         Member member = findMemberById(memberId);
@@ -228,12 +227,6 @@ public class CartService {
 
     private Cart getOrCreateCart(Member member) {
         return cartRepository.findByMember(member)
-                .orElseGet(() -> createCartForMember(member));
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Cart createCartForMember(Member member) {
-        log.info("사용자 ID : {} 에 대한 새로운 견적서(Cart)를 생성합니다.", member.getId());
-        return cartRepository.save(Cart.builder().member(member).build());
+                .orElseGet(() -> cartRepository.save(Cart.builder().member(member).build()));
     }
 }
