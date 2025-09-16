@@ -32,7 +32,7 @@ public class VendorProductQueryRepository {
 	public static class VendorWithMinPrice {
 		public final Vendor vendor;
 		public final Long minPrice;
-		
+
 		public VendorWithMinPrice(Vendor vendor, Long minPrice) {
 			this.vendor = vendor;
 			this.minPrice = minPrice;
@@ -56,7 +56,7 @@ public class VendorProductQueryRepository {
 			builder.and(vendor.region.code.in(regionCodes));
 		}
 
-		// 가격 조건 (기본가 이하)
+		// 가격 조건 (기본가 이하) - null이거나 최대값(1000만원)인 경우 조건 제외
 		if (price != null && price != 10000000) {
 			builder.and(weddingHall.basePrice.loe(price.longValue()));
 		}
@@ -113,7 +113,7 @@ public class VendorProductQueryRepository {
 			builder.and(vendor.region.code.in(regionCodes));
 		}
 
-		// 가격 조건 (기본가 이하)
+		// 가격 조건 (기본가 이하) - null인 경우 조건 제외
 		if (price != null) {
 			builder.and(studioProduct.basePrice.loe(price.longValue()));
 		}
@@ -165,7 +165,7 @@ public class VendorProductQueryRepository {
 			builder.and(vendor.region.code.in(regionCodes));
 		}
 
-		// 가격 조건 (기본가 이하)
+		// 가격 조건 (기본가 이하) - null인 경우 조건 제외
 		if (price != null) {
 			builder.and(makeupProduct.basePrice.loe(price.longValue()));
 		}
@@ -216,7 +216,7 @@ public class VendorProductQueryRepository {
 			builder.and(vendor.region.code.in(regionCodes));
 		}
 
-		// 가격 조건 (기본가 이하)
+		// 가격 조건 (기본가 이하) - null인 경우 조건 제외
 		if (price != null) {
 			builder.and(dressProduct.basePrice.loe(price.longValue()));
 		}
