@@ -1,5 +1,6 @@
 package com.wedit.backend.api.vendor.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wedit.backend.api.media.dto.MediaRequestDTO;
 import com.wedit.backend.api.vendor.entity.enums.*;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -49,6 +50,7 @@ public class ProductCreateRequestDTO {
     @Schema(description = "[스튜디오] 사진 스타일", example = "HANOK")
     private StudioStyle studioStyle;
     @Schema(description = "[스튜디오] 특수 촬영 옵션", example = "PERSON_CENTERED")
+    @JsonProperty("specialShots")
     private StudioSpecialShot specialShot;
     @Schema(description = "[스튜디오] 아이폰 스냅 가능 여부", example = "true")
     private Boolean iphoneSnap;
