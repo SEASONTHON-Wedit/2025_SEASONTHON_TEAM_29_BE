@@ -128,6 +128,18 @@ public class CartService {
 
         Member member = findMemberById(memberId);
         Cart cart = getOrCreateCart(member);
+
+        // Cart에 CartItem이 없다면 바로 빈 응답 반환
+        if (cart.getCartItems().isEmpty()) {
+            return CartDetailResponseDTO.builder()
+                    .totalActivePrice(0L)
+                    .weddingHalls(new ArrayList<>())
+                    .dresses(new ArrayList<>())
+                    .makeups(new ArrayList<>())
+                    .studios(new ArrayList<>())
+                    .build();
+        }
+        
         List<CartItem> cartItems = cartItemRepository.findAllWithDetailsByCart(cart);
 
         List<CartDetailResponseDTO.CartItemDTO> itemDTOs = cartItems.stream().map(this::mapCartItemToDto).toList();
@@ -146,7 +158,11 @@ public class CartService {
             }
         }
 
-        Comparator<CartDetailResponseDTO.CartItemDTO> dateComparator = Comparator.comparing(CartDetailResponseDTO.CartItemDTO::getExecutionDateTime);
+        Comparator<CartDetailResponseDTO.CartItemDTO> dateComparator = Comparator.comparing(
+                CartDetailResponseDTO.CartItemDTO::getExecutionDateTime,
+                Comparator.nullsLast(Comparator.naturalOrder())
+        );
+
         weddingHalls.sort(dateComparator);
         dresses.sort(dateComparator);
         makeups.sort(dateComparator);

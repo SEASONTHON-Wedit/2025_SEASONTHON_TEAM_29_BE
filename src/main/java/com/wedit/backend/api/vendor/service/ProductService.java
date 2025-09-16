@@ -84,6 +84,8 @@ public class ProductService {
                 details.put("hallMeal", hall.getHallMeal().getDisplayName());
                 details.put("capacity", hall.getCapacity());
                 details.put("hasParking", hall.getHasParking());
+                details.put("weddingHallSeat",  hall.getWeddingHallSeat());
+                details.put("banquetHallSeat",  hall.getBanquetHallSeat());
             } else if (product instanceof StudioProduct studio) {
                 details.put("studioStyle", studio.getStudioStyle().getDisplayName());
                 details.put("specialShot", studio.getSpecialShot().getDisplayName());
@@ -126,6 +128,8 @@ public class ProductService {
             details.put("hallMeal", hall.getHallMeal().getDisplayName());
             details.put("capacity", hall.getCapacity());
             details.put("hasParking", hall.getHasParking());
+            details.put("weddingHallSeat", hall.getWeddingHallSeat());
+            details.put("banquetHallSeat", hall.getBanquetHallSeat());
         } else if (product instanceof StudioProduct studio) {
             details.put("studioStyle", studio.getStudioStyle().getDisplayName());
             details.put("specialShot", studio.getSpecialShot().getDisplayName());
@@ -164,6 +168,8 @@ public class ProductService {
                     .hallMeal(request.getHallMeal())
                     .capacity(request.getCapacity())
                     .hasParking(request.getHasParking())
+                    .weddingHallSeat(request.getWeddingHallSeat())
+                    .banquetHallSeat(request.getBanquetHallSeat())
                     .durationInMinutes(request.getDurationInMinutes())
                     .build();
             case STUDIO -> StudioProduct.builder()

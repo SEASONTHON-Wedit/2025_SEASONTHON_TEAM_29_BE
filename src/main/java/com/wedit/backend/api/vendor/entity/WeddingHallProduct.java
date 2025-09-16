@@ -30,16 +30,23 @@ public class WeddingHallProduct extends Product {
 
     @Column(nullable = false)
     private Boolean hasParking;  // 주차장 유무
+    
+    private Integer weddingHallSeat;    // 웨딩홀 석 수
+
+    private Integer banquetHallSeat;    // 피로연장 석 수
 
     @Builder
     public WeddingHallProduct(Vendor vendor, String name, Long basePrice, String description,
                               Integer durationInMinutes, HallStyle hallStyle,
-                              HallMeal hallMeal, Integer capacity, Boolean hasParking) {
+                              HallMeal hallMeal, Integer capacity, Boolean hasParking,
+                              Integer weddingHallSeat, Integer banquetHallSeat) {
 
         super(vendor, name, basePrice, description, durationInMinutes);
         this.hallStyle = hallStyle;
         this.hallMeal = hallMeal;
         this.capacity = capacity;
         this.hasParking = hasParking;
+        this.weddingHallSeat = weddingHallSeat;
+        this.banquetHallSeat = banquetHallSeat;
     }
 }

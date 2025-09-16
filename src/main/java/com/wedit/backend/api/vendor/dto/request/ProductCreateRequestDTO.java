@@ -45,6 +45,10 @@ public class ProductCreateRequestDTO {
     private Integer capacity;
     @Schema(description = "[웨딩홀] 주차 가능 여부", example = "true")
     private Boolean hasParking;
+    @Schema(description = "[웨딩홀] 웨딩홀 석 수", example = "180")
+    private Integer weddingHallSeat;
+    @Schema(description = "[웨딩홀] 피로연장 석 수", example = "470")
+    private Integer banquetHallSeat;
 
     // --- 스튜디오 속성 ---
     @Schema(description = "[스튜디오] 사진 스타일", example = "HANOK")

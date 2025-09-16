@@ -30,7 +30,10 @@ public class CartController {
     private final JwtService jwtService;
 
 
-    @Operation(summary = "내 견적서 상세 조회 API")
+    @Operation(
+            summary = "내 견적서 상세 조회 API",
+            description = "견적서에 아이템이 없다면 200과 함께 빈 배열을 반환합니다."
+    )
     @GetMapping
     public ResponseEntity<ApiResponse<CartDetailResponseDTO>> getCartDetails(
         @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken) {
