@@ -279,7 +279,8 @@ public class VendorService {
 					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
 				.toList();
 
-			log.info("웨딩홀 검색 성공 (JPA) - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(), expandedRegionCodes.size());
+			log.info("웨딩홀 검색 성공 (JPA) - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(),
+				expandedRegionCodes == null ? 0 : expandedRegionCodes.size());
 			return results;
 		} catch (Exception e) {
 			log.error("웨딩홀 검색 실패 (JPA) - regionCodes: {}, price: {}", regionCodes, price, e);
@@ -312,7 +313,8 @@ public class VendorService {
 					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
 				.toList();
 
-			log.info("스튜디오 검색 성공 - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(), expandedRegionCodes.size());
+			log.info("스튜디오 검색 성공 - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(),
+				expandedRegionCodes == null ? 0 : expandedRegionCodes.size());
 			return results;
 		} catch (Exception e) {
 			log.error("스튜디오 검색 실패 - regionCodes: {}, price: {}", regionCodes, price, e);
@@ -345,7 +347,8 @@ public class VendorService {
 					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
 				.toList();
 
-			log.info("메이크업 검색 성공 - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(), expandedRegionCodes.size());
+			log.info("메이크업 검색 성공 - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(),
+				expandedRegionCodes == null ? 0 : expandedRegionCodes.size());
 			return results;
 		} catch (Exception e) {
 			log.error("메이크업 검색 실패 - regionCodes: {}, price: {}", regionCodes, price, e);
@@ -377,7 +380,8 @@ public class VendorService {
 					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
 				.toList();
 
-			log.info("드레스 검색 성공 - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(), expandedRegionCodes.size());
+			log.info("드레스 검색 성공 - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(),
+				expandedRegionCodes == null ? 0 : expandedRegionCodes.size());
 			return results;
 		} catch (Exception e) {
 			log.error("드레스 검색 실패 - regionCodes: {}, price: {}", regionCodes, price, e);
