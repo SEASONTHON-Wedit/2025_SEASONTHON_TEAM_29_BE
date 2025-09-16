@@ -20,11 +20,13 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 
 @Service
@@ -48,12 +50,12 @@ public class CartService {
         Product product = findProductById(request.getProductId());
 
         if (cart.getCartItems().stream()
-                .anyMatch(
-                        item -> item.getProduct()
-                                .getId()
-                                .equals(product.getId()))
-        ) {
-            throw new BadRequestException("이미 견적서에 담긴 상품입니다. productId : " + product.getId());
+                .anyMatch(item ->
+                        item.getProduct().getId().equals(product.getId())
+                                && Objects.equals(item.getExecutionDateTime(), request.getExecutionDateTime())
+                )) {
+            throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_EXIST_CART_ITEM + " productId : "
+                    + product.getId() + ", executionDateTime: " + request.getExecutionDateTime());
         }
 
         CartItem newCartItem = CartItem.builder()
@@ -225,8 +227,13 @@ public class CartService {
     }
 
     private Cart getOrCreateCart(Member member) {
-
         return cartRepository.findByMember(member)
-                .orElseGet(() -> cartRepository.save(Cart.builder().member(member).build()));
+                .orElseGet(() -> createCartForMember(member));
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Cart createCartForMember(Member member) {
+        log.info("사용자 ID : {} 에 대한 새로운 견적서(Cart)를 생성합니다.", member.getId());
+        return cartRepository.save(Cart.builder().member(member).build());
     }
 }

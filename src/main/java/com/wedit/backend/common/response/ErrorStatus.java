@@ -40,6 +40,7 @@ public enum ErrorStatus {
 	BAD_REQUEST_ESTIMATE_CONFLICT(HttpStatus.BAD_REQUEST, "견적서 시간이 겹칩니다."),
 	BAD_REQUEST_ALREADY_HAVE_INVITATION(HttpStatus.BAD_REQUEST, "이미 청첩장을 가지고 있습니다."),
 	BAD_REQUEST_ALREADY_OTHER_MEMBER_HAVE_INVITATION(HttpStatus.BAD_REQUEST, "이미 다른 멤버가 청첩장을 가지고 있습니다."),
+    BAD_REQUEST_ALREADY_EXIST_CART_ITEM(HttpStatus.BAD_REQUEST, "이미 같은 시간의 상품이 담겨 있습니다."),
 
 	/// 401 UNAUTHORIZED
 	UNAUTHORIZED_USER(HttpStatus.UNAUTHORIZED, "인증되지 않은 사용자입니다."),
