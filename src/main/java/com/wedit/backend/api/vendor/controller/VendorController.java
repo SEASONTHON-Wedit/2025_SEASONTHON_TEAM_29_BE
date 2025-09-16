@@ -332,6 +332,78 @@ public class VendorController {
 	}
 
 	@Operation(
+		summary = "웨딩홀 조건 검색 조회 (JPA 성능 테스트용)",
+		description = """
+			**성능 비교를 위한 순수 JPA 구현 버전입니다.**
+			
+			웨딩홀을 다양한 조건으로 검색합니다. **모든 조건은 선택사항**이며, 입력된 조건은 AND 연산으로 적용됩니다. 
+			결과는 가격 오름차순으로 정렬됩니다.
+			
+			**⚠️ 주의사항:**
+			- 이 API는 QueryDSL 대신 순수 JPA JPQL을 사용한 성능 테스트용입니다
+			- 기존 API와 동일한 결과를 반환하지만 내부 구현이 다릅니다
+			- 성능 측정 후 제거될 예정입니다
+			
+			**검색 조건 (모두 선택사항):**
+			- **regionCode**: 지역 코드 (읍/면/동 단위, 여러 개 선택 가능)
+			- **price**: 최대 예산 (해당 금액 이하의 상품만 조회, 미입력시 제한 없음)
+			- **hallStyle**: 홀 스타일 (HOTEL, HOUSE, CONVENTION 등, 미선택시 모든 스타일)
+			- **hallMeal**: 식사 타입 (BUFFET, COURSE 등, 미선택시 모든 타입)
+			- **capacity**: 최소 수용 인원 (해당 인원 이상 수용 가능한 홀만 조회, 미입력시 제한 없음)
+			- **hasParking**: 주차장 보유 여부 (미선택시 모든 업체)
+			
+			**예시 요청:**
+			```
+			# QueryDSL 버전과 성능 비교
+			GET /api/v1/vendor/conditionSearch/weddingHall (QueryDSL)
+			GET /api/v1/vendor/test/conditionSearch/weddingHall (JPA)
+			```
+			"""
+	)
+	@GetMapping("/test/conditionSearch/weddingHall")
+	public ResponseEntity<ApiResponse<List<ProductResponseDTO>>> searchWeddingHallVendorWithJPA(
+		@Parameter(
+			description = "지역 코드 목록 (읍/면/동 단위)",
+			example = "1168010100,1168010200",
+			required = false
+		) @RequestParam(value = "regionCode", required = false) List<String> regionCodes,
+
+		@Parameter(
+			description = "최대 예산 (원 단위, 미입력시 제한 없음)",
+			example = "20000000",
+			required = false
+		) @RequestParam(value = "price", required = false) @Positive(message = "가격은 0보다 커야 합니다") Integer price,
+
+		@Parameter(
+			description = "홀 스타일 목록 (미선택시 모든 스타일)",
+			example = "HOTEL,HOUSE",
+			required = false
+		) @RequestParam(value = "hallStyle", required = false) List<HallStyle> hallStyles,
+
+		@Parameter(
+			description = "식사 타입 목록 (미선택시 모든 타입)",
+			example = "COURSE,BUFFET",
+			required = false
+		) @RequestParam(value = "hallMeal", required = false) List<HallMeal> hallMeals,
+
+		@Parameter(
+			description = "최소 수용 인원 (미입력시 제한 없음)",
+			example = "150",
+			required = false
+		) @RequestParam(value = "capacity", required = false) @Positive(message = "수용 인원은 1명 이상이어야 합니다") Integer capacity,
+
+		@Parameter(
+			description = "주차장 보유 여부 (미선택시 모든 업체)",
+			example = "true",
+			required = false
+		) @RequestParam(value = "hasParking", required = false) Boolean hasParking
+	) {
+		List<ProductResponseDTO> weddingHallProductResponseDTOS = vendorService.searchWeddingHallWithJPA(
+			regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
+		return ApiResponse.success(SuccessStatus.CONDITION_SEARCH_SUCCESS, weddingHallProductResponseDTOS);
+	}
+
+	@Operation(
 		summary = "스튜디오 조건 검색 조회",
 		description = """
 			스튜디오를 다양한 조건으로 검색합니다. **모든 조건은 선택사항**이며, 입력된 조건은 AND 연산으로 적용됩니다. 

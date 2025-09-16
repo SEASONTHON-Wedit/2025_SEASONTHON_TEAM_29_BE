@@ -21,12 +21,17 @@ import com.wedit.backend.api.vendor.entity.enums.MakeupStyle;
 import com.wedit.backend.api.vendor.entity.enums.StudioSpecialShot;
 import com.wedit.backend.api.vendor.entity.enums.StudioStyle;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
 public class VendorProductQueryRepository {
 	private final JPAQueryFactory queryFactory;
+	private final EntityManager entityManager;
 
 	// 최저가와 함께 업체 정보를 담을 DTO 클래스
 	public static class VendorWithMinPrice {
@@ -94,6 +99,91 @@ public class VendorProductQueryRepository {
 			.groupBy(vendor.id)
 			.orderBy(weddingHall.basePrice.min().asc())
 			.fetch();
+	}
+
+	/**
+	 * 순수 JPA를 사용한 웨딩홀 검색 (성능 비교용)
+	 */
+	public List<VendorWithMinPrice> searchWeddingHallVendorsWithJPA(
+		List<String> regionCodes,
+		Integer price,
+		List<HallStyle> hallStyles,
+		List<HallMeal> hallMeals,
+		Integer capacity,
+		Boolean hasParking) {
+
+		StringBuilder jpql = new StringBuilder();
+		jpql.append("SELECT v, MIN(wh.basePrice) ")
+			.append("FROM WeddingHallProduct wh ")
+			.append("JOIN wh.vendor v ")
+			.append("JOIN v.region r ")
+			.append("LEFT JOIN v.logoMedia ")
+			.append("WHERE 1=1 ");
+
+		// 동적 조건 추가
+		if (regionCodes != null && !regionCodes.isEmpty()) {
+			jpql.append("AND r.code IN :regionCodes ");
+		}
+
+		if (price != null && price != 10000000) {
+			jpql.append("AND wh.basePrice <= :price ");
+		}
+
+		if (hallStyles != null && !hallStyles.isEmpty()) {
+			jpql.append("AND wh.hallStyle IN :hallStyles ");
+		}
+
+		if (hallMeals != null && !hallMeals.isEmpty()) {
+			jpql.append("AND wh.hallMeal IN :hallMeals ");
+		}
+
+		if (capacity != null) {
+			jpql.append("AND wh.capacity >= :capacity ");
+		}
+
+		if (hasParking != null) {
+			jpql.append("AND wh.hasParking = :hasParking ");
+		}
+
+		jpql.append("GROUP BY v.id ")
+			.append("ORDER BY MIN(wh.basePrice) ASC");
+
+		TypedQuery<Object[]> query = entityManager.createQuery(jpql.toString(), Object[].class);
+
+		// 파라미터 바인딩
+		if (regionCodes != null && !regionCodes.isEmpty()) {
+			query.setParameter("regionCodes", regionCodes);
+		}
+
+		if (price != null && price != 10000000) {
+			query.setParameter("price", price.longValue());
+		}
+
+		if (hallStyles != null && !hallStyles.isEmpty()) {
+			query.setParameter("hallStyles", hallStyles);
+		}
+
+		if (hallMeals != null && !hallMeals.isEmpty()) {
+			query.setParameter("hallMeals", hallMeals);
+		}
+
+		if (capacity != null) {
+			query.setParameter("capacity", capacity);
+		}
+
+		if (hasParking != null) {
+			query.setParameter("hasParking", hasParking);
+		}
+
+		List<Object[]> results = query.getResultList();
+
+		// Object[] 결과를 VendorWithMinPrice로 변환
+		return results.stream()
+			.map(result -> new VendorWithMinPrice(
+				(Vendor)result[0],
+				(Long)result[1]
+			))
+			.toList();
 	}
 
 	public List<VendorWithMinPrice> searchStudioVendors(

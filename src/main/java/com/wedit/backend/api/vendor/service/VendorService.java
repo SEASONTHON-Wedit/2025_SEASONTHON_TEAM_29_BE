@@ -35,7 +35,6 @@ import com.wedit.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -93,13 +92,7 @@ public class VendorService {
 
 	@Transactional(readOnly = true)
 	public VendorDetailResponseDTO getVendorDetail(Long vendorId) {
-<<<<<<< Updated upstream
-		
-		log.info("업체 상세 조회 시작 - vendorId: {}", vendorId);
-=======
-
 		log.debug("업체 상세 조회 시작 - vendorId: {}", vendorId);
->>>>>>> Stashed changes
 
 		Vendor vendor = vendorRepository.findById(vendorId)
 			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + " : " + vendorId));
@@ -219,6 +212,8 @@ public class VendorService {
 		log.info("웨딩홀 검색 시작 - regionCodes: {}, price: {}, hallStyles: {}, hallMeals: {}, capacity: {}, hasParking: {}",
 			regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
 
+		long startTime = System.currentTimeMillis();
+
 		try {
 			// 입력받은 지역 코드를 level 3 코드들로 확장
 			List<String> expandedRegionCodes = expandToLevel3RegionCodes(regionCodes);
@@ -232,10 +227,45 @@ public class VendorService {
 					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
 				.toList();
 
-			log.info("웨딩홀 검색 성공 - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(), expandedRegionCodes.size());
+			long endTime = System.currentTimeMillis();
+			log.info("[PERFORMANCE] 웨딩홀 검색 (QueryDSL) 완료 - {} 개 업체 결과, 소요시간: {}ms (확장된 지역: {}개)",
+				results.size(), (endTime - startTime), expandedRegionCodes == null ? 0 : expandedRegionCodes.size());
 			return results;
 		} catch (Exception e) {
-			log.error("웨딩홀 검색 실패 - regionCodes: {}, price: {}", regionCodes, price, e);
+			long endTime = System.currentTimeMillis();
+			log.error("웨딩홀 검색 실패 (QueryDSL) - regionCodes: {}, price: {}, 소요시간: {}ms",
+				regionCodes, price, (endTime - startTime), e);
+			throw e;
+		}
+	}
+
+	/**
+	 * 순수 JPA를 사용한 웨딩홀 검색 (성능 비교용)
+	 */
+	public List<ProductResponseDTO> searchWeddingHallWithJPA(List<String> regionCodes, Integer price,
+		List<HallStyle> hallStyles, List<HallMeal> hallMeals, Integer capacity, Boolean hasParking) {
+
+		log.info(
+			"웨딩홀 검색 시작 (JPA) - regionCodes: {}, price: {}, hallStyles: {}, hallMeals: {}, capacity: {}, hasParking: {}",
+			regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
+
+		try {
+			// 입력받은 지역 코드를 level 3 코드들로 확장
+			List<String> expandedRegionCodes = expandToLevel3RegionCodes(regionCodes);
+
+			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice =
+				vendorProductQueryRepository.searchWeddingHallVendorsWithJPA(
+					expandedRegionCodes, price, hallStyles, hallMeals, capacity, hasParking);
+
+			List<ProductResponseDTO> results = vendorsWithPrice.stream()
+				.map(vendorWithPrice -> convertToProductResponseDTO(
+					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
+				.toList();
+
+			log.info("웨딩홀 검색 성공 (JPA) - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(), expandedRegionCodes.size());
+			return results;
+		} catch (Exception e) {
+			log.error("웨딩홀 검색 실패 (JPA) - regionCodes: {}, price: {}", regionCodes, price, e);
 			throw e;
 		}
 	}
