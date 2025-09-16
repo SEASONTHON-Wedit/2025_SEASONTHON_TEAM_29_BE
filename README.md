@@ -102,9 +102,9 @@ http://localhost:8080/api/v3/api-docs
 
 ## 🏗 인프라 아키텍처
 
-<img width="1011" height="792" alt="Image" src="https://github.com/user-attachments/assets/0b1d02f1-a987-4a39-b999-de2dca74a9f4" />
+<img width="1085" height="813" alt="infra drawio" src="https://github.com/user-attachments/assets/0a9c7b08-1a88-4e91-ae31-81c76cc5d721" />
 
----- 
+----
 
 ## 👥 팀원
 
