@@ -93,8 +93,13 @@ public class VendorService {
 
 	@Transactional(readOnly = true)
 	public VendorDetailResponseDTO getVendorDetail(Long vendorId) {
+<<<<<<< Updated upstream
 		
 		log.info("업체 상세 조회 시작 - vendorId: {}", vendorId);
+=======
+
+		log.debug("업체 상세 조회 시작 - vendorId: {}", vendorId);
+>>>>>>> Stashed changes
 
 		Vendor vendor = vendorRepository.findById(vendorId)
 			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + " : " + vendorId));
@@ -153,78 +158,80 @@ public class VendorService {
 
 	/**
 	 * 입력받은 지역 코드들을 분석하여 모든 level 3 지역 코드들로 확장합니다.
+	 * - null 또는 빈 리스트: 그대로 반환 (모든 지역 검색)
 	 * - level 3 코드: 그대로 사용
 	 * - level 2 코드: 해당 지역에 속하는 모든 level 3 코드들로 확장
 	 * - level 1 코드: 해당 지역에 속하는 모든 level 3 코드들로 확장
 	 */
 	private List<String> expandToLevel3RegionCodes(List<String> inputRegionCodes) {
 		if (inputRegionCodes == null || inputRegionCodes.isEmpty()) {
-			return inputRegionCodes;
+			log.debug("지역 코드가 null 또는 빈 리스트이므로 모든 지역을 대상으로 검색합니다.");
+			return inputRegionCodes; // null이나 빈 리스트 그대로 반환하여 조건 제외
 		}
-		
+
 		List<String> level3Codes = new ArrayList<>();
-		
+
 		for (String regionCode : inputRegionCodes) {
 			Optional<Region> regionOpt = regionRepository.findByCode(regionCode);
-			
+
 			if (regionOpt.isEmpty()) {
 				log.warn("존재하지 않는 지역 코드입니다: {}", regionCode);
 				continue;
 			}
-			
+
 			Region region = regionOpt.get();
-			
+
 			switch (region.getLevel()) {
 				case 3:
 					// level 3은 그대로 추가
 					level3Codes.add(regionCode);
 					break;
-					
+
 				case 2:
 					// level 2의 하위 level 3들을 모두 조회해서 추가
 					List<String> childLevel3Codes = regionRepository.findLevel3CodesByParentCode(regionCode);
 					level3Codes.addAll(childLevel3Codes);
 					log.debug("level 2 지역 {} 에서 {} 개의 level 3 지역 확장", regionCode, childLevel3Codes.size());
 					break;
-					
+
 				case 1:
 					// level 1의 하위 level 3들을 모두 조회해서 추가
 					List<String> grandChildLevel3Codes = regionRepository.findLevel3CodesByGrandParentCode(regionCode);
 					level3Codes.addAll(grandChildLevel3Codes);
 					log.debug("level 1 지역 {} 에서 {} 개의 level 3 지역 확장", regionCode, grandChildLevel3Codes.size());
 					break;
-					
+
 				default:
 					log.warn("지원하지 않는 지역 레벨입니다: {} (level: {})", regionCode, region.getLevel());
 			}
 		}
-		
+
 		// 중복 제거
 		List<String> uniqueLevel3Codes = level3Codes.stream().distinct().toList();
 		log.debug("지역 코드 확장 완료: {} -> {} ({}개)", inputRegionCodes, uniqueLevel3Codes, uniqueLevel3Codes.size());
-		
+
 		return uniqueLevel3Codes;
 	}
 
 	public List<ProductResponseDTO> searchWeddingHall(List<String> regionCodes, Integer price,
 		List<HallStyle> hallStyles, List<HallMeal> hallMeals, Integer capacity, Boolean hasParking) {
-		
+
 		log.info("웨딩홀 검색 시작 - regionCodes: {}, price: {}, hallStyles: {}, hallMeals: {}, capacity: {}, hasParking: {}",
-				regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
-		
+			regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
+
 		try {
 			// 입력받은 지역 코드를 level 3 코드들로 확장
 			List<String> expandedRegionCodes = expandToLevel3RegionCodes(regionCodes);
-			
-			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice = 
+
+			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice =
 				vendorProductQueryRepository.searchWeddingHallVendors(
 					expandedRegionCodes, price, hallStyles, hallMeals, capacity, hasParking);
-			
+
 			List<ProductResponseDTO> results = vendorsWithPrice.stream()
 				.map(vendorWithPrice -> convertToProductResponseDTO(
 					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
 				.toList();
-			
+
 			log.info("웨딩홀 검색 성공 - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(), expandedRegionCodes.size());
 			return results;
 		} catch (Exception e) {
@@ -236,23 +243,23 @@ public class VendorService {
 	public List<ProductResponseDTO> searchStudio(List<String> regionCodes, Integer price,
 		List<StudioStyle> studioStyles,
 		List<StudioSpecialShot> studioSpecialShots, Boolean iphoneSnap) {
-		
+
 		log.info("스튜디오 검색 시작 - regionCodes: {}, price: {}, studioStyles: {}, specialShots: {}, iphoneSnap: {}",
-				regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap);
-		
+			regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap);
+
 		try {
 			// 입력받은 지역 코드를 level 3 코드들로 확장
 			List<String> expandedRegionCodes = expandToLevel3RegionCodes(regionCodes);
-			
-			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice = 
+
+			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice =
 				vendorProductQueryRepository.searchStudioVendors(
 					expandedRegionCodes, price, studioStyles, studioSpecialShots, iphoneSnap);
-			
+
 			List<ProductResponseDTO> results = vendorsWithPrice.stream()
 				.map(vendorWithPrice -> convertToProductResponseDTO(
 					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
 				.toList();
-			
+
 			log.info("스튜디오 검색 성공 - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(), expandedRegionCodes.size());
 			return results;
 		} catch (Exception e) {
@@ -264,23 +271,23 @@ public class VendorService {
 	public List<ProductResponseDTO> searchMakeup(List<String> regionCodes, Integer price,
 		List<MakeupStyle> makeupStyles,
 		Boolean isStylistDesignationAvailable, Boolean hasPrivateRoom) {
-		
+
 		log.info("메이크업 검색 시작 - regionCodes: {}, price: {}, makeupStyles: {}, stylistDesignation: {}, privateRoom: {}",
-				regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom);
-		
+			regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom);
+
 		try {
 			// 입력받은 지역 코드를 level 3 코드들로 확장
 			List<String> expandedRegionCodes = expandToLevel3RegionCodes(regionCodes);
-			
-			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice = 
+
+			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice =
 				vendorProductQueryRepository.searchMakeupVendors(
 					expandedRegionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom);
-			
+
 			List<ProductResponseDTO> results = vendorsWithPrice.stream()
 				.map(vendorWithPrice -> convertToProductResponseDTO(
 					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
 				.toList();
-			
+
 			log.info("메이크업 검색 성공 - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(), expandedRegionCodes.size());
 			return results;
 		} catch (Exception e) {
@@ -291,23 +298,23 @@ public class VendorService {
 
 	public List<ProductResponseDTO> searchDress(List<String> regionCodes, Integer price,
 		List<DressStyle> dressStyles, List<DressOrigin> dressOrigins) {
-		
+
 		log.info("드레스 검색 시작 - regionCodes: {}, price: {}, dressStyles: {}, dressOrigins: {}",
-				regionCodes, price, dressStyles, dressOrigins);
-		
+			regionCodes, price, dressStyles, dressOrigins);
+
 		try {
 			// 입력받은 지역 코드를 level 3 코드들로 확장
 			List<String> expandedRegionCodes = expandToLevel3RegionCodes(regionCodes);
-			
-			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice = 
+
+			List<VendorProductQueryRepository.VendorWithMinPrice> vendorsWithPrice =
 				vendorProductQueryRepository.searchDressVendors(
 					expandedRegionCodes, price, dressStyles, dressOrigins);
-			
+
 			List<ProductResponseDTO> results = vendorsWithPrice.stream()
 				.map(vendorWithPrice -> convertToProductResponseDTO(
 					vendorWithPrice.vendor, vendorWithPrice.minPrice != null ? vendorWithPrice.minPrice : 0L))
 				.toList();
-			
+
 			log.info("드레스 검색 성공 - {} 개 업체 결과 반환 (확장된 지역: {}개)", results.size(), expandedRegionCodes.size());
 			return results;
 		} catch (Exception e) {
