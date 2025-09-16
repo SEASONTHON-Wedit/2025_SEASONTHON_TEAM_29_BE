@@ -300,7 +300,7 @@ public class VendorController {
 			description = "최대 예산 (원 단위, 미입력시 제한 없음)",
 			example = "20000000",
 			required = false
-		) @RequestParam(value = "price", required = false) @Positive(message = "가격은 0보다 커야 합니다") Integer price,
+		) @RequestParam(value = "price", required = false) Integer price,
 
 		@Parameter(
 			description = "홀 스타일 목록 (미선택시 모든 스타일)",
@@ -318,7 +318,7 @@ public class VendorController {
 			description = "최소 수용 인원 (미입력시 제한 없음)",
 			example = "150",
 			required = false
-		) @RequestParam(value = "capacity", required = false) @Positive(message = "수용 인원은 1명 이상이어야 합니다") Integer capacity,
+		) @RequestParam(value = "capacity", required = false) Integer capacity,
 
 		@Parameter(
 			description = "주차장 보유 여부 (미선택시 모든 업체)",
@@ -372,7 +372,7 @@ public class VendorController {
 			description = "최대 예산 (원 단위, 미입력시 제한 없음)",
 			example = "20000000",
 			required = false
-		) @RequestParam(value = "price", required = false) @Positive(message = "가격은 0보다 커야 합니다") Integer price,
+		) @RequestParam(value = "price", required = false) Integer price,
 
 		@Parameter(
 			description = "홀 스타일 목록 (미선택시 모든 스타일)",
@@ -390,7 +390,7 @@ public class VendorController {
 			description = "최소 수용 인원 (미입력시 제한 없음)",
 			example = "150",
 			required = false
-		) @RequestParam(value = "capacity", required = false) @Positive(message = "수용 인원은 1명 이상이어야 합니다") Integer capacity,
+		) @RequestParam(value = "capacity", required = false) Integer capacity,
 
 		@Parameter(
 			description = "주차장 보유 여부 (미선택시 모든 업체)",
@@ -441,7 +441,7 @@ public class VendorController {
 			description = "최대 예산 (원 단위, 미입력시 제한 없음)",
 			example = "3000000",
 			required = false
-		) @RequestParam(value = "price", required = false) @Positive(message = "가격은 0보다 커야 합니다") Integer price,
+		) @RequestParam(value = "price", required = false) Integer price,
 
 		@Parameter(
 			description = "스튜디오 스타일 목록 (미선택시 모든 스타일)",
@@ -504,7 +504,7 @@ public class VendorController {
 			description = "최대 예산 (원 단위, 미입력시 제한 없음)",
 			example = "800000",
 			required = false
-		) @RequestParam(value = "price", required = false) @Positive(message = "가격은 0보다 커야 합니다") Integer price,
+		) @RequestParam(value = "price", required = false) Integer price,
 
 		@Parameter(
 			description = "메이크업 스타일 목록 (미선택시 모든 스타일)",
@@ -566,7 +566,7 @@ public class VendorController {
 			description = "최대 예산 (원 단위, 미입력시 제한 없음)",
 			example = "5000000",
 			required = false
-		) @RequestParam(value = "price", required = false) @Positive(message = "가격은 0보다 커야 합니다") Integer price,
+		) @RequestParam(value = "price", required = false) Integer price,
 
 		@Parameter(
 			description = "드레스 스타일 목록 (미선택시 모든 스타일)",

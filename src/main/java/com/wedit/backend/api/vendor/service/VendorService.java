@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 import com.wedit.backend.api.vendor.entity.*;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -215,6 +216,14 @@ public class VendorService {
 		long startTime = System.currentTimeMillis();
 
 		try {
+			// 유효성 검증: 음수값 체크
+			if (price != null && price <= 0) {
+				throw new BadRequestException("가격은 0보다 커야 합니다.");
+			}
+			if (capacity != null && capacity <= 0) {
+				throw new BadRequestException("수용 인원은 1명 이상이어야 합니다.");
+			}
+
 			// 입력받은 지역 코드를 level 3 코드들로 확장
 			List<String> expandedRegionCodes = expandToLevel3RegionCodes(regionCodes);
 
@@ -250,6 +259,14 @@ public class VendorService {
 			regionCodes, price, hallStyles, hallMeals, capacity, hasParking);
 
 		try {
+			// 유효성 검증: 음수값 체크
+			if (price != null && price <= 0) {
+				throw new BadRequestException("가격은 0보다 커야 합니다.");
+			}
+			if (capacity != null && capacity <= 0) {
+				throw new BadRequestException("수용 인원은 1명 이상이어야 합니다.");
+			}
+
 			// 입력받은 지역 코드를 level 3 코드들로 확장
 			List<String> expandedRegionCodes = expandToLevel3RegionCodes(regionCodes);
 
@@ -278,6 +295,11 @@ public class VendorService {
 			regionCodes, price, studioStyles, studioSpecialShots, iphoneSnap);
 
 		try {
+			// 유효성 검증: 음수값 체크
+			if (price != null && price <= 0) {
+				throw new BadRequestException("가격은 0보다 커야 합니다.");
+			}
+
 			// 입력받은 지역 코드를 level 3 코드들로 확장
 			List<String> expandedRegionCodes = expandToLevel3RegionCodes(regionCodes);
 
@@ -306,6 +328,11 @@ public class VendorService {
 			regionCodes, price, makeupStyles, isStylistDesignationAvailable, hasPrivateRoom);
 
 		try {
+			// 유효성 검증: 음수값 체크
+			if (price != null && price <= 0) {
+				throw new BadRequestException("가격은 0보다 커야 합니다.");
+			}
+
 			// 입력받은 지역 코드를 level 3 코드들로 확장
 			List<String> expandedRegionCodes = expandToLevel3RegionCodes(regionCodes);
 
@@ -333,6 +360,11 @@ public class VendorService {
 			regionCodes, price, dressStyles, dressOrigins);
 
 		try {
+			// 유효성 검증: 음수값 체크
+			if (price != null && price <= 0) {
+				throw new BadRequestException("가격은 0보다 커야 합니다.");
+			}
+
 			// 입력받은 지역 코드를 level 3 코드들로 확장
 			List<String> expandedRegionCodes = expandToLevel3RegionCodes(regionCodes);
 
