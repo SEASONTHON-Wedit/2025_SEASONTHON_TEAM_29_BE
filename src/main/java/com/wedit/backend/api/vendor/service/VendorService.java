@@ -1,10 +1,9 @@
 package com.wedit.backend.api.vendor.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
+import com.wedit.backend.api.vendor.entity.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,8 +17,6 @@ import com.wedit.backend.api.vendor.dto.request.VendorCreateRequestDTO;
 import com.wedit.backend.api.vendor.dto.response.ProductResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorBannerResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorDetailResponseDTO;
-import com.wedit.backend.api.vendor.entity.Region;
-import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.entity.enums.DressOrigin;
 import com.wedit.backend.api.vendor.entity.enums.DressStyle;
 import com.wedit.backend.api.vendor.entity.enums.HallMeal;
@@ -30,7 +27,6 @@ import com.wedit.backend.api.vendor.entity.enums.StudioStyle;
 import com.wedit.backend.api.vendor.entity.enums.VendorType;
 import com.wedit.backend.api.vendor.repository.RegionRepository;
 import com.wedit.backend.api.vendor.repository.VendorProductQueryRepository;
-import com.wedit.backend.api.vendor.repository.VendorProductQueryRepository.VendorWithMinPrice;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
 import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.NotFoundException;
@@ -38,6 +34,7 @@ import com.wedit.backend.common.response.ErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 
 @Service
 @RequiredArgsConstructor
@@ -97,7 +94,7 @@ public class VendorService {
 	@Transactional(readOnly = true)
 	public VendorDetailResponseDTO getVendorDetail(Long vendorId) {
 		
-		log.debug("업체 상세 조회 시작 - vendorId: {}", vendorId);
+		log.info("업체 상세 조회 시작 - vendorId: {}", vendorId);
 
 		Vendor vendor = vendorRepository.findById(vendorId)
 			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + " : " + vendorId));
@@ -109,6 +106,7 @@ public class VendorService {
 			: null;
 
 		log.info("업체 상세 조회 완료 - vendorId: {}, 상품 개수: {}", vendorId, products.size());
+
 		return VendorDetailResponseDTO.builder()
 			.vendorId(vendor.getId())
 			.vendorName(vendor.getName())

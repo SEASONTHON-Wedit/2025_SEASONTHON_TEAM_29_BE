@@ -34,6 +34,7 @@ public class AdminEvent extends BaseTimeEntity {
     private LocalDateTime endDateTime;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean isAllDay = false;
 
     @Column(length = 2083)

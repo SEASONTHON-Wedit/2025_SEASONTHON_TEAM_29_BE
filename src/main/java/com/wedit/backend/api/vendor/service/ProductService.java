@@ -77,12 +77,33 @@ public class ProductService {
                     .map(media -> s3Service.toCdnUrl(media.getMediaKey()))
                     .collect(Collectors.toList());
 
+            Map<String, Object> details = new HashMap<>();
+
+            if (product instanceof WeddingHallProduct hall) {
+                details.put("hallStyle", hall.getHallStyle().getDisplayName());
+                details.put("hallMeal", hall.getHallMeal().getDisplayName());
+                details.put("capacity", hall.getCapacity());
+                details.put("hasParking", hall.getHasParking());
+            } else if (product instanceof StudioProduct studio) {
+                details.put("studioStyle", studio.getStudioStyle().getDisplayName());
+                details.put("specialShot", studio.getSpecialShot().getDisplayName());
+                details.put("iphoneSnap", studio.getIphoneSnap());
+            } else if (product instanceof DressProduct dress) {
+                details.put("dressStyle", dress.getDressStyle().getDisplayName());
+                details.put("dressOrigin", dress.getDressOrigin().getDisplayName());
+            } else if (product instanceof MakeupProduct makeup) {
+                details.put("makeupStyle", makeup.getMakeupStyle().getDisplayName());
+                details.put("hasPrivateRoom", makeup.getHasPrivateRoom());
+                details.put("isStylistDesignationAvailable", makeup.getIsStylistDesignationAvailable());
+            }
+
             return VendorDetailResponseDTO.ProductSummaryDTO.builder()
                     .id(product.getId())
                     .name(product.getName())
                     .description(product.getDescription())
                     .basePrice(product.getBasePrice())
                     .imageUrls(imageUrls)
+                    .details(details)
                     .build();
         }).collect(Collectors.toList());
     }

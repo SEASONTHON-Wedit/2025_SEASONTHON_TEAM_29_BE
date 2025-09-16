@@ -18,7 +18,6 @@ import org.springframework.validation.annotation.Validated;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 
 import com.wedit.backend.api.vendor.dto.request.ProductCreateRequestDTO;
 import com.wedit.backend.api.vendor.dto.request.VendorCreateRequestDTO;
