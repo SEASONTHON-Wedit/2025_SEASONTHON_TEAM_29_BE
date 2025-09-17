@@ -206,12 +206,12 @@ public class ReviewService {
         Object[] stats = reviewRepository.findReviewStatsByVendorId(vendorId)
                 .orElse(new Object[]{0L, 0.0});
 
-        Long totalCount = (stats.length > 0 && stats[0] instanceof Number)
-                ? ((Number) stats[0]).longValue()
+        long totalCount = (stats.length > 0 && stats[0] instanceof Number num)
+                ? num.longValue()
                 : 0L;
 
-        Double averageRating = (stats.length > 1 && stats[1] instanceof Number)
-                ? ((Number) stats[1]).doubleValue()
+        double averageRating = (stats.length > 1 && stats[1] instanceof Number num)
+                ? num.doubleValue()
                 : 0.0;
 
         if (totalCount == 0L) {
@@ -278,12 +278,12 @@ public class ReviewService {
          Object[] stats = reviewRepository.findReviewStatsByVendorId(vendorId)
                  .orElse(new Object[]{0L, 0.0});
 
-         Long reviewCount = (stats.length > 0 && stats[0] instanceof Number)
-                 ? ((Number) stats[0]).longValue()
+         long reviewCount = (stats.length > 0 && stats[0] instanceof Number num)
+                 ? num.longValue()
                  : 0L;
 
-         Double averageRating = (stats.length > 1 && stats[1] instanceof Number)
-                 ? ((Number) stats[1]).doubleValue()
+         double averageRating = (stats.length > 1 && stats[1] instanceof Number num)
+                 ? num.doubleValue()
                  : 0.0;
 
          if (reviewCount == 0L) {
@@ -293,8 +293,9 @@ public class ReviewService {
          Vendor vendor = vendorRepository.findById(vendorId)
                  .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + "통계 업데이트 중 업체를 찾을 수 없습니다: " + vendorId));
 
-         vendor.setReviewCount(reviewCount.intValue());
-         vendor.setAverageRating(averageRating);
+         vendor.updateReviewStats((int) reviewCount, averageRating);
+
+         vendorRepository.save(vendor);
      }
 
     private void validateReviewOwner(Review review, Long memberId) {
