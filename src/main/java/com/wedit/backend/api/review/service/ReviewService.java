@@ -223,24 +223,26 @@ public class ReviewService {
     // 특정 업체 리뷰 통계 조회
     public ReviewStatsResponseDTO getReviewStats(Long vendorId) {
 
-        // 벤더 존재 유무 조회
         if (!vendorRepository.existsById(vendorId)) {
             throw new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + " : " + vendorId);
         }
 
         // 특정 업체의 리뷰 통계 (총 후기 개수, 평균 별점)
-        Object[] stats = reviewRepository.findReviewStatsByVendorId(vendorId)
-                .orElse(new Object[]{0L, 0.0});
+        ReviewStatsSummaryDTO stats = reviewRepository.findReviewStatsByVendorId(vendorId)
+                .orElseGet(() -> new ReviewStatsSummaryDTO() {
+                    @Override
+                    public Long getTotalReviewCount() {
+                        return 0L;
+                    }
 
-        long totalCount = 0L;
-        if (stats.length > 0 && stats[0] != null) {
-            totalCount = ((Number) stats[0]).longValue();
-        }
+                    @Override
+                    public Double getAverageRating() {
+                        return 0.0;
+                    }
+                });
 
-        double averageRating = 0.0;
-        if (stats.length > 1 && stats[1] != null) {
-            averageRating = ((Number) stats[1]).doubleValue();
-        }
+        long totalCount = Optional.ofNullable(stats.getTotalReviewCount()).orElse(0L);
+        double averageRating = Optional.ofNullable(stats.getAverageRating()).orElse(0.0);
 
         if (totalCount == 0L) {
             averageRating = 0.0;
@@ -303,18 +305,21 @@ public class ReviewService {
 
      private void updateVendorReviewStats(Long vendorId) {
 
-         Object[] stats = reviewRepository.findReviewStatsByVendorId(vendorId)
-                 .orElse(new Object[]{0L, 0.0});
+         ReviewStatsSummaryDTO stats = reviewRepository.findReviewStatsByVendorId(vendorId)
+                 .orElseGet(() -> new ReviewStatsSummaryDTO() {
+                     @Override
+                     public Long getTotalReviewCount() {
+                         return 0L;
+                     }
 
-         long reviewCount = 0L;
-         if (stats.length > 0 && stats[0] != null) {
-             reviewCount = ((Number) stats[0]).longValue();
-         }
+                     @Override
+                     public Double getAverageRating() {
+                         return 0.0;
+                     }
+                 });
 
-         double averageRating = 0.0;
-         if (stats.length > 1 && stats[1] != null) {
-             averageRating = ((Number) stats[1]).doubleValue();
-         }
+         long reviewCount = Optional.ofNullable(stats.getTotalReviewCount()).orElse(0L);
+         double averageRating = Optional.ofNullable(stats.getAverageRating()).orElse(0.0);
 
          if (reviewCount == 0L) {
              averageRating = 0.0;
