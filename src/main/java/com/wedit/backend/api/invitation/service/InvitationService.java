@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.wedit.backend.api.invitation.dto.InvitationCreateRequestDTO;
 import com.wedit.backend.api.invitation.dto.InvitationGetResponseDTO;
 import com.wedit.backend.api.invitation.entity.Invitation;
+import com.wedit.backend.api.invitation.entity.MarriagePlace;
 import com.wedit.backend.api.invitation.repository.InvitationRepository;
 import com.wedit.backend.api.media.entity.Media;
 import com.wedit.backend.api.media.entity.enums.MediaDomain;
@@ -17,6 +18,8 @@ import com.wedit.backend.api.member.entity.Couple;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.repository.CoupleRepository;
 import com.wedit.backend.api.member.repository.MemberRepository;
+import com.wedit.backend.api.vendor.entity.Vendor;
+import com.wedit.backend.api.vendor.repository.VendorRepository;
 import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.response.ErrorStatus;
@@ -33,12 +36,13 @@ public class InvitationService {
 	private final MemberRepository memberRepository;
 	private final CoupleRepository coupleRepository;
 	private final MediaService mediaService;
+	private final VendorRepository vendorRepository;
 
 	@Transactional
 	public void createInvitation(String memberEmail, InvitationCreateRequestDTO createRequestDTO) {
-		
+
 		log.info("초청장 생성 시작 - memberEmail: {}", memberEmail);
-		
+
 		Member member = memberRepository.findByEmail(memberEmail)
 			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
 
@@ -53,8 +57,8 @@ public class InvitationService {
 		if (couple.isPresent()) {
 			Member otherMember = couple.get().getOtherMember(member);
 			if (invitationRepository.existsByMember(otherMember)) {
-				log.warn("초청장 생성 실패 - 커플의 다른 멤버가 이미 보유 중. memberId: {}, otherMemberId: {}", 
-						member.getId(), otherMember.getId());
+				log.warn("초청장 생성 실패 - 커플의 다른 멤버가 이미 보유 중. memberId: {}, otherMemberId: {}",
+					member.getId(), otherMember.getId());
 				throw new BadRequestException(
 					ErrorStatus.BAD_REQUEST_ALREADY_OTHER_MEMBER_HAVE_INVITATION.getMessage());
 			}
@@ -95,7 +99,8 @@ public class InvitationService {
 
 			// 티켓 사진 저장
 			if (createRequestDTO.getTicketMedia() != null) {
-				Media main = createRequestDTO.getTicketMedia().toEntity(MediaDomain.INVITATION, saved.getId(), "ticket");
+				Media main = createRequestDTO.getTicketMedia()
+					.toEntity(MediaDomain.INVITATION, saved.getId(), "ticket");
 				mediaService.save(main);
 				log.debug("티켓 미디어 저장 완료 - invitationId: {}", saved.getId());
 			}
@@ -108,7 +113,7 @@ public class InvitationService {
 				mediaService.saveAll(mediaToSave);
 				log.debug("일반 미디어 저장 완료 - invitationId: {}, 개수: {}", saved.getId(), mediaToSave.size());
 			}
-			
+
 			log.info("초청장 생성 완료 - memberId: {}, invitationId: {}", member.getId(), saved.getId());
 		} catch (Exception e) {
 			log.error("초청장 생성 실패 - memberEmail: {}", memberEmail, e);
@@ -117,9 +122,9 @@ public class InvitationService {
 	}
 
 	public InvitationGetResponseDTO getInvitation(String memberEmail) {
-		
+
 		log.debug("초청장 조회 시작 - memberEmail: {}", memberEmail);
-		
+
 		Member member = memberRepository.findByEmail(memberEmail)
 			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
 
@@ -129,7 +134,7 @@ public class InvitationService {
 		Optional<Invitation> invitation = invitationRepository.findByMember(member);
 		if (invitation.isPresent()) {
 			log.debug("본인 초청장 발견 - memberId: {}, invitationId: {}", member.getId(), invitation.get().getId());
-			
+
 			InvitationGetResponseDTO response = buildInvitationResponse(invitation.get());
 			log.info("초청장 조회 완료 (본인) - memberId: {}, invitationId: {}", member.getId(), invitation.get().getId());
 			return response;
@@ -140,40 +145,63 @@ public class InvitationService {
 			Member otherMember = couple.get().getOtherMember(member);
 			invitation = invitationRepository.findByMember(otherMember);
 			if (invitation.isPresent()) {
-				log.debug("커플 상대방 초청장 발견 - memberId: {}, otherMemberId: {}, invitationId: {}", 
-						member.getId(), otherMember.getId(), invitation.get().getId());
-				
+				log.debug("커플 상대방 초청장 발견 - memberId: {}, otherMemberId: {}, invitationId: {}",
+					member.getId(), otherMember.getId(), invitation.get().getId());
+
 				InvitationGetResponseDTO response = buildInvitationResponse(invitation.get());
 				log.info("초청장 조회 완료 (커플) - memberId: {}, invitationId: {}", member.getId(), invitation.get().getId());
 				return response;
 			}
 		}
-		
+
 		log.info("초청장 없음 - memberEmail: {}", memberEmail);
 		return null;
 	}
-	
+
 	private InvitationGetResponseDTO buildInvitationResponse(Invitation invitation) {
 		try {
-			String mainMediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.getId(), "main")
-				.getFirst();
+			// 메인 미디어 URL 조회 (안전하게 처리)
+			List<String> mainMediaUrls = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.getId(), "main");
+			String mainMediaUrl = mainMediaUrls.isEmpty() ? null : mainMediaUrls.get(0);
 
-			List<String> filmMediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.getId(),
-				"film");
+			// 필름 미디어 URL 리스트 조회
+			List<String> filmMediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.getId(), "film");
 
-			String ticketMediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.getId(),
-					"ticket")
-				.getFirst();
+			// 티켓 미디어 URL 조회 (안전하게 처리)
+			List<String> ticketMediaUrls = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.getId(),
+				"ticket");
+			String ticketMediaUrl = ticketMediaUrls.isEmpty() ? null : ticketMediaUrls.get(0);
 
-			List<String> mediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.getId(),
-				"media");
+			// 일반 미디어 URL 리스트 조회
+			List<String> mediaUrl = mediaService.findMediaUrls(MediaDomain.INVITATION, invitation.getId(), "media");
+
+			// MarriagePlace에 location 정보 설정
+			MarriagePlace marriagePlace = invitation.getMarriagePlace();
+			if (marriagePlace != null && marriagePlace.getVendorName() != null && !marriagePlace.getVendorName()
+				.trim()
+				.isEmpty()) {
+				// 업체명을 통해 업체 조회하여 full address 설정
+				Optional<Vendor> vendorOpt = vendorRepository.findFirstByName(marriagePlace.getVendorName());
+				if (vendorOpt.isPresent()) {
+					Vendor vendor = vendorOpt.get();
+					String location = vendor.getFullAddress();
+					if (vendor.getAddressDetail() != null && !vendor.getAddressDetail().trim().isEmpty()) {
+						location += " " + vendor.getAddressDetail();
+					}
+					marriagePlace.setLocation(location);
+					log.debug("결혼식장 위치 정보 설정 완료 - vendorName: {}, location: {}",
+						marriagePlace.getVendorName(), location);
+				} else {
+					log.warn("결혼식장 업체를 찾을 수 없음 - vendorName: {}", marriagePlace.getVendorName());
+				}
+			}
 
 			return InvitationGetResponseDTO.builder()
 				.id(invitation.getId())
 				.basicInformation(invitation.getBasicInformation())
 				.greetings(invitation.getGreetings())
 				.marriageDate(invitation.getMarriageDate())
-				.marriagePlace(invitation.getMarriagePlace())
+				.marriagePlace(marriagePlace)
 				.gallery(invitation.getGallery())
 				.ending(invitation.getEnding())
 				.account(invitation.getAccount())

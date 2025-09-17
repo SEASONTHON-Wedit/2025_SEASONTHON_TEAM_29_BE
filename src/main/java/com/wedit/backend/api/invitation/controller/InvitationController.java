@@ -80,6 +80,7 @@ public class InvitationController {
 			**응답 정보:**
 			- 신랑/신부 기본 정보
 			- 결혼식 장소 및 날짜/시간
+			- **marriagePlace.location**: vendorName을 통해 자동으로 조회된 업체의 전체 주소
 			- 인사말 및 갤러리 이미지
 			- 템플릿 및 테마 정보
 			
@@ -89,16 +90,30 @@ public class InvitationController {
 			  "code": 200,
 			  "message": "초청장 조회 성공",
 			  "data": {
-			    "groomName": "김철수",
-			    "brideName": "이영희",
-			    "marriagePlace": "아펠가모 선릉점",
-			    "marriageDate": "2025-10-15",
-			    "marriageTime": "14:00",
+			    "marriagePlace": {
+			      "vendorName": "아펠가모 선릉",
+			      "floorAndHall": "2층 로얄홀",
+			      "drawSketchMap": true,
+			      "location": "서울 강남구 테헤란로 322 한신인터벨리24 빌딩 4층"
+			    },
+			    "basicInformation": {
+			      "groomName": "김철수",
+			      "brideName": "이영희"
+			    },
+			    "marriageDate": {
+			      "date": "2025-10-15",
+			      "time": "14:00"
+			    },
 			    "greetings": "저희 두 사람이 사랑의 결실을 맺게 되었습니다...",
 			    "galleryImages": ["https://cdn.example.com/image1.jpg"]
 			  }
 			}
 			```
+			
+			**⭐ 새로운 기능:**
+			- `marriagePlace.location` 필드가 자동으로 설정됩니다
+			- `vendorName`에 해당하는 업체를 데이터베이스에서 조회하여 `fullAddress + addressDetail`을 location으로 제공
+			- 업체를 찾을 수 없는 경우 location은 null로 반환됩니다
 			""",
 		security = @SecurityRequirement(name = "Bearer Authentication")
 	)
