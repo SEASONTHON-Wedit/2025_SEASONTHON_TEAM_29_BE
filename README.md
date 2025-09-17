@@ -103,7 +103,7 @@ http://localhost:8080/api/v3/api-docs
 
 ## 🏗 인프라 아키텍처
 
-<img width="1085" height="813" alt="infra drawio" src="https://github.com/user-attachments/assets/7233d947-bf44-4350-9c41-22183e19bf9b" />
+<img width="1085" height="813" alt="infra drawio2" src="https://github.com/user-attachments/assets/91c247e5-b878-41c7-af6f-1b0384b0e60b" />
 
 ---
 
