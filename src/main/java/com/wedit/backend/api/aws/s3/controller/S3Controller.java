@@ -16,11 +16,16 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +33,7 @@ import java.util.List;
 @Tag(name = "S3", description = "S3 미디어(이미지/비디오/오디오) API 입니다.")
 @RestController
 @RequiredArgsConstructor
+@Validated
 @RequestMapping("/api/v1/s3")
 public class S3Controller {
 
@@ -36,21 +42,29 @@ public class S3Controller {
 
 
     @Operation(summary = "단일 미디어 업로드용 Presigned URL 발급",
-            description = "하나의 미디어 파일(이미지/비디오/오디오)을 S3에 업로드하기 위한 Presigned URL을 발급합니다.")
+            description = """
+                하나의 미디어 파일(이미지/비디오/오디오)을 S3에 업로드하기 위한 Presigned URL을 발급합니다.
+                
+                **지원 파일 타입:**
+                - 이미지: jpg, jpeg, png, gif, webp (최대 15MB)
+                - 비디오: mp4, mov, avi (최대 100MB)
+                
+                **도메인별 사용:**
+                - REVIEW: 후기 이미지/동영상
+                - VENDOR: 업체 로고/대표 이미지  
+                - INVITATION: 초청장 갤러리 이미지
+                """,
+            security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "URL 발급 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 파일 타입 또는 크기 초과", content = @Content),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "유효하지 않은 토큰", content = @Content)
     })
-    @Parameters({
-            @Parameter(name = "domain", description = "업로드 도메인(e.g., 'review', 'vendor', 'invitation')", required = true, example = "review"),
-            @Parameter(name = "reqToken", hidden = true)
-    })
     @PutMapping("/{domain}/upload-url")
     public ResponseEntity<ApiResponse<PresignedUrlResponseDTO>> getSinglePutUrl(
-            @PathVariable MediaDomain domain,
-            @RequestBody PresignedUrlRequestDTO reqDto,
-            @RequestHeader("Authorization") String reqToken) {
+            @Parameter(description = "업로드 도메인", example = "REVIEW") @PathVariable @NotNull MediaDomain domain,
+            @Valid @RequestBody PresignedUrlRequestDTO reqDto,
+            @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken) {
 
         Long memberId = extractMemberId(reqToken);
 
@@ -62,22 +76,31 @@ public class S3Controller {
     }
 
     @Operation(summary = "복수 미디어 업로드용 Presigned URL 발급",
-            description = "여러 개의 미디어 파일을 S3에 업로드하기 위한 Presigned URL 리스트를 발급합니다."
+            description = """
+                여러 개의 미디어 파일을 S3에 업로드하기 위한 Presigned URL 리스트를 발급합니다.
+                
+                **배치 업로드:**
+                - 최대 10개 파일까지 동시 처리 가능
+                - 각 파일은 개별 검증 수행
+                - 하나라도 실패 시 전체 요청 실패
+                
+                **사용 예시:**
+                - 후기 작성 시 여러 이미지 동시 업로드
+                - 갤러리 사진 일괄 업로드
+                """,
+            security = @SecurityRequirement(name = "Bearer Authentication")
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "URL 목록 발급 성공"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 파일 타입 또는 크기 초과", content = @Content),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "유효하지 않은 토큰", content = @Content)
     })
-    @Parameters({
-            @Parameter(name = "domain", description = "업로드 도메인(e.g., 'review', 'vendor', 'invitation')", required = true, example = "vendor"),
-            @Parameter(name = "reqToken", hidden = true)
-    })
     @PutMapping("/{domain}/upload-urls")
     public ResponseEntity<ApiResponse<List<PresignedUrlResponseDTO>>> getMultiplePutUrl(
-            @PathVariable MediaDomain domain,
-            @RequestBody List<PresignedUrlRequestDTO> reqDtos,
-            @RequestHeader("Authorization") String reqToken) {
+            @Parameter(description = "업로드 도메인", example = "VENDOR") @PathVariable @NotNull MediaDomain domain,
+            @Valid @RequestBody @NotEmpty(message = "파일 목록은 비어있을 수 없습니다") List<PresignedUrlRequestDTO> reqDtos,
+            @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken) {
+
         Long memberId = extractMemberId(reqToken);
 
         for (var req : reqDtos) {

@@ -77,12 +77,35 @@ public class ProductService {
                     .map(media -> s3Service.toCdnUrl(media.getMediaKey()))
                     .collect(Collectors.toList());
 
+            Map<String, Object> details = new HashMap<>();
+
+            if (product instanceof WeddingHallProduct hall) {
+                details.put("hallStyle", hall.getHallStyle().getDisplayName());
+                details.put("hallMeal", hall.getHallMeal().getDisplayName());
+                details.put("capacity", hall.getCapacity());
+                details.put("hasParking", hall.getHasParking());
+                details.put("weddingHallSeat",  hall.getWeddingHallSeat());
+                details.put("banquetHallSeat",  hall.getBanquetHallSeat());
+            } else if (product instanceof StudioProduct studio) {
+                details.put("studioStyle", studio.getStudioStyle().getDisplayName());
+                details.put("specialShot", studio.getSpecialShot().getDisplayName());
+                details.put("iphoneSnap", studio.getIphoneSnap());
+            } else if (product instanceof DressProduct dress) {
+                details.put("dressStyle", dress.getDressStyle().getDisplayName());
+                details.put("dressOrigin", dress.getDressOrigin().getDisplayName());
+            } else if (product instanceof MakeupProduct makeup) {
+                details.put("makeupStyle", makeup.getMakeupStyle().getDisplayName());
+                details.put("hasPrivateRoom", makeup.getHasPrivateRoom());
+                details.put("isStylistDesignationAvailable", makeup.getIsStylistDesignationAvailable());
+            }
+
             return VendorDetailResponseDTO.ProductSummaryDTO.builder()
                     .id(product.getId())
                     .name(product.getName())
                     .description(product.getDescription())
                     .basePrice(product.getBasePrice())
                     .imageUrls(imageUrls)
+                    .details(details)
                     .build();
         }).collect(Collectors.toList());
     }
@@ -105,14 +128,17 @@ public class ProductService {
             details.put("hallMeal", hall.getHallMeal().getDisplayName());
             details.put("capacity", hall.getCapacity());
             details.put("hasParking", hall.getHasParking());
+            details.put("weddingHallSeat", hall.getWeddingHallSeat());
+            details.put("banquetHallSeat", hall.getBanquetHallSeat());
         } else if (product instanceof StudioProduct studio) {
-            details.put("photoStyle", studio.getPhotoStyle().getDisplayName());
+            details.put("studioStyle", studio.getStudioStyle().getDisplayName());
             details.put("specialShot", studio.getSpecialShot().getDisplayName());
             details.put("iphoneSnap", studio.getIphoneSnap());
         } else if (product instanceof DressProduct dress) {
-            details.put("mainMaterial", dress.getMainMaterial().getDisplayName());
+            details.put("dressStyle", dress.getDressStyle().getDisplayName());
             details.put("dressOrigin", dress.getDressOrigin().getDisplayName());
         } else if (product instanceof MakeupProduct makeup) {
+            details.put("makeupStyle", makeup.getMakeupStyle().getDisplayName());
             details.put("hasPrivateRoom", makeup.getHasPrivateRoom());
             details.put("isStylistDesignationAvailable", makeup.getIsStylistDesignationAvailable());
         }
@@ -136,18 +162,22 @@ public class ProductService {
             case WEDDING_HALL -> WeddingHallProduct.builder()
                     .vendor(vendor)
                     .name(request.getName())
+                    .description(request.getDescription())
                     .basePrice(request.getBasePrice())
                     .hallStyle(request.getHallStyle())
                     .hallMeal(request.getHallMeal())
                     .capacity(request.getCapacity())
                     .hasParking(request.getHasParking())
+                    .weddingHallSeat(request.getWeddingHallSeat())
+                    .banquetHallSeat(request.getBanquetHallSeat())
                     .durationInMinutes(request.getDurationInMinutes())
                     .build();
             case STUDIO -> StudioProduct.builder()
                     .vendor(vendor)
                     .name(request.getName())
+                    .description(request.getDescription())
                     .basePrice(request.getBasePrice())
-                    .photoStyle(request.getPhotoStyle())
+                    .studioStyle(request.getStudioStyle())
                     .specialShot(request.getSpecialShot())
                     .iphoneSnap(request.getIphoneSnap())
                     .durationInMinutes(request.getDurationInMinutes())
@@ -155,7 +185,9 @@ public class ProductService {
             case MAKEUP -> MakeupProduct.builder()
                     .vendor(vendor)
                     .name(request.getName())
+                    .description(request.getDescription())
                     .basePrice(request.getBasePrice())
+                    .makeupStyle(request.getMakeupStyle())
                     .hasPrivateRoom(request.getHasPrivateRoom())
                     .isStylistDesignationAvailable(request.getIsStylistDesignationAvailable())
                     .durationInMinutes(request.getDurationInMinutes())
@@ -163,8 +195,9 @@ public class ProductService {
             case DRESS -> DressProduct.builder()
                     .vendor(vendor)
                     .name(request.getName())
+                    .description(request.getDescription())
                     .basePrice(request.getBasePrice())
-                    .mainMaterial(request.getMainMaterial())
+                    .dressStyle(request.getDressStyle())
                     .dressOrigin(request.getDressOrigin())
                     .durationInMinutes(request.getDurationInMinutes())
                     .build();

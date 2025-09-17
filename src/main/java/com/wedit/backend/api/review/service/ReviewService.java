@@ -205,15 +205,25 @@ public class ReviewService {
         // 특정 업체의 리뷰 통계 (총 후기 개수, 평균 별점)
         Object[] stats = reviewRepository.findReviewStatsByVendorId(vendorId)
                 .orElse(new Object[]{0L, 0.0});
-        Long totalCount = (Long) stats[0];
-        Double averageRating = (Double) stats[1];
+
+        Long totalCount = (stats.length > 0 && stats[0] instanceof Number)
+                ? ((Number) stats[0]).longValue()
+                : 0L;
+
+        Double averageRating = (stats.length > 1 && stats[1] instanceof Number)
+                ? ((Number) stats[1]).doubleValue()
+                : 0.0;
+
+        if (totalCount == 0L) {
+            averageRating = 0.0;
+        }
 
         // 특정 업체의 별점 별 후기 개수
         Map<Integer, Long> ratingCountResult = reviewRepository.findRatingCountsByVendorId(vendorId)
                 .stream()
                 .collect(Collectors.toMap(
-                        row -> (Integer) row[0],
-                        row -> (Long) row[1]
+                        row -> (row[0] instanceof Number) ? ((Number) row[0]).intValue() : 0,
+                        row -> (row[1] instanceof Number) ? ((Number) row[1]).longValue() : 0L
                 ));
 
         // DTO 조립 후 반환
@@ -268,8 +278,17 @@ public class ReviewService {
          Object[] stats = reviewRepository.findReviewStatsByVendorId(vendorId)
                  .orElse(new Object[]{0L, 0.0});
 
-         Long reviewCount = (Long) stats[0];
-         Double averageRating = (Double) stats[1];
+         Long reviewCount = (stats.length > 0 && stats[0] instanceof Number)
+                 ? ((Number) stats[0]).longValue()
+                 : 0L;
+
+         Double averageRating = (stats.length > 1 && stats[1] instanceof Number)
+                 ? ((Number) stats[1]).doubleValue()
+                 : 0.0;
+
+         if (reviewCount == 0L) {
+             averageRating = 0.0;
+         }
 
          Vendor vendor = vendorRepository.findById(vendorId)
                  .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + "통계 업데이트 중 업체를 찾을 수 없습니다: " + vendorId));

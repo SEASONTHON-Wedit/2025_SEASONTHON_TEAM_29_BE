@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
 
 import com.wedit.backend.api.todoList.dto.TodoItemResponseDTO;
 import com.wedit.backend.api.todoList.dto.TodoListResponseDTO;
@@ -21,10 +22,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.constraints.Positive;
 
 @Tag(name = "todo", description = "TODO LIST 관련 API 입니다.")
 @RestController
 @RequiredArgsConstructor
+@Validated
 @RequestMapping("/api/v1/todo")
 public class TodoListController {
 
@@ -57,7 +60,7 @@ public class TodoListController {
 	})
 	@PostMapping("/{templateId}/toggle")
 	public ResponseEntity<ApiResponse<TodoItemResponseDTO>> toggleTodo(
-		@Parameter(description = "TODO 템플릿 ID", example = "1") @PathVariable Long templateId,
+		@Parameter(description = "TODO 템플릿 ID", example = "1") @PathVariable @Positive Long templateId,
 		@AuthenticationPrincipal UserDetails userDetails) {
 
 		TodoItemResponseDTO response = todoListService.toggleTodo(templateId, userDetails.getUsername());

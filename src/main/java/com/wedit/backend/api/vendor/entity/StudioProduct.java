@@ -1,11 +1,8 @@
 package com.wedit.backend.api.vendor.entity;
 
-import com.wedit.backend.api.vendor.entity.enums.StudioPhotoStyle;
+import com.wedit.backend.api.vendor.entity.enums.StudioStyle;
 import com.wedit.backend.api.vendor.entity.enums.StudioSpecialShot;
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,9 +15,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StudioProduct extends Product {
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private StudioPhotoStyle photoStyle;
+    private StudioStyle studioStyle;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StudioSpecialShot specialShot;
 
@@ -29,11 +28,11 @@ public class StudioProduct extends Product {
 
     @Builder
     public StudioProduct(Vendor vendor, String name, Long basePrice, String description,
-                         Integer durationInMinutes, StudioPhotoStyle photoStyle,
+                         Integer durationInMinutes, StudioStyle studioStyle,
                          StudioSpecialShot specialShot, Boolean iphoneSnap) {
 
         super(vendor, name, basePrice, description, durationInMinutes);
-        this.photoStyle = photoStyle;
+        this.studioStyle = studioStyle;
         this.specialShot = specialShot;
         this.iphoneSnap = iphoneSnap;
     }

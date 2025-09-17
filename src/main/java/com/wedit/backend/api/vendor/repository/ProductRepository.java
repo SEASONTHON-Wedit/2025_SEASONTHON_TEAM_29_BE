@@ -11,7 +11,8 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
 
-    Optional<Long> findMinBasePriceByVendorId(Long vendorId);
+    @Query("SELECT MIN(p.basePrice) FROM Product p WHERE p.vendor.id = :vendorId")
+    Optional<Long> findMinBasePriceByVendorId(@Param("vendorId") Long vendorId);
 
     List<Product> findAllByVendorId(Long vendorId);
 

@@ -1,9 +1,7 @@
 package com.wedit.backend.api.vendor.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.wedit.backend.api.vendor.entity.enums.MakeupStyle;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,6 +14,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MakeupProduct extends Product {
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MakeupStyle makeupStyle;
+
     @Column(nullable = false)
     private Boolean hasPrivateRoom; // 단독룸 있는지
 
@@ -25,8 +27,9 @@ public class MakeupProduct extends Product {
     @Builder
     public MakeupProduct(Vendor vendor, String name, Long basePrice, String description,
                          Integer durationInMinutes, Boolean hasPrivateRoom,
-                         Boolean isStylistDesignationAvailable) {
+                         MakeupStyle makeupStyle, Boolean isStylistDesignationAvailable) {
         super(vendor, name, basePrice, description, durationInMinutes);
+        this.makeupStyle =  makeupStyle;
         this.hasPrivateRoom = hasPrivateRoom;
         this.isStylistDesignationAvailable = isStylistDesignationAvailable;
     }

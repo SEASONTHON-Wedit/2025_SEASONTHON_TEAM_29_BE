@@ -20,11 +20,13 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 
 @Service
@@ -48,12 +50,12 @@ public class CartService {
         Product product = findProductById(request.getProductId());
 
         if (cart.getCartItems().stream()
-                .anyMatch(
-                        item -> item.getProduct()
-                                .getId()
-                                .equals(product.getId()))
-        ) {
-            throw new BadRequestException("이미 견적서에 담긴 상품입니다. productId : " + product.getId());
+                .anyMatch(item ->
+                        item.getProduct().getId().equals(product.getId())
+                                && Objects.equals(item.getExecutionDateTime(), request.getExecutionDateTime())
+                )) {
+            throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_EXIST_CART_ITEM + " productId : "
+                    + product.getId() + ", executionDateTime: " + request.getExecutionDateTime());
         }
 
         CartItem newCartItem = CartItem.builder()
@@ -123,11 +125,22 @@ public class CartService {
 
     
     // 사용자의 견적서 상세 정보 조회
-    @Transactional(readOnly = true)
     public CartDetailResponseDTO getCartDetails(Long memberId) {
 
         Member member = findMemberById(memberId);
         Cart cart = getOrCreateCart(member);
+
+        // Cart에 CartItem이 없다면 바로 빈 응답 반환
+        if (cart.getCartItems().isEmpty()) {
+            return CartDetailResponseDTO.builder()
+                    .totalActivePrice(0L)
+                    .weddingHalls(new ArrayList<>())
+                    .dresses(new ArrayList<>())
+                    .makeups(new ArrayList<>())
+                    .studios(new ArrayList<>())
+                    .build();
+        }
+        
         List<CartItem> cartItems = cartItemRepository.findAllWithDetailsByCart(cart);
 
         List<CartDetailResponseDTO.CartItemDTO> itemDTOs = cartItems.stream().map(this::mapCartItemToDto).toList();
@@ -146,7 +159,11 @@ public class CartService {
             }
         }
 
-        Comparator<CartDetailResponseDTO.CartItemDTO> dateComparator = Comparator.comparing(CartDetailResponseDTO.CartItemDTO::getExecutionDateTime);
+        Comparator<CartDetailResponseDTO.CartItemDTO> dateComparator = Comparator.comparing(
+                CartDetailResponseDTO.CartItemDTO::getExecutionDateTime,
+                Comparator.nullsLast(Comparator.naturalOrder())
+        );
+
         weddingHalls.sort(dateComparator);
         dresses.sort(dateComparator);
         makeups.sort(dateComparator);
@@ -209,7 +226,6 @@ public class CartService {
     }
 
     private Cart getOrCreateCart(Member member) {
-
         return cartRepository.findByMember(member)
                 .orElseGet(() -> cartRepository.save(Cart.builder().member(member).build()));
     }

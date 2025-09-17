@@ -13,6 +13,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.stream.Collectors;
 
@@ -24,7 +26,9 @@ public class GlobalExceptionAdvice {
     // 커스텀 예외 처리 (ex. BAD_REQUEST, CONFLICT 등)
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<ApiResponse> handleCostumeException(BaseException ex) {
-
+        
+        log.warn("커스텀 예외 발생 - {}: {}", ex.getClass().getSimpleName(), ex.getMessage());
+        
         return ResponseEntity.status(ex.getStatusCode())
                 .body(ApiResponse.fail(ex.getStatusCode(), ex.getMessage()));
     }
@@ -40,18 +44,49 @@ public class GlobalExceptionAdvice {
                         ErrorStatus.INTERNAL_SERVER_ERROR.getMessage()));
     }
 
+    // @Validated 어노테이션으로 검증 실패 (@RequestParam, @PathVariable 등)
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse> handleConstraintViolation(ConstraintViolationException ex) {
+        
+        String errorMsg = ex.getConstraintViolations().stream()
+                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+                .collect(Collectors.joining(", "));
+        
+        log.warn("파라미터 검증 실패 - {}", errorMsg);
+                
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
+                .body(ApiResponse.fail(ErrorStatus.BAD_REQUEST_VALID_FAILED.getStatusCode(), errorMsg));
+    }
+
+    // 파라미터 타입 불일치 (ex. String을 Long으로 변환 실패)
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        
+        String errorMsg = String.format("파라미터 '%s'의 값 '%s'을(를) %s 타입으로 변환할 수 없습니다", 
+                ex.getName(), ex.getValue(), ex.getRequiredType().getSimpleName());
+        
+        log.warn("파라미터 타입 변환 실패 - {}", errorMsg);
+                
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
+                .body(ApiResponse.fail(ErrorStatus.BAD_REQUEST_MISSING_PARAM.getStatusCode(), errorMsg));
+    }
+
     // 필수 요청 파라미터 누락 (ex. 리뷰 ID 없이 리뷰 조회)
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ApiResponse> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex) {
+        
+        String errorMsg = ErrorStatus.BAD_REQUEST_MISSING_REQUIRED_FIELD.getMessage() + ": " + ex.getParameterName();
+        log.warn("필수 파라미터 누락 - {}", errorMsg);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
-                .body(ApiResponse.fail(ErrorStatus.BAD_REQUEST_MISSING_REQUIRED_FIELD.getStatusCode(),
-                        ErrorStatus.BAD_REQUEST_MISSING_REQUIRED_FIELD.getMessage() + ": " + ex.getParameterName()));
+                .body(ApiResponse.fail(ErrorStatus.BAD_REQUEST_MISSING_REQUIRED_FIELD.getStatusCode(), errorMsg));
     }
 
     // 잘못된 인자 전달 (ex. 숫자 필드에 문자열 입력)
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        
+        log.warn("잘못된 인자 - {}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
                 .body(ApiResponse.fail(ErrorStatus.BAD_REQUEST_MISSING_PARAM.getStatusCode(), ex.getMessage()));
@@ -65,6 +100,8 @@ public class GlobalExceptionAdvice {
                 .map(error -> String.format("%s: %s", error.getField(),
                         error.getDefaultMessage()))
                 .collect(Collectors.joining(", "));
+        
+        log.warn("DTO 검증 실패 - {}", errorMsg);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST.value())
                 .body(ApiResponse.fail(ErrorStatus.BAD_REQUEST_VALID_FAILED.getStatusCode(), errorMsg));
@@ -73,6 +110,8 @@ public class GlobalExceptionAdvice {
     // DB에 존재하지 않는 리소스 접근/조작 시도 (ex. 존재하지 않은 리뷰 접근)
     @ExceptionHandler(EmptyResultDataAccessException.class)
     public ResponseEntity<ApiResponse> handleEmptyResultDataAccessException(EmptyResultDataAccessException ex) {
+        
+        log.warn("존재하지 않는 리소스 접근 - {}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND.value())
                 .body(ApiResponse.fail(ErrorStatus.NOT_FOUND_RESOURCE.getStatusCode(),
@@ -87,7 +126,8 @@ public class GlobalExceptionAdvice {
                 .map(Object::toString)
                 .collect(Collectors.joining(", "));
 
-        String errorMsg = ex.getMessage() + " " + supportedType + " (" + ex.getMessage() + ")";
+        String errorMsg = "지원하지 않는 Content-Type입니다. 지원 타입: " + supportedType;
+        log.warn("지원하지 않는 Content-Type - 요청: {}, 지원: {}", ex.getContentType(), supportedType);
 
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value())
                 .body(ApiResponse.fail(ErrorStatus.UNSUPPORTED_MEDIA_TYPE.getStatusCode(), errorMsg));

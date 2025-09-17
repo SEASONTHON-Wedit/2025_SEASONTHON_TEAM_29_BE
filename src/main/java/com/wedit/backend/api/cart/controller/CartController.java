@@ -9,8 +9,11 @@ import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.ErrorStatus;
 import com.wedit.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/cart")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Cart", description = "Cart (견적서, 장바구니) 관련 API 입니다.")
 public class CartController {
 
@@ -26,10 +30,13 @@ public class CartController {
     private final JwtService jwtService;
 
 
-    @Operation(summary = "내 견적서 상세 조회 API")
+    @Operation(
+            summary = "내 견적서 상세 조회 API",
+            description = "견적서에 아이템이 없다면 200과 함께 빈 배열을 반환합니다."
+    )
     @GetMapping
     public ResponseEntity<ApiResponse<CartDetailResponseDTO>> getCartDetails(
-        @RequestHeader("Authorization") String reqToken) {
+        @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken) {
 
         Long memberId = extractMemberId(reqToken);
 
@@ -41,7 +48,7 @@ public class CartController {
     @Operation(summary = "견적서에 상품 찜 API")
     @PostMapping("/items")
     public ResponseEntity<ApiResponse<Void>> addItemToCart(
-            @RequestHeader("Authorization") String reqToken,
+            @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
             @Valid @RequestBody CartAddRequestDTO request) {
 
         Long memberId = extractMemberId(reqToken);
@@ -54,8 +61,8 @@ public class CartController {
     @Operation(summary = "견적서의 찜한 상품 활성화 API")
     @PatchMapping("/items/{cartItemId}/activate")
     public ResponseEntity<ApiResponse<Void>> activateCartItem(
-            @RequestHeader("Authorization") String reqToken,
-            @PathVariable Long cartItemId) {
+            @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
+            @Parameter(description = "장바구니 아이템 ID", example = "1") @PathVariable @Positive Long cartItemId) {
 
         Long memberId = extractMemberId(reqToken);
 
@@ -67,8 +74,8 @@ public class CartController {
     @Operation(summary = "견적서의 찜한 상품 삭제하기 API")
     @DeleteMapping("/items/{cartItemId}")
     public ResponseEntity<ApiResponse<Void>> removeCartItem(
-            @RequestHeader("Authorization") String reqToken,
-            @PathVariable Long cartItemId) {
+            @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
+            @Parameter(description = "장바구니 아이템 ID", example = "1") @PathVariable @Positive Long cartItemId) {
 
         Long memberId = extractMemberId(reqToken);
 

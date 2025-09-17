@@ -7,9 +7,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum StudioSpecialShot {
 
-    PERSON_CENTERED("인물중심"),
-    DIVERSE_BACKGROUND("배경다양"),
-    PERSON_AND_BACKGROUND("인물+배경");
+    HANOK("한옥"),
+    UNDERWATER("수중"),
+    WITH_PET("반려동물"),
+    NONE("특수촬영안함");
 
     private final String displayName;
 }

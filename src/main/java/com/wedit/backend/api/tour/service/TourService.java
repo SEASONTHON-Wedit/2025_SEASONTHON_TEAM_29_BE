@@ -144,6 +144,7 @@ public class TourService {
 
     // Tour 조회 후 소유권 검증 (수정/삭제용)
     private Tour findOwnedTour(Long tourId, Long memberId) {
+
         Tour tour = tourRepository.findById(tourId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_TOUR.getMessage()));
 

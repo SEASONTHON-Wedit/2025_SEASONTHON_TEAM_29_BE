@@ -1,5 +1,6 @@
 package com.wedit.backend.api.vendor.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.wedit.backend.api.media.dto.MediaRequestDTO;
 import com.wedit.backend.api.vendor.entity.enums.*;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,6 +25,8 @@ public class ProductCreateRequestDTO {
     @NotBlank
     private String name;
 
+    private String description;
+
     @Schema(description = "상품 이미지 목록 (S3 업로드 후 반환된 키)")
     private List<MediaRequestDTO> productImages;
     @Schema(description = "해당 상품 소요시간 분 단위 (ex. 웨딩홀 2시간)")
@@ -42,22 +45,29 @@ public class ProductCreateRequestDTO {
     private Integer capacity;
     @Schema(description = "[웨딩홀] 주차 가능 여부", example = "true")
     private Boolean hasParking;
+    @Schema(description = "[웨딩홀] 웨딩홀 석 수", example = "180")
+    private Integer weddingHallSeat;
+    @Schema(description = "[웨딩홀] 피로연장 석 수", example = "470")
+    private Integer banquetHallSeat;
 
     // --- 스튜디오 속성 ---
     @Schema(description = "[스튜디오] 사진 스타일", example = "HANOK")
-    private StudioPhotoStyle photoStyle;
+    private StudioStyle studioStyle;
     @Schema(description = "[스튜디오] 특수 촬영 옵션", example = "PERSON_CENTERED")
+    @JsonProperty("specialShots")
     private StudioSpecialShot specialShot;
     @Schema(description = "[스튜디오] 아이폰 스냅 가능 여부", example = "true")
     private Boolean iphoneSnap;
 
     // --- 드레스 속성 ---
-    @Schema(description = "[드레스] 주력 소재", example = "SILK")
-    private DressMaterial mainMaterial;
+    @Schema(description = "[드레스] 드레스 스타일", example = "DANAH")
+    private DressStyle dressStyle;
     @Schema(description = "[드레스] 원산지 (국내/수입)", example = "IMPORTED")
     private DressOrigin dressOrigin;
 
     // --- 메이크업 속성 ---
+    @Schema(description = "[메이크업] 메이크업 스타일", example = "ROMANTIC")
+    private MakeupStyle makeupStyle;
     @Schema(description = "[메이크업] 단독룸 보유 여부", example = "true")
     private Boolean hasPrivateRoom;
     @Schema(description = "[메이크업] 스타일리스트 지정 가능 여부", example = "false")
