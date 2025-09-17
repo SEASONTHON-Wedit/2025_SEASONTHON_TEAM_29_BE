@@ -232,13 +232,15 @@ public class ReviewService {
         Object[] stats = reviewRepository.findReviewStatsByVendorId(vendorId)
                 .orElse(new Object[]{0L, 0.0});
 
-        long totalCount = (stats.length > 0 && stats[0] instanceof Number num)
-                ? num.longValue()
-                : 0L;
+        long totalCount = 0L;
+        if (stats.length > 0 && stats[0] != null) {
+            totalCount = ((Number) stats[0]).longValue();
+        }
 
-        double averageRating = (stats.length > 1 && stats[1] instanceof Number num)
-                ? num.doubleValue()
-                : 0.0;
+        double averageRating = 0.0;
+        if (stats.length > 1 && stats[1] != null) {
+            averageRating = ((Number) stats[1]).doubleValue();
+        }
 
         if (totalCount == 0L) {
             averageRating = 0.0;
@@ -248,8 +250,8 @@ public class ReviewService {
         Map<Integer, Long> ratingCountResult = reviewRepository.findRatingCountsByVendorId(vendorId)
                 .stream()
                 .collect(Collectors.toMap(
-                        row -> (row[0] instanceof Number) ? ((Number) row[0]).intValue() : 0,
-                        row -> (row[1] instanceof Number) ? ((Number) row[1]).longValue() : 0L
+                        row -> (row.length > 0 && row[0] != null) ? ((Number) row[0]).intValue() : 0,
+                        row -> (row.length > 1 && row[1] != null) ? ((Number) row[1]).longValue() : 0L
                 ));
 
         // DTO 조립 후 반환
@@ -304,13 +306,15 @@ public class ReviewService {
          Object[] stats = reviewRepository.findReviewStatsByVendorId(vendorId)
                  .orElse(new Object[]{0L, 0.0});
 
-         long reviewCount = (stats.length > 0 && stats[0] instanceof Number num)
-                 ? num.longValue()
-                 : 0L;
+         long reviewCount = 0L;
+         if (stats.length > 0 && stats[0] != null) {
+             reviewCount = ((Number) stats[0]).longValue();
+         }
 
-         double averageRating = (stats.length > 1 && stats[1] instanceof Number num)
-                 ? num.doubleValue()
-                 : 0.0;
+         double averageRating = 0.0;
+         if (stats.length > 1 && stats[1] != null) {
+             averageRating = ((Number) stats[1]).doubleValue();
+         }
 
          if (reviewCount == 0L) {
              averageRating = 0.0;

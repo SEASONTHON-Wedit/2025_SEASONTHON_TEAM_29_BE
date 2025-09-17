@@ -69,6 +69,7 @@ public class InvitationController {
 		@Valid @RequestBody InvitationCreateRequestDTO createRequestDTO) {
 		
 		invitationService.createInvitation(userDetails.getUsername(), createRequestDTO);
+
 		return ApiResponse.successOnly(SuccessStatus.INVITATION_CREATE_SUCCESS);
 	}
 
