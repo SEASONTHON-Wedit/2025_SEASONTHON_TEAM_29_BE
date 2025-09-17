@@ -23,8 +23,6 @@ import com.wedit.backend.api.vendor.entity.enums.StudioStyle;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.TypedQuery;
 import lombok.RequiredArgsConstructor;
 
 @Repository

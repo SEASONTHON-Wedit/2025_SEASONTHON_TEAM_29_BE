@@ -110,13 +110,13 @@ public class ContractController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "존재하지 않는 계약", content = @Content(schema = @Schema(implementation = ApiResponse.class)))
     })
     @GetMapping("/{contractId}")
-    public ResponseEntity<ApiResponse<ContractDetailDTO>> getContractDetail(
+    public ResponseEntity<ApiResponse<ContractDetailResponseDTO>> getContractDetail(
             @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
             @Parameter(description = "계약 ID", example = "1") @PathVariable @Positive Long contractId) {
 
         Long memberId = extractMemberId(reqToken);
 
-        ContractDetailDTO response = contractService.getContractDetail(memberId, contractId);
+        ContractDetailResponseDTO response = contractService.getContractDetail(memberId, contractId);
 
         return ApiResponse.success(SuccessStatus.CONTRACT_DETAIL_GET_SUCCESS, response);
     }
@@ -125,14 +125,21 @@ public class ContractController {
             summary = "후기 작성 가능 계약 목록 조회 (후기 작성하러 가기 페이지)",
             description = "이행일이 지난 계약 목록을 페이징 조회합니다."
     )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "후기 작성 가능 계약 목록 조회 성공")
+    })
+    @Parameters({
+            @Parameter(name = "page", description = "페이지 번호", in = ParameterIn.QUERY, example = "0"),
+            @Parameter(name = "size", description = "페이지 당 항목 수", in = ParameterIn.QUERY, example = "5")
+    })
     @GetMapping("/my/reviewable")
-    public ResponseEntity<ApiResponse<Page<ReviewableContractDTO>>> getReviewableContracts(
+    public ResponseEntity<ApiResponse<Page<ReviewableContractResponseDTO>>> getReviewableContracts(
             @Parameter(hidden = true) @RequestHeader("Authorization") String reqToken,
             @PageableDefault(size = 5) Pageable pageable) {
 
         Long memberId = extractMemberId(reqToken);
 
-        Page<ReviewableContractDTO> response = contractService.getReviewableContracts(memberId, pageable);
+        Page<ReviewableContractResponseDTO> response = contractService.getReviewableContracts(memberId, pageable);
 
         return ApiResponse.success(SuccessStatus.REVIEWABLE_CONTRACT_GET_SUCCESS, response);
     }

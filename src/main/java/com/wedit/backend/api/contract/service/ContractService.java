@@ -15,9 +15,7 @@ import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -88,6 +86,12 @@ public class ContractService {
     public MyContractsResponseDTO getMyContracts(Long memberId, Pageable pageable) {
 
         Member member = findMemberById(memberId);
+
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                    Sort.by(Sort.Direction.ASC, "executionDateTime"));
+        }
+
         Page<Contract> contractsPage = contractRepository.findAllContractsByMember(member, pageable);
 
         // DB단에서 페이징 후 메모리에서 그룹핑
@@ -114,23 +118,30 @@ public class ContractService {
 
     // 후기 작성하러 가기 페이징 조회
     @Transactional(readOnly = true)
-    public Page<ReviewableContractDTO> getReviewableContracts(Long memberId, Pageable pageable) {
+    public Page<ReviewableContractResponseDTO> getReviewableContracts(Long memberId, Pageable pageable) {
 
         Member member = findMemberById(memberId);
-        Page<Contract> pastContractsPage = contractRepository.findPastContractsByMember(member, pageable);
 
-        return pastContractsPage.map(contract -> {
+        // 기본은 이행일 기준 내림차순
+        if (pageable.getSort().isUnsorted()) {
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
+                    Sort.by(Sort.Direction.DESC, "executionDateTime"));
+        }
+
+        Page<Contract> reviewableContractsPage = contractRepository.findReviewableContracts(member, LocalDateTime.now(), pageable);
+
+        return reviewableContractsPage.map(contract -> {
             String logoUrl = contract.getProduct().getVendor().getLogoMedia() != null
                     ? mediaService.toCdnUrl(contract.getProduct().getVendor().getLogoMedia().getMediaKey())
                     : null;
 
-            return ReviewableContractDTO.from(contract, logoUrl);
+            return ReviewableContractResponseDTO.from(contract, logoUrl);
         });
     }
 
     // 계약 상세 조회
     @Transactional(readOnly = true)
-    public ContractDetailDTO getContractDetail(Long memberId, Long contractId) {
+    public ContractDetailResponseDTO getContractDetail(Long memberId, Long contractId) {
 
         Contract contract = contractRepository.findContractDetailsByIdAndMemberId(contractId, memberId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_CONTRACT.getMessage()));
@@ -139,7 +150,7 @@ public class ContractService {
                 ? mediaService.toCdnUrl(contract.getProduct().getVendor().getRepMedia().getMediaKey())
                 : null;
 
-        return ContractDetailDTO.from(contract, repImageUrl);
+        return ContractDetailResponseDTO.from(contract, repImageUrl);
     }
 
     public void createSlots(AvailableSlotCreateRequestDTO request) {

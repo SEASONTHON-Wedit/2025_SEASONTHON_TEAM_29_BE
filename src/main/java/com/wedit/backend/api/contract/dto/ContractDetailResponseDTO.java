@@ -4,7 +4,7 @@ import com.wedit.backend.api.contract.entity.Contract;
 
 import java.time.LocalDateTime;
 
-public record ContractDetailDTO(
+public record ContractDetailResponseDTO(
         Long contractId,
         String vendorName,
         String vendorAddress,
@@ -12,8 +12,8 @@ public record ContractDetailDTO(
         LocalDateTime executionDateTime
 ) {
 
-    public static ContractDetailDTO from(Contract contract, String repImageUrl) {
-        return new ContractDetailDTO(
+    public static ContractDetailResponseDTO from(Contract contract, String repImageUrl) {
+        return new ContractDetailResponseDTO(
                 contract.getId(),
                 contract.getProduct().getVendor().getName(),
                 contract.getProduct().getVendor().getFullAddress(),

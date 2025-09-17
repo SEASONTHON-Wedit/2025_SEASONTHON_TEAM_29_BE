@@ -41,9 +41,9 @@
 
 ----
 
-## 📊 데이터베이스 구조
+## 📊 ERD
 
-<img width="4236" height="3424" alt="Image" src="https://github.com/user-attachments/assets/cc7fc5a7-3816-4c4d-b494-77043e703102" />
+<img width="6140" height="7156" alt="Image" src="https://github.com/user-attachments/assets/1970f074-61d1-4eb2-ab2f-6eaa193336b5" />
 
 ---
 
@@ -100,11 +100,11 @@ http://localhost:8080/api/v3/api-docs
 
 ----
 
-## 🏗 프로젝트 아키텍처
+## 🏗 인프라 아키텍처
 
-<img width="4340" height="2776" alt="Image" src="https://github.com/user-attachments/assets/5fbcb83e-fef3-40ee-bb0f-86a37da2e44e" />
+<img width="1085" height="813" alt="infra drawio" src="https://github.com/user-attachments/assets/0a9c7b08-1a88-4e91-ae31-81c76cc5d721" />
 
----- 
+----
 
 ## 👥 팀원
 
@@ -112,8 +112,8 @@ http://localhost:8080/api/v3/api-docs
 
 | 이름      | 역할 | GitHub                                         | 담당 업무                  |
 |---------|------|------------------------------------------------|------------------------|
-| **김현빈** | Backend Lead | [@kimhyunbin](https://github.com/wien0128)   | 아키텍처 설계, 인증 시스템, CI/CD |
-| **오현우** | Backend Developer | [@HyunWoo9930](https://github.com/HyunWoo9930) | API 개발, 소셜로그인          |
+| **김현빈** | Backend Lead | [@Wien0128](https://github.com/wien0128)   | 아키텍처 설계, 인증/인가, CI/CD, API 개발 |
+| **오현우** | Backend Developer | [@HyunWoo9930](https://github.com/HyunWoo9930) | API 개발, 소셜로그인, 검색          |
 
 <div align="center">
 

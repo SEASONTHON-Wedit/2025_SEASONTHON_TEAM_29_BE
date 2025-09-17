@@ -40,6 +40,7 @@ public class UserEvent extends BaseTimeEntity {
     private LocalDateTime endDateTime;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean isAllDay = false;
 
     @Column(unique = true)

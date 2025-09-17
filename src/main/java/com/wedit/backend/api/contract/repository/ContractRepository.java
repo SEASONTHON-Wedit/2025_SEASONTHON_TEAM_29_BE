@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 
@@ -26,16 +27,16 @@ public interface ContractRepository extends JpaRepository<Contract,Long> {
             countQuery = "SELECT count(c) FROM Contract c WHERE c.member = :member")
     Page<Contract> findAllContractsByMember(@Param("member") Member member, Pageable pageable);
 
-    // 후기 작성하러 가기 페이지  - 지난 계약만 조회
+    // 후기 작성하러 가기 페이지 - 지난 계약과 후기가 달리지 않은 것만 조회
     @Query(value = "SELECT c FROM Contract c " +
-//            "JOIN FETCH c.product p " +
-//            "JOIN FETCH p.vendor v " +
-//            "LEFT JOIN FETCH v.logoMedia " +
-            "WHERE c.member = :member AND c.executionDateTime < CURRENT_TIMESTAMP " +
-            "ORDER BY c.executionDateTime DESC",
-            countQuery = "SELECT count(c) FROM Contract c WHERE c.member = :member AND c.executionDateTime < CURRENT_TIMESTAMP")
-    Page<Contract> findPastContractsByMember(@Param("member") Member member, Pageable pageable);
-
+            "WHERE c.member = :member " +
+            "AND c.executionDateTime < :now " +
+            "AND c.review IS NULL",
+            countQuery = "SELECT COUNT(c) FROM Contract c " +
+                    "WHERE c.member = :member " +
+                    "AND c.executionDateTime < :now " +
+                    "AND c.review IS NULL")
+    Page<Contract> findReviewableContracts(@Param("member") Member member, @Param("now") LocalDateTime now, Pageable pageable);
 
     // 계약 단건 상세 조회를 위한 쿼리
     @Query("SELECT c FROM Contract c " +

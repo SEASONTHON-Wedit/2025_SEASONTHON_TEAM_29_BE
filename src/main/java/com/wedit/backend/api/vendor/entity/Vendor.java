@@ -73,11 +73,8 @@ public class Vendor extends BaseTimeEntity {
         this.minBasePrice = minBasePrice;
     }
 
-    public void setAverageRating(Double averageRating) {
+    public void updateReviewStats(int reviewCount, double averageRating) {
         this.averageRating = averageRating;
-    }
-
-    public void setReviewCount(Integer reviewCount) {
         this.reviewCount = reviewCount;
     }
 }
