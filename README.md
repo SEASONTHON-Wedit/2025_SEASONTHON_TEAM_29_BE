@@ -39,11 +39,6 @@
 ## 🪾 브랜치 전략
 - **Issue**를 통한 feature/bug/fix/refactor 브랜치 생성
 
-----
-
-## 📊 ERD
-
-<img width="6140" height="7156" alt="Image" src="https://github.com/user-attachments/assets/1970f074-61d1-4eb2-ab2f-6eaa193336b5" />
 
 ---
 
@@ -98,13 +93,19 @@ http://localhost:8080/api/swagger-ui.html
 http://localhost:8080/api/v3/api-docs
 ```
 
-----
+---
+
+## 📊 ERD
+
+<img width="6436" height="7096" alt="wedit_ERD" src="https://github.com/user-attachments/assets/f21a976e-3781-4f80-b5e8-fea258dae945" />
+
+---
 
 ## 🏗 인프라 아키텍처
 
-<img width="1085" height="813" alt="infra drawio" src="https://github.com/user-attachments/assets/0a9c7b08-1a88-4e91-ae31-81c76cc5d721" />
+<img width="1085" height="813" alt="infra drawio" src="https://github.com/user-attachments/assets/7233d947-bf44-4350-9c41-22183e19bf9b" />
 
-----
+---
 
 ## 👥 팀원
 
