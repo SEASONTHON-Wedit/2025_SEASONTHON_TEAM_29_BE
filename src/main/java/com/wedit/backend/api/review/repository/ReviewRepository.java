@@ -48,7 +48,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Page<Review> findByVendorIdWithMember(@Param("vendorId") Long vendorId, Pageable pageable);
 
     // 특정 업체의 리뷰 통계 (총 후기 개수, 평균 별점)
-    @Query("SELECT COUNT(r), COALESCE(AVG(r.rating), 0.0) FROM Review r WHERE r.vendor.id = :vendorId")
+    @Query("SELECT COUNT(r) as totalReviewCount, COALESCE(AVG(r.rating), 0.0) as averageRating " +
+            "FROM Review r " +
+            "WHERE r.vendor.id = :vendorId")
     Optional<ReviewStatsSummaryDTO> findReviewStatsByVendorId(@Param("vendorId") Long vendorId);
     
     // 특정 업체의 별점별 후기 개수 조회
