@@ -1,5 +1,6 @@
 package com.wedit.backend.api.review.entity;
 
+import com.wedit.backend.api.contract.entity.Contract;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.common.entity.BaseTimeEntity;
@@ -43,9 +44,20 @@ public class Review extends BaseTimeEntity {
     @JoinColumn(name = "vendor_id")
     private Vendor vendor;
 
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "contract_id", unique = true)
+    private Contract contract;
+
     public void update(int rating, String best, String worst) {
         this.rating = rating;
         this.contentBest = best;
         this.contentWorst = worst;
+    }
+
+    public void setContract(Contract contract) {
+        this.contract = contract;
+        if (contract != null && contract.getReview() != this) {
+            contract.setReviewInternal(this);
+        }
     }
 }

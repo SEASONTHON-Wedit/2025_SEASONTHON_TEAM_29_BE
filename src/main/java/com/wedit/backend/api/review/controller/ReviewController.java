@@ -118,39 +118,6 @@ public class ReviewController {
                 **페이징 설정:**
                 - 기본 페이지 크기: 5개
                 - 페이지 번호는 0부터 시작
-                
-                **예시 요청:**
-                ```
-                GET /api/v1/review/all-reviews?page=0&size=5
-                ```
-                
-                **예시 응답:**
-                ```json
-                {
-                  "code": 200,
-                  "message": "메인 배너 후기 목록 조회 성공",
-                  "data": {
-                    "content": [
-                      {
-                        "reviewId": 1,
-                        "vendorName": "아펠가모 선릉",
-                        "vendorType": "WEDDING_HALL",
-                        "rating": 5,
-                        "content": "정말 만족스러운 서비스였습니다!",
-                        "authorName": "김**",
-                        "createdAt": "2025-09-14T10:30:00",
-                        "imageUrls": ["https://cdn.example.com/image1.jpg"]
-                      }
-                    ],
-                    "totalElements": 25,
-                    "totalPages": 5,
-                    "number": 0,
-                    "size": 5,
-                    "first": true,
-                    "last": false
-                  }
-                }
-                ```
                 """
     )
     @Parameters({
@@ -227,30 +194,6 @@ public class ReviewController {
                 - **totalCount**: 전체 리뷰 개수
                 - **averageRating**: 평균 평점 (소수점 1자리)
                 - **ratingDistribution**: 별점별(1~5점) 리뷰 개수
-                
-                **예시 요청:**
-                ```
-                GET /api/v1/review/1/stats
-                ```
-                
-                **예시 응답:**
-                ```json
-                {
-                  "code": 200,
-                  "message": "업체 후기 통계 조회 성공",
-                  "data": {
-                    "totalCount": 25,
-                    "averageRating": 4.2,
-                    "ratingDistribution": {
-                      "5": 10,
-                      "4": 8,
-                      "3": 5,
-                      "2": 1,
-                      "1": 1
-                    }
-                  }
-                }
-                ```
                 """
     )
     @ApiResponses({
@@ -280,34 +223,6 @@ public class ReviewController {
                 **페이징 설정:**
                 - 기본 페이지 크기: 2개
                 - 페이지 번호는 0부터 시작
-                
-                **예시 요청:**
-                ```
-                GET /api/v1/review/1/reviews?page=0&size=2&sort=rating,desc
-                ```
-                
-                **예시 응답:**
-                ```json
-                {
-                  "code": 200,
-                  "message": "업체 후기 목록 조회 성공",
-                  "data": {
-                    "reviews": [
-                      {
-                        "reviewId": 1,
-                        "rating": 5,
-                        "content": "정말 만족스러운 서비스였습니다!",
-                        "authorName": "김**",
-                        "createdAt": "2025-09-01T10:30:00"
-                      }
-                    ],
-                    "totalElements": 10,
-                    "totalPages": 5,
-                    "currentPage": 0,
-                    "hasNext": true
-                  }
-                }
-                ```
                 """
     )
     @ApiResponses({

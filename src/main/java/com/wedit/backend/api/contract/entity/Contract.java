@@ -1,6 +1,7 @@
 package com.wedit.backend.api.contract.entity;
 
 import com.wedit.backend.api.member.entity.Member;
+import com.wedit.backend.api.review.entity.Review;
 import com.wedit.backend.api.vendor.entity.Product;
 import com.wedit.backend.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
@@ -24,6 +25,9 @@ public class Contract extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "member_id")
     private Member member;
+
+    @OneToOne(mappedBy = "contract", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Review review;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "product_id")
@@ -55,5 +59,9 @@ public class Contract extends BaseTimeEntity {
         if (this.status == ContractStatus.CONFIRMED) {
             this.status = ContractStatus.COMPLETED;
         }
+    }
+
+    public void setReviewInternal(Review review) {
+        this.review = review;
     }
 }

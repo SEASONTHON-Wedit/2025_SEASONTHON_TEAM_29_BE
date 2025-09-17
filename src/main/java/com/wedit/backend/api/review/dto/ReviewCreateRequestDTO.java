@@ -12,8 +12,8 @@ import java.util.List;
 @Schema(description = "후기 작성 요청 DTO")
 public class ReviewCreateRequestDTO {
 
-    @Schema(description = "리뷰를 작성할 업체의 ID", example = "42")
-    private Long vendorId;
+    @Schema(description = "리뷰를 작성할 계약의 ID", example = "42")
+    private Long contractId;
 
     @Schema(description = "별점 (1~5 사이의 정수)", example = "5")
     private Integer rating;

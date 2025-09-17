@@ -1,5 +1,7 @@
 package com.wedit.backend.api.review.service;
 
+import com.wedit.backend.api.contract.entity.Contract;
+import com.wedit.backend.api.contract.repository.ContractRepository;
 import com.wedit.backend.api.media.entity.Media;
 import com.wedit.backend.api.media.entity.enums.MediaDomain;
 import com.wedit.backend.api.media.service.MediaService;
@@ -10,6 +12,7 @@ import com.wedit.backend.api.review.entity.Review;
 import com.wedit.backend.api.review.repository.ReviewRepository;
 import com.wedit.backend.api.vendor.entity.Vendor;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
+import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.ForbiddenException;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.exception.UnauthorizedException;
@@ -35,7 +38,7 @@ public class ReviewService {
     private final VendorRepository vendorRepository;
     private final MemberRepository memberRepository;
     private final MediaService mediaService;
-
+    private final ContractRepository contractRepository;
 
 
     /**
@@ -49,17 +52,24 @@ public class ReviewService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
 
-        Vendor vendor = vendorRepository.findById(dto.getVendorId())
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage()));
+        Contract contract = contractRepository.findContractDetailsByIdAndMemberId(dto.getContractId(), memberId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_CONTRACT.getMessage()));
+
+        if (contract.getReview() != null) {
+            throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_WRITE_REVIEW.getMessage());
+        }
 
         Review review = Review.builder()
                 .contentBest(dto.getContentBest())
                 .contentWorst(dto.getContentWorst())
                 .rating(dto.getRating())
                 .member(member)
-                .vendor(vendor)
+                .vendor(contract.getProduct().getVendor())
+                .contract(contract)
                 .build();
+        review.setContract(contract);
         Review savedReview = reviewRepository.save(review);
+        reviewRepository.flush();
 
         if (dto.getMediaList() != null && !dto.getMediaList().isEmpty()) {
             List<Media> mediaToSave = dto.getMediaList().stream()
@@ -88,6 +98,7 @@ public class ReviewService {
 
         // 텍스트 업데이트
         review.update(dto.getRating(), dto.getContentBest(), dto.getContentWorst());
+        reviewRepository.flush();
 
         // 기존 미디어 DB와 S3 모두 삭제
         mediaService.deleteAllByOwner(MediaDomain.REVIEW, reviewId);
@@ -127,6 +138,7 @@ public class ReviewService {
 
         // 리뷰 삭제
         reviewRepository.delete(review);
+        reviewRepository.flush();
 
         // 업체 통계 갱신
         updateVendorReviewStats(vendorId);
@@ -150,7 +162,21 @@ public class ReviewService {
                 ? "D-" + ChronoUnit.DAYS.between(LocalDate.now(), review.getMember().getWeddingDate())
                 : null;
 
-        return ReviewDetailResponseDTO.from(review, reviewImageUrls, vendorLogoUrl, dDay);
+        return ReviewDetailResponseDTO.builder()
+                .reviewId(reviewId)
+                .contentBest(review.getContentBest())
+                .contentWorst(review.getContentWorst())
+                .rating(review.getRating())
+                .imagesUrls(reviewImageUrls)
+                .createdAt(review.getCreatedAt())
+                .writerName(maskWriterName(review.getMember().getName()))
+                .writerType(review.getMember().getType())
+                .weddingDday(dDay)
+                .vendorId(review.getVendor().getId())
+                .vendorName(review.getVendor().getName())
+                .vendorType(review.getVendor().getVendorType().name())
+                .vendorLogoUrl(vendorLogoUrl)
+                .build();
     }
 
     // 메인 배너 후기 페이징 조회
@@ -184,7 +210,7 @@ public class ReviewService {
     @Transactional(readOnly = true)
     public Page<MyReviewResponseDTO> getMyReviewList(Long memberId, Pageable pageable) {
 
-        // 1. Review와 연관된 Vendor를 함께 페이징 조회
+        // Review와 연관된 Vendor를 함께 페이징 조회
         Page<Review> page = reviewRepository.findByMemberIdWithVendor(memberId, pageable);
         if (page.isEmpty()) {
             return Page.empty();
@@ -308,7 +334,7 @@ public class ReviewService {
 
         return ReviewCreateResponseDTO.builder()
                 .reviewId(review.getId())
-                .memberName(review.getMember().getName())
+                .memberName(maskWriterName(review.getMember().getName()))
                 .vendorName(review.getVendor().getName())
                 .rating(review.getRating())
                 .contentBest(review.getContentBest())
@@ -322,7 +348,7 @@ public class ReviewService {
 
         return ReviewUpdateResponseDTO.builder()
                 .reviewId(review.getId())
-                .memberName(review.getMember().getName())
+                .memberName(maskWriterName(review.getMember().getName()))
                 .vendorName(review.getVendor().getName())
                 .rating(review.getRating())
                 .contentBest(review.getContentBest())
@@ -337,6 +363,9 @@ public class ReviewService {
     private String maskWriterName(String name) {
         if (name == null || name.isEmpty()) {
             return name;
+        }
+        if (name.length() == 1) {
+            return "*";
         }
         return name.substring(0, name.length() - 1) + "*";
     }
