@@ -66,6 +66,7 @@ public enum SuccessStatus {
     CONDITION_SEARCH_SUCCESS(HttpStatus.OK, "조건 검색 성공"),
     CALENDAR_EVENTS_GET_SUCCESS(HttpStatus.OK, "캘린더 월별 일정 조회 성공"),
     CALENDAR_UPDATE_SUCCESS(HttpStatus.OK, "캘린더 일정 수정 성공"),
+    VENDOR_ADDRESS_GET_SUCCESS(HttpStatus.OK, "업체 주소 조회 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),

@@ -16,6 +16,7 @@ import com.wedit.backend.api.media.entity.enums.MediaDomain;
 import com.wedit.backend.api.media.service.MediaService;
 import com.wedit.backend.api.vendor.dto.request.VendorCreateRequestDTO;
 import com.wedit.backend.api.vendor.dto.response.ProductResponseDTO;
+import com.wedit.backend.api.vendor.dto.response.VendorAddressResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorBannerResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorDetailResponseDTO;
 import com.wedit.backend.api.vendor.entity.enums.DressOrigin;
@@ -398,6 +399,29 @@ public class VendorService {
 			.reviewCount(vendor.getReviewCount())
 			.logoMediaUrl(vendor.getLogoMedia() != null ?
 				s3Service.toCdnUrl(vendor.getLogoMedia().getMediaKey()) : null)
+			.build();
+	}
+
+	@Transactional(readOnly = true)
+	public VendorAddressResponseDTO getVendorAddressByName(String name) {
+		log.debug("업체명으로 주소 조회 시작 - vendorName: {}", name);
+
+		Vendor vendor = vendorRepository.findFirstByName(name)
+			.orElseThrow(() -> new NotFoundException("해당 이름의 업체를 찾을 수 없습니다: " + name));
+
+		// 완전한 주소 생성 (기본주소 + 상세주소)
+		String completeAddress = vendor.getFullAddress();
+		if (vendor.getAddressDetail() != null && !vendor.getAddressDetail().trim().isEmpty()) {
+			completeAddress += " " + vendor.getAddressDetail();
+		}
+
+		log.info("업체명으로 주소 조회 완료 - vendorName: {}, completeAddress: {}", name, completeAddress);
+
+		return VendorAddressResponseDTO.builder()
+			.vendorName(vendor.getName())
+			.fullAddress(vendor.getFullAddress())
+			.addressDetail(vendor.getAddressDetail())
+			.completeAddress(completeAddress)
 			.build();
 	}
 }

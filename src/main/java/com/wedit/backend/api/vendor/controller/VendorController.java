@@ -23,6 +23,7 @@ import com.wedit.backend.api.vendor.dto.request.ProductCreateRequestDTO;
 import com.wedit.backend.api.vendor.dto.request.VendorCreateRequestDTO;
 import com.wedit.backend.api.vendor.dto.response.ProductDetailResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.ProductResponseDTO;
+import com.wedit.backend.api.vendor.dto.response.VendorAddressResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorBannerResponseDTO;
 import com.wedit.backend.api.vendor.dto.response.VendorDetailResponseDTO;
 import com.wedit.backend.api.vendor.entity.enums.DressOrigin;
@@ -583,5 +584,47 @@ public class VendorController {
 		List<ProductResponseDTO> dressProductResponseDTOS = vendorService.searchDress(
 			regionCodes, price, dressStyles, dressOrigins);
 		return ApiResponse.success(SuccessStatus.CONDITION_SEARCH_SUCCESS, dressProductResponseDTOS);
+	}
+
+	@Operation(
+		summary = "업체명으로 전체 주소 조회",
+		description = """
+			업체명을 입력하여 해당 업체의 전체 주소를 조회합니다.
+			
+			**주소 구성:**
+			- **fullAddress**: 기본 주소 (도로명 또는 지번 주소)
+			- **addressDetail**: 상세 주소 (층, 호수 등)
+			- **completeAddress**: fullAddress + addressDetail을 합친 완전한 주소
+			
+			**예시 요청:**
+			```
+			GET /api/v1/vendor/address?name=아펠가모 선릉
+			```
+			
+			**예시 응답:**
+			```json
+			{
+			  "code": 200,
+			  "message": "업체 주소 조회 성공",
+			  "data": {
+			    "vendorName": "아펠가모 선릉",
+			    "fullAddress": "서울 강남구 테헤란로 322",
+			    "addressDetail": "한신인터벨리24 빌딩 4층",
+			    "completeAddress": "서울 강남구 테헤란로 322 한신인터벨리24 빌딩 4층"
+			  }
+			}
+			```
+			"""
+	)
+	@GetMapping("/address")
+	public ResponseEntity<ApiResponse<VendorAddressResponseDTO>> getVendorAddressByName(
+		@Parameter(
+			description = "조회할 업체명",
+			example = "아펠가모 선릉",
+			required = true
+		) @RequestParam @NotEmpty String name) {
+
+		VendorAddressResponseDTO response = vendorService.getVendorAddressByName(name);
+		return ApiResponse.success(SuccessStatus.VENDOR_ADDRESS_GET_SUCCESS, response);
 	}
 }
