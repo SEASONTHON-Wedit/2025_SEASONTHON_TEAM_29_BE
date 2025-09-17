@@ -1,5 +1,6 @@
 package com.wedit.backend.api.review.repository;
 
+import com.wedit.backend.api.review.dto.ReviewStatsSummaryDTO;
 import com.wedit.backend.api.review.entity.Review;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,7 +49,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
 
     // 특정 업체의 리뷰 통계 (총 후기 개수, 평균 별점)
     @Query("SELECT COUNT(r), COALESCE(AVG(r.rating), 0.0) FROM Review r WHERE r.vendor.id = :vendorId")
-    Optional<Object[]> findReviewStatsByVendorId(@Param("vendorId") Long vendorId);
+    Optional<ReviewStatsSummaryDTO> findReviewStatsByVendorId(@Param("vendorId") Long vendorId);
     
     // 특정 업체의 별점별 후기 개수 조회
     @Query("SELECT r.rating, COUNT(r) FROM Review r WHERE r.vendor.id = :vendorId GROUP BY r.rating")
