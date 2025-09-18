@@ -46,6 +46,7 @@ public class ContractService {
     public List<AvailableSlotResponseDTO> getAvailableContractSlots(AvailableSlotsRequestDTO request) {
 
         int currentYear = LocalDate.now().getYear();
+        LocalDateTime now = LocalDateTime.now();
 
         return request.months().stream()
                 .flatMap(month -> {
@@ -57,6 +58,7 @@ public class ContractService {
                                     request.productId(), TimeSlotStatus.AVAILABLE, startOfMonth, endOfMonth)
                             .stream();
                 })
+                .filter(slot -> slot.getStartTime().isAfter(now))
                 .map(AvailableSlotResponseDTO::from)
                 .collect(Collectors.toList());
     }
