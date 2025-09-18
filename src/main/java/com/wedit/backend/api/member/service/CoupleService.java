@@ -32,7 +32,7 @@ public class CoupleService {
 		Member member = findMemberById(memberId);
 
 		// 이미 커플이라면 코드 반환
-		Optional<Couple> existingCouple = coupleRepository.findByGroomOrBride(member);
+		Optional<Couple> existingCouple = coupleRepository.findByGroomOrBrideWithLock(member);
 		if (existingCouple.isPresent()) {
 			String existingCode = existingCouple.get().getCoupleCode();
 			log.info("기존 커플 코드 반환. memberId: {}, coupleCode: {}", memberId, existingCode);
@@ -93,7 +93,7 @@ public class CoupleService {
 
 		Member member = findMemberById(memberId);
 
-		Couple couple = coupleRepository.findByGroomOrBride(member)
+		Couple couple = coupleRepository.findByGroomOrBrideWithLock(member)
 			.orElseThrow(() -> {
 				log.warn("이미 연동 해제된 사용자가 해제 시도. memberId: {}", memberId);
 				return new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_DISCONNECT_COUPLE.getMessage());
@@ -114,7 +114,7 @@ public class CoupleService {
 	}
 
 	public Member hasCouple(Member member) {
-		Optional<Couple> couple = coupleRepository.findByGroomOrBride(member);
+		Optional<Couple> couple = coupleRepository.findByGroomOrBrideWithLock(member);
 		if (couple.isPresent()) {
 			if (couple.get().getGroom() == member) {
 				return couple.get().getBride();

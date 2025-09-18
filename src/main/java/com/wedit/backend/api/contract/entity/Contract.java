@@ -1,7 +1,8 @@
 package com.wedit.backend.api.contract.entity;
 
 import com.wedit.backend.api.member.entity.Member;
-import com.wedit.backend.api.vendor.entity.Vendor;
+import com.wedit.backend.api.review.entity.Review;
+import com.wedit.backend.api.vendor.entity.Product;
 import com.wedit.backend.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -9,65 +10,58 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "contracts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "contracts")
 public class Contract extends BaseTimeEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_id", nullable = false)
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "member_id")
     private Member member;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "vendor_id", nullable = false)
-    private Vendor vendor;
-    
-    @Column(name = "contract_date", nullable = false)
-    private LocalDate contractDate;
-    
-    @Column(name = "start_time", nullable = false)
-    private LocalTime startTime;
-    
-    @Column(name = "end_time", nullable = false)
-    private LocalTime endTime;
-    
+
+    @OneToOne(mappedBy = "contract", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private Review review;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "product_id")
+    private Product product;
+
+    @Column(nullable = false)
+    private LocalDateTime executionDateTime;    // 계약 이행 일시
+
+    @Column(nullable = false)
+    private Long finalPrice;
+
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(nullable = false)
     private ContractStatus status;
-    
-    @Column(name = "total_amount")
-    private Long totalAmount;
-    
-    @Column(name = "deposit_amount")
-    private Long depositAmount;
-    
-    @Column(name = "special_requests", length = 1000)
-    private String specialRequests;
-    
+
+    private LocalDateTime paymentCompletedAt;   // 결제 완료 시각
+
     @Builder
-    public Contract(Member member, Vendor vendor, LocalDate contractDate, 
-                   LocalTime startTime, LocalTime endTime, ContractStatus status,
-                   Long totalAmount, Long depositAmount, String specialRequests) {
+    public Contract(Member member, Product product, LocalDateTime executionDateTime, Long finalPrice) {
         this.member = member;
-        this.vendor = vendor;
-        this.contractDate = contractDate;
-        this.startTime = startTime;
-        this.endTime = endTime;
-        this.status = status;
-        this.totalAmount = totalAmount;
-        this.depositAmount = depositAmount;
-        this.specialRequests = specialRequests;
+        this.product = product;
+        this.executionDateTime = executionDateTime;
+        this.finalPrice = finalPrice;
+        this.status = ContractStatus.CONFIRMED; // 생성 시점에 확정 (해커톤 한정)
+        this.paymentCompletedAt = LocalDateTime.now(); // 생성 시점 = 결제 완료 시점
     }
-    
-    public void updateStatus(ContractStatus status) {
-        this.status = status;
+
+    public void complete() {
+        if (this.status == ContractStatus.CONFIRMED) {
+            this.status = ContractStatus.COMPLETED;
+        }
+    }
+
+    public void setReviewInternal(Review review) {
+        this.review = review;
     }
 }

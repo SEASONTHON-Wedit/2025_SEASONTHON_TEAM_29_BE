@@ -4,10 +4,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.wedit.backend.api.invitation.entity.Invitation;
 import com.wedit.backend.api.member.jwt.entity.RefreshToken;
 import com.wedit.backend.api.reservation.entity.Reservation;
 import com.wedit.backend.api.review.entity.Review;
-import com.wedit.backend.api.tour.entity.MemberTourConnection;
 import com.wedit.backend.common.entity.BaseTimeEntity;
 
 import jakarta.persistence.CascadeType;
@@ -95,14 +95,14 @@ public class Member extends BaseTimeEntity {
 	@Builder.Default
 	private List<Reservation> reservations = new ArrayList<>();
 
+	// 🎯 Member - Invitation, 1:1 관계로 다시 복원
+	@OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Invitation invitation;
+
 	// Member - Review, 1:N on Member perspective
 	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
 	@Builder.Default
 	private List<Review> reviews = new ArrayList<>();
-
-	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-	@Builder.Default
-	private List<MemberTourConnection> tours = new ArrayList<>();
 
 	public void changeEmail(String newEmail) {
 		this.email = newEmail;
@@ -145,5 +145,10 @@ public class Member extends BaseTimeEntity {
 	public Member update(String name) {
 		this.name = name;
 		return this;
+	}
+
+	// 🎯 커플 정보 편의 메서드
+	public Couple getCouple() {
+		return asGroom != null ? asGroom : asBride;
 	}
 }

@@ -1,7 +1,7 @@
 package com.wedit.backend.api.review.repository;
 
+import com.wedit.backend.api.review.dto.ReviewStatsSummaryDTO;
 import com.wedit.backend.api.review.entity.Review;
-import com.wedit.backend.api.vendor.dto.response.VendorReviewStatsDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,45 +15,43 @@ import java.util.Optional;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
 
-    // reviewId로 조회 시 연관 이미지도 Left Join 으로 함께 조회 -> N+1 방지
-    @Query("SELECT r FROM Review r LEFT JOIN FETCH r.images WHERE r.id = :id")
-    Optional<Review> findByIdWithImages(@Param("id") Long id);
-
-
-    @Query("SELECT r FROM Review r JOIN FETCH r.vendor WHERE r.member.id = :memberId")
+    /**
+     * 특정 사용자가 작성한 리뷰 목록을 Vendor 정보와 함께 페이징 조회 (내 후기 목록용)
+     */
+    @Query(value = "SELECT r FROM Review r JOIN FETCH r.vendor v WHERE r.member.id = :memberId",
+            countQuery = "SELECT count(r) FROM Review r WHERE r.member.id = :memberId")
     Page<Review> findByMemberIdWithVendor(@Param("memberId") Long memberId, Pageable pageable);
 
-    // 페이징 조회 하며 Member와 Vendor를 함께 가져오기
+    /**
+     * 모든 리뷰 목록을 Member 및 Vendor 정보와 함께 페이징하여 조회
+     */
     @Query(
             value = "SELECT r FROM Review r JOIN FETCH r.member JOIN FETCH r.vendor",
             countQuery = "SELECT count(r) FROM Review r"
     )
     Page<Review> findAllWithMemberAndVendor(Pageable pageable);
 
-    // reviewId로 Review, Member, Vendor, ReviewImages 조회
+    /**
+     * 특정 리뷰를 조회할 때, 연관된 Member와 Vendor 정보 가져옴 (후기 상세 조회)
+     */
     @Query("SELECT r FROM Review r " +
             "JOIN FETCH r.member " +
             "JOIN FETCH r.vendor " +
-            "LEFT JOIN FETCH r.images " + // 이미지가 없을 수 있으므로 LEFT JOIN
             "WHERE r.id = :reviewId")
-    Optional<Review> findByIdWithDetails(@Param("reviewId") Long reviewId);
+    Optional<Review> findByIdWithMemberAndVendor(@Param("reviewId") Long reviewId);
 
-    // 여러 업체의 리뷰 통계를 한 번에 조회하는 쿼리
-    @Query("SELECT new com.wedit.backend.api.vendor.dto.response.VendorReviewStatsDTO(r.vendor.id, COUNT(r.id), AVG(r.rating)) " +
-            "FROM Review r " +
-            "WHERE r.vendor.id IN :vendorIds " +
-            "GROUP BY r.vendor.id")
-    List<VendorReviewStatsDTO> findReviewStatsByVendorIds(@Param("vendorIds") List<Long> vendorIds);
-
-    // 후기 목록 페이징 조회
-    @Query(value = "SELECT r FROM Review r JOIN FETCH r.member WHERE r.vendor.id = :vendorId",
+    /**
+     * 특정 업체의 리뷰 목록을 작성자(Member) 정보와 함께 페이징하여 조회
+     */
+    @Query(value = "SELECT r FROM Review r JOIN FETCH r.member m WHERE r.vendor.id = :vendorId",
             countQuery = "SELECT COUNT(r) FROM Review r WHERE r.vendor.id = :vendorId")
-    Page<Review> findByVendorId(@Param("vendorId") Long vendorId, Pageable pageable);
-
+    Page<Review> findByVendorIdWithMember(@Param("vendorId") Long vendorId, Pageable pageable);
 
     // 특정 업체의 리뷰 통계 (총 후기 개수, 평균 별점)
-    @Query("SELECT COUNT(r), COALESCE(AVG(r.rating), 0.0) FROM Review r WHERE r.vendor.id = :vendorId")
-    Optional<Object[]> findReviewStatsByVendorId(@Param("vendorId") Long vendorId);
+    @Query("SELECT COUNT(r) as totalReviewCount, COALESCE(AVG(r.rating), 0.0) as averageRating " +
+            "FROM Review r " +
+            "WHERE r.vendor.id = :vendorId")
+    Optional<ReviewStatsSummaryDTO> findReviewStatsByVendorId(@Param("vendorId") Long vendorId);
     
     // 특정 업체의 별점별 후기 개수 조회
     @Query("SELECT r.rating, COUNT(r) FROM Review r WHERE r.vendor.id = :vendorId GROUP BY r.rating")

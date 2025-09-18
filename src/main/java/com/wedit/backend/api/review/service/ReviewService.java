@@ -1,23 +1,25 @@
 package com.wedit.backend.api.review.service;
 
-import com.wedit.backend.api.aws.s3.service.S3Service;
+import com.wedit.backend.api.contract.entity.Contract;
+import com.wedit.backend.api.contract.repository.ContractRepository;
+import com.wedit.backend.api.media.entity.Media;
+import com.wedit.backend.api.media.entity.enums.MediaDomain;
+import com.wedit.backend.api.media.service.MediaService;
 import com.wedit.backend.api.member.entity.Member;
 import com.wedit.backend.api.member.repository.MemberRepository;
 import com.wedit.backend.api.review.dto.*;
 import com.wedit.backend.api.review.entity.Review;
-import com.wedit.backend.api.review.entity.ReviewImage;
-import com.wedit.backend.api.review.repository.ReviewImageRepository;
 import com.wedit.backend.api.review.repository.ReviewRepository;
 import com.wedit.backend.api.vendor.entity.Vendor;
-import com.wedit.backend.api.vendor.entity.VendorImage;
-import com.wedit.backend.api.vendor.repository.VendorImageRepository;
 import com.wedit.backend.api.vendor.repository.VendorRepository;
+import com.wedit.backend.common.exception.BadRequestException;
 import com.wedit.backend.common.exception.ForbiddenException;
 import com.wedit.backend.common.exception.NotFoundException;
 import com.wedit.backend.common.exception.UnauthorizedException;
 import com.wedit.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,141 +37,145 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final VendorRepository vendorRepository;
     private final MemberRepository memberRepository;
-    private final ReviewImageRepository reviewImageRepository;
-    private final VendorImageRepository vendorImageRepository;
-    private final S3Service s3Service;
+    private final MediaService mediaService;
+    private final ContractRepository contractRepository;
 
-    
-    // 후기 작성
+
+    /**
+     * 후기 작성
+     * @param dto 클라이언트로부터 받은 리뷰 정보 및 미디어 메타데이터 목록
+     * @param memberId 작성자 ID
+     * @return 생성된 리뷰 정보 DTO
+     */
     public ReviewCreateResponseDTO createReview(ReviewCreateRequestDTO dto, Long memberId) {
 
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
 
-        Vendor vendor = vendorRepository.findById(dto.getVendorId())
-                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage()));
+        Contract contract = contractRepository.findContractDetailsByIdAndMemberId(dto.getContractId(), memberId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_CONTRACT.getMessage()));
+
+        if (contract.getReview() != null) {
+            throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_WRITE_REVIEW.getMessage());
+        }
 
         Review review = Review.builder()
                 .contentBest(dto.getContentBest())
                 .contentWorst(dto.getContentWorst())
                 .rating(dto.getRating())
                 .member(member)
-                .vendor(vendor)
+                .vendor(contract.getProduct().getVendor())
+                .contract(contract)
                 .build();
+        review.setContract(contract);
+        Review savedReview = reviewRepository.save(review);
+        reviewRepository.flush();
 
-        if (dto.getImageKeys() != null && !dto.getImageKeys().isEmpty()) {
-            int sortOrder = 1;
-            for (String key : dto.getImageKeys()) {
-                review.addImage(new ReviewImage(key, review, sortOrder++));
-            }
+        if (dto.getMediaList() != null && !dto.getMediaList().isEmpty()) {
+            List<Media> mediaToSave = dto.getMediaList().stream()
+                    .map(mediaDto -> mediaDto.toEntity(MediaDomain.REVIEW, savedReview.getId()))
+                    .collect(Collectors.toList());
+            mediaService.saveAll(mediaToSave);
         }
 
-        Review savedReview = reviewRepository.save(review);
+        updateVendorReviewStats(savedReview.getVendor().getId());
 
-        return createDtoWithPresignedUrls(savedReview);
+        List<String> imageUrls = mediaService.findMediaUrls(MediaDomain.REVIEW, savedReview.getId());
+
+        return createDtoWithCdnUrls(savedReview, imageUrls);
     }
 
-    
-    // 후기 수정
+
+    /**
+     * 후기 수정 (전체 삭제 후 재생성)
+     */
     public ReviewUpdateResponseDTO updateReview(Long reviewId, ReviewUpdateRequestDTO dto, Long memberId) {
 
-        Review review = reviewRepository.findByIdWithImages(reviewId)
+        Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW.getMessage()));
 
         validateReviewOwner(review, memberId);
 
         // 텍스트 업데이트
         review.update(dto.getRating(), dto.getContentBest(), dto.getContentWorst());
+        reviewRepository.flush();
 
-        // 이미지 변경 사항 처리
-        Set<String> existingKeys = review.getImages().stream()
-                .map(ReviewImage::getImageKey)
-                .collect(Collectors.toSet());
-        Set<String> newKeys = (dto.getImageKeys() != null) ? new HashSet<>(dto.getImageKeys()) : new HashSet<>();
+        // 기존 미디어 DB와 S3 모두 삭제
+        mediaService.deleteAllByOwner(MediaDomain.REVIEW, reviewId);
 
-        // 삭제할 이미지 처리
-        Set<String> keysToDelete = new HashSet<>(existingKeys);
-        keysToDelete.removeAll(newKeys);
-        if (!keysToDelete.isEmpty()) {
-            s3Service.deleteFiles(new ArrayList<>(keysToDelete));   // S3 에서 일괄 삭제
-            review.getImages().removeIf(img -> keysToDelete.contains(img.getImageKey()));   // DB에서 삭제
+        if (dto.getMediaList() != null && !dto.getMediaList().isEmpty()) {
+            List<Media> mediaToSave = dto.getMediaList().stream()
+                    .map(mediaDto -> mediaDto.toEntity(MediaDomain.REVIEW, reviewId))
+                    .collect(Collectors.toList());
+            mediaService.saveAll(mediaToSave);
         }
 
-        // 추가할 이미지 처리
-        Set<String> keysToAdd = new HashSet<>(newKeys);
-        keysToAdd.removeAll(existingKeys);
-        if (!keysToAdd.isEmpty()) {
-            int sortOrder = review.getImages().size() + 1;
-            for (String key : keysToAdd) {
-                review.addImage(new ReviewImage(key, review, sortOrder++));
-            }
-        }
+        // 업체 통계 갱신
+        updateVendorReviewStats(review.getVendor().getId());
+
+        List<String> imageUrls = mediaService.findMediaUrls(MediaDomain.REVIEW, reviewId);
 
         // 수정한 리뷰 응답
-        return updateDtoWithPresignedUrls(review);
+        return updateDtoWithCdnUrls(review, imageUrls);
     }
 
-    // 리뷰 삭제
+    /**
+     * 후기 삭제
+     */
     public void deleteReview(Long reviewId, Long memberId) {
 
-        Review review = reviewRepository.findByIdWithImages(reviewId)
+        Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW.getMessage()));
+
         if (!review.getMember().getId().equals(memberId)) {
             throw new ForbiddenException(ErrorStatus.UNAUTHORIZED_WRITER_NOT_SAME_USER.getMessage());
         }
 
-        List<String> imageKeys = review.getImages().stream()
-                        .map(ReviewImage::getImageKey)
-                        .toList();
-
-        if (!imageKeys.isEmpty()) {
-            s3Service.deleteFiles(imageKeys);
-        }
+        Long vendorId = review.getVendor().getId();
         
+        // 연관 미디어 삭제
+        mediaService.deleteAllByOwner(MediaDomain.REVIEW, reviewId);
+
+        // 리뷰 삭제
         reviewRepository.delete(review);
+        reviewRepository.flush();
+
+        // 업체 통계 갱신
+        updateVendorReviewStats(vendorId);
     }
 
     // 후기 상세 조회
     @Transactional(readOnly = true)
     public ReviewDetailResponseDTO getReviewDetail(Long reviewId) {
 
-        // 1. Review, Member, Vendor, ReviewImages를 한 번의 쿼리로 조회
-        Review review = reviewRepository.findByIdWithDetails(reviewId)
+        Review review = reviewRepository.findByIdWithMemberAndVendor(reviewId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_REVIEW.getMessage()));
 
-        Member writer = review.getMember();
-        Vendor vendor = review.getVendor();
+        List<String> reviewImageUrls = mediaService.findMediaUrls(MediaDomain.REVIEW, review.getId());
 
-        // 2. 후기에 첨부된 이미지들의 Presigned URL 생성
-        List<String> reviewImageUrls = review.getImages().stream()
-                .map(image -> s3Service.generatePresignedGetUrl(image.getImageKey()).getPresignedUrl())
-                .collect(Collectors.toList());
+        String vendorLogoUrl = Optional.ofNullable(review.getVendor().getLogoMedia())
+                .map(media -> mediaService.toCdnUrl(media.getMediaKey()))
+                .orElse(null);
 
-        // 3. 업체의 로고 이미지 Presigned URL 생성 (별도 조회)
-        String vendorLogoUrl = vendorImageRepository.findLogoByVendorId(vendor.getId())
-                .map(logoImage -> s3Service.generatePresignedGetUrl(logoImage.getImageKey()).getPresignedUrl())
-                .orElse(null); // 로고가 없으면 null
-
-        // 4. D-Day 계산
-        String dDay = (writer.getWeddingDate() != null)
-                ? "D-" + ChronoUnit.DAYS.between(LocalDate.now(), writer.getWeddingDate())
+        // D-Day 계산
+        String dDay = (review.getMember().getWeddingDate() != null)
+                ? "D-" + ChronoUnit.DAYS.between(LocalDate.now(), review.getMember().getWeddingDate())
                 : null;
 
-        // 5. 최종 응답 DTO 조립
         return ReviewDetailResponseDTO.builder()
-                .reviewId(review.getId())
-                .rating(review.getRating())
+                .reviewId(reviewId)
                 .contentBest(review.getContentBest())
                 .contentWorst(review.getContentWorst())
+                .rating(review.getRating())
                 .imagesUrls(reviewImageUrls)
                 .createdAt(review.getCreatedAt())
-                .writerName(writer.getName())
-                .writerType(writer.getType())
+                .writerName(maskWriterName(review.getMember().getName()))
+                .writerType(review.getMember().getType())
                 .weddingDday(dDay)
-                .vendorId(vendor.getId())
-                .vendorName(vendor.getName())
+                .vendorId(review.getVendor().getId())
+                .vendorName(review.getVendor().getName())
+                .vendorType(review.getVendor().getVendorType().name())
                 .vendorLogoUrl(vendorLogoUrl)
-                .vendorCategory(vendor.getCategory().name())
                 .build();
     }
 
@@ -179,112 +185,75 @@ public class ReviewService {
 
         // 리뷰 페이징 조회
         Page<Review> page = reviewRepository.findAllWithMemberAndVendor(pageable);
-        List<Review> reviews = page.getContent();
-
-        // 리뷰 리스트가 비었다면 바로 반환
-        if (reviews.isEmpty()) {
+        if (page.isEmpty()) {
             return Page.empty();
         }
 
-        // 리뷰 ID 리스트의 대표 이미지들을 한 번의 쿼리로 조회
-        List<Long> reviewIds = reviews.stream().map(Review::getId).toList();
-        // 키: reviewId, 값: ReviewImage
-        Map<Long, ReviewImage> firstImageMap = reviewImageRepository.findFirstImagesByReviewIds(reviewIds)
-                .stream()
-                .collect(Collectors.toMap(
-                        image -> image.getReview().getId(),
-                        image -> image
-                ));
+        List<Long> reviewIds = page.getContent().stream().map(Review::getId).toList();
+        Map<Long, String> firstImageUrlMap = new HashMap<>();
 
-        return page.map(review -> {
-            ReviewImage firstImage = firstImageMap.get(review.getId());
+        mediaService.findAllByOwnerDomainAndOwnerIds(MediaDomain.REVIEW, reviewIds).stream()
+                .sorted(Comparator.comparingInt(Media::getSortOrder))
+                .collect(Collectors.groupingBy(Media::getOwnerId))
+                .forEach((reviewId, mediaList) -> {
+                    if (!mediaList.isEmpty()) {
+                        firstImageUrlMap.put(reviewId, mediaService.toCdnUrl(mediaList.get(0).getMediaKey()));
+                    }
+                });
 
-            String mainImageUrl = (firstImage != null)
-                    ? s3Service.generatePresignedGetUrl(firstImage.getImageKey()).getPresignedUrl()
-                    : null;
-
-            String content = (review.getContentBest() != null && !review.getContentBest().isEmpty())
-                    ? review.getContentBest()
-                    : review.getContentWorst();
-
-            String maskedWriterName = maskWriterName(review.getMember().getName());
-            String vendorName = review.getVendor().getName();
-
-            return ReviewMainBannerResponseDTO.builder()
-                    .reviewId(review.getId())
-                    .vendorName(vendorName)
-                    .reviewImageUrl(mainImageUrl)
-                    .content(content)
-                    .rating(review.getRating())
-                    .writerName(maskedWriterName)
-                    .createdAt(review.getCreatedAt())
-                    .build();
-        });
+        return page.map(review -> ReviewMainBannerResponseDTO.from(review, firstImageUrlMap.get(review.getId()),
+                (review.getContentBest() != null && !review.getContentBest().isEmpty()) ? review.getContentBest() : review.getContentWorst(),
+                maskWriterName(review.getMember().getName())));
     }
 
     // 작성한 내 후기 페이징 조회
     @Transactional(readOnly = true)
     public Page<MyReviewResponseDTO> getMyReviewList(Long memberId, Pageable pageable) {
 
-        // 1. Review와 연관된 Vendor를 함께 페이징 조회
+        // Review와 연관된 Vendor를 함께 페이징 조회
         Page<Review> page = reviewRepository.findByMemberIdWithVendor(memberId, pageable);
-
         if (page.isEmpty()) {
             return Page.empty();
         }
 
-        // 2. 조회된 리뷰 페이지에서 Vendor ID 목록을 추출
-        List<Long> vendorIds = page.getContent().stream()
-                .map(review -> review.getVendor().getId())
-                .distinct()
-                .collect(Collectors.toList());
-
-        // 3. 추출된 Vendor ID 목록을 사용하여, 필요한 모든 로고 이미지를 한 번의 쿼리로 가져오기
-        Map<Long, VendorImage> logoImageMap = vendorImageRepository.findLogoImagesByVendorIds(vendorIds).stream()
-                .collect(Collectors.toMap(
-                        image -> image.getVendor().getId(), // Key: Vendor ID
-                        image -> image                    // Value: VendorImage 객체
-                ));
-
-        // 4. DTO로 변환. 각 리뷰에 대해 DB를 추가 조회 대신, 메모리에 있는 Map에서 로고 정보를 찾기
-        return page.map(review -> {
-            Vendor vendor = review.getVendor();
-            VendorImage logoImage = logoImageMap.get(vendor.getId());
-
-            String vendorLogoUrl = (logoImage != null)
-                    ? s3Service.generatePresignedGetUrl(logoImage.getImageKey()).getPresignedUrl()
-                    : null; // 로고가 없는 경우 null 처리
-
-            return MyReviewResponseDTO.builder()
-                    .reviewId(review.getId())
-                    .vendorName(vendor.getName())
-                    .district(vendor.getAddress().getDistrict())
-                    .vendorLogoUrl(vendorLogoUrl)
-                    .myRating(review.getRating())
-                    .build();
-        });
+        return page.map(review -> MyReviewResponseDTO.from(review, Optional.ofNullable(review.getVendor().getLogoMedia())
+                .map(media -> mediaService.toCdnUrl(media.getMediaKey())).orElse(null)));
     }
 
     // 특정 업체 리뷰 통계 조회
     public ReviewStatsResponseDTO getReviewStats(Long vendorId) {
 
-        // 벤더 존재 유무 조회
         if (!vendorRepository.existsById(vendorId)) {
             throw new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + " : " + vendorId);
         }
 
         // 특정 업체의 리뷰 통계 (총 후기 개수, 평균 별점)
-        Object[] stats = reviewRepository.findReviewStatsByVendorId(vendorId)
-                .orElse(new Object[]{0L, 0.0});
-        Long totalCount = (Long) stats[0];
-        Double averageRating = (Double) stats[1];
+        ReviewStatsSummaryDTO stats = reviewRepository.findReviewStatsByVendorId(vendorId)
+                .orElseGet(() -> new ReviewStatsSummaryDTO() {
+                    @Override
+                    public Long getTotalReviewCount() {
+                        return 0L;
+                    }
+
+                    @Override
+                    public Double getAverageRating() {
+                        return 0.0;
+                    }
+                });
+
+        long totalCount = Optional.ofNullable(stats.getTotalReviewCount()).orElse(0L);
+        double averageRating = Optional.ofNullable(stats.getAverageRating()).orElse(0.0);
+
+        if (totalCount == 0L) {
+            averageRating = 0.0;
+        }
 
         // 특정 업체의 별점 별 후기 개수
         Map<Integer, Long> ratingCountResult = reviewRepository.findRatingCountsByVendorId(vendorId)
                 .stream()
                 .collect(Collectors.toMap(
-                        row -> (Integer) row[0],
-                        row -> (Long) row[1]
+                        row -> (row.length > 0 && row[0] != null) ? ((Number) row[0]).intValue() : 0,
+                        row -> (row.length > 1 && row[1] != null) ? ((Number) row[1]).longValue() : 0L
                 ));
 
         // DTO 조립 후 반환
@@ -301,11 +270,67 @@ public class ReviewService {
             throw new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + " : " + vendorId);
         }
 
-        // 후기 목록 페이징 조회
-        Page<Review> reviewPage = reviewRepository.findByVendorId(vendorId, pageable);
+         Page<Review> reviewPage = reviewRepository.findByVendorIdWithMember(vendorId, pageable);
+         if (reviewPage.isEmpty()) {
+             return new ReviewListResponseDTO(Page.empty(pageable));
+         }
 
-         // DTO 조립 후 반환
-        return new ReviewListResponseDTO(reviewPage);
+         List<Long> reviewIds = reviewPage.getContent().stream().map(Review::getId).toList();
+         Map<Long, List<String>> imageUrlsMap = new HashMap<>();
+
+         mediaService.findAllByOwnerDomainAndOwnerIds(MediaDomain.REVIEW, reviewIds).stream()
+                 .sorted(Comparator.comparingInt(Media::getSortOrder))
+                 .collect(Collectors.groupingBy(Media::getOwnerId))
+                 .forEach((reviewId, mediaList) -> imageUrlsMap.put(reviewId,
+                         mediaList.stream().map(media -> mediaService.toCdnUrl(media.getMediaKey())).collect(Collectors.toList())));
+
+         List<ReviewListDetailDTO> dtoList = reviewPage.getContent().stream()
+                 .map(review -> ReviewListDetailDTO.builder()
+                         .reviewId(review.getId())
+                         .writerName(maskWriterName(review.getMember().getName()))
+                         .rating(review.getRating())
+                         .contentBest(review.getContentBest())
+                         .contentWorst(review.getContentWorst())
+                         .imageUrls(imageUrlsMap.getOrDefault(review.getId(), Collections.emptyList()))
+                         .createdAt(review.getCreatedAt())
+                         .build())
+                 .collect(Collectors.toList());
+
+         Page<ReviewListDetailDTO> dtoPage = new PageImpl<>(dtoList, pageable, reviewPage.getTotalElements());
+
+         return new ReviewListResponseDTO(dtoPage);
+     }
+
+     ///  --- 헬퍼 메서드 ---
+
+     private void updateVendorReviewStats(Long vendorId) {
+
+         ReviewStatsSummaryDTO stats = reviewRepository.findReviewStatsByVendorId(vendorId)
+                 .orElseGet(() -> new ReviewStatsSummaryDTO() {
+                     @Override
+                     public Long getTotalReviewCount() {
+                         return 0L;
+                     }
+
+                     @Override
+                     public Double getAverageRating() {
+                         return 0.0;
+                     }
+                 });
+
+         long reviewCount = Optional.ofNullable(stats.getTotalReviewCount()).orElse(0L);
+         double averageRating = Optional.ofNullable(stats.getAverageRating()).orElse(0.0);
+
+         if (reviewCount == 0L) {
+             averageRating = 0.0;
+         }
+
+         Vendor vendor = vendorRepository.findById(vendorId)
+                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_VENDOR.getMessage() + "통계 업데이트 중 업체를 찾을 수 없습니다: " + vendorId));
+
+         vendor.updateReviewStats((int) reviewCount, averageRating);
+
+         vendorRepository.save(vendor);
      }
 
     private void validateReviewOwner(Review review, Long memberId) {
@@ -314,38 +339,30 @@ public class ReviewService {
         }
     }
 
-    private ReviewCreateResponseDTO createDtoWithPresignedUrls(Review review) {
-
-        List<String> presignedUrls = review.getImages().stream()
-                .map(image -> s3Service.generatePresignedGetUrl(image.getImageKey()).getPresignedUrl())
-                .collect(Collectors.toList());
+    private ReviewCreateResponseDTO createDtoWithCdnUrls(Review review, List<String> imageUrls) {
 
         return ReviewCreateResponseDTO.builder()
                 .reviewId(review.getId())
-                .memberName(review.getMember().getName())
+                .memberName(maskWriterName(review.getMember().getName()))
                 .vendorName(review.getVendor().getName())
                 .rating(review.getRating())
                 .contentBest(review.getContentBest())
                 .contentWorst(review.getContentWorst())
-                .imageUrls(presignedUrls)
+                .imageUrls(imageUrls)
                 .createdAt(review.getCreatedAt())
                 .build();
     }
 
-    private ReviewUpdateResponseDTO updateDtoWithPresignedUrls(Review review) {
-
-        List<String> presignedUrls = review.getImages().stream()
-                .map(image -> s3Service.generatePresignedGetUrl(image.getImageKey()).getPresignedUrl())
-                .collect(Collectors.toList());
+    private ReviewUpdateResponseDTO updateDtoWithCdnUrls(Review review, List<String> imageUrls) {
 
         return ReviewUpdateResponseDTO.builder()
                 .reviewId(review.getId())
-                .memberName(review.getMember().getName())
+                .memberName(maskWriterName(review.getMember().getName()))
                 .vendorName(review.getVendor().getName())
                 .rating(review.getRating())
                 .contentBest(review.getContentBest())
                 .contentWorst(review.getContentWorst())
-                .imageUrls(presignedUrls)
+                .imageUrls(imageUrls)
                 .updatedAt(review.getUpdatedAt())
                 .build();
     }
@@ -356,7 +373,9 @@ public class ReviewService {
         if (name == null || name.isEmpty()) {
             return name;
         }
-
+        if (name.length() == 1) {
+            return "*";
+        }
         return name.substring(0, name.length() - 1) + "*";
     }
 }

@@ -15,8 +15,10 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -32,6 +34,9 @@ public class S3Service {
 
     @Value("${cloud.aws.s3.presign.expiration-minutes}")
     private Integer durationMinutes;
+
+    @Value("${cloud.aws.cloudfront.url}")
+    private String cdnBaseUrl;
 
 
     public PresignedUrlResponseDTO  generatePresignedPutUrl(
@@ -60,27 +65,30 @@ public class S3Service {
         return PresignedUrlResponseDTO.builder()
                 .s3Key(key)
                 .presignedUrl(url)
+                .contentType(reqDto.getContentType())
+                .contentLength(reqDto.getContentLength())
                 .build();
     }
 
-    public PresignedUrlResponseDTO  generatePresignedGetUrl(String key) {
+    // 단일 조회 CDN URL 변환
+    public String toCdnUrl(String key) {
 
-        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
+        if (key == null || key.isBlank()) {
+            return null;
+        }
 
-        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
-                .getObjectRequest(getObjectRequest)
-                .signatureDuration(Duration.ofMinutes(durationMinutes))
-                .build();
+        return cdnBaseUrl + "/" + key;
+    }
 
-        String url = s3Presigner.presignGetObject(presignRequest).url().toString();
+    // 다중 조회 CDN URL 리스트 반환
+    public List<String> toCdnUrls(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return Collections.emptyList();
+        }
 
-        return PresignedUrlResponseDTO.builder()
-                .s3Key(key)
-                .presignedUrl(url)
-                .build();
+        return keys.stream()
+                .map(this::toCdnUrl)
+                .collect(Collectors.toList());
     }
 
     public void deleteFile(String key) {
@@ -115,13 +123,26 @@ public class S3Service {
     private String createS3Key(String domain, Long memberId, Long domainId, String contentType, String originalFileName) {
 
         // 미디어 타입 분류
-        String mediaType = contentType.toLowerCase().startsWith("image/") ? "images" : "videos";
+        String mediaType;
+        String lowerContentType = contentType.toLowerCase();
+        if (lowerContentType.startsWith("image/")) {
+            mediaType = "images";
+        } else if (lowerContentType.startsWith("video/")) {
+            mediaType = "videos";
+        } else if (lowerContentType.startsWith("audio/")) {
+            mediaType = "audios";
+        } else {
+            mediaType = "others";
+        }
 
         // 날짜 폴더 구조
         String currentDateTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
         // UUID 생성
         String uuid = UUID.randomUUID().toString();
+
+        // 도메인 ID, 없으면 0
+        Long finalDomainId = (domainId != null) ? domainId : 0L;
 
         // 확장자 추출
         String extension = "";
@@ -131,7 +152,7 @@ public class S3Service {
         String safeFileName = uuid + "_" + currentDateTime + extension;
 
         // 최종 PreSigned URL 발급 후 반환
-        // {domain}/{memberId}/{mediaType}/{domainId}/{uuid}_{currentDateTime}.{extension}
-        return String.format("%s/%d/%s/%d/%s", domain, memberId, mediaType, domainId, safeFileName);
+        // {domain}/{memberId}/{mediaType}/{finalDomainId}/{uuid}_{currentDateTime}.{extension}
+        return String.format("%s/%d/%s/%d/%s", domain, memberId, mediaType, finalDomainId, safeFileName);
     }
 }
