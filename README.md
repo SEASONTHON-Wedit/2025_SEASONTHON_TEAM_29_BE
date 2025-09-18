@@ -69,8 +69,9 @@
 - **AWS EC2** - 서버 호스팅
 - **AWS RDS** - 관리형 MySQL 데이터베이스
 - **AWS S3** - 파일 저장소
-- **AWS CloudFront** - CDN
+- **AWS CloudFront** - CDN Caching
 - **Docker** - 컨테이너화
+- **Cloudflare** - DNS, TSL/SSL 인증, Caching
 
 ### **External Services**
 - **CoolSMS** - SMS 인증 서비스
@@ -80,6 +81,7 @@
 - **SpringDoc OpenAPI (Swagger)** - API 문서화
 - **Spring Actuator** - 애플리케이션 모니터링
 - **Micrometer Prometheus** - 메트릭 수집
+- **Grafana** - RDS, Spring 모니터링 대시보드 구성
 - **P6Spy** - SQL 로깅
 
 ### **Build & DevOps**
@@ -110,8 +112,9 @@
 
 2. **CD (Continuous Deployment)**
    - CI 성공 시 자동으로 EC2에 배포
-   - Blue-Green 방식의 무중단 배포
-   - Docker Compose를 이용한 컨테이너 관리
+   - DockerHub에서 최신 이미지 풀링
+   - Spring Boot Docker 컨테이너 실행
+   
 ---
 
 ## 🏛️ 아키텍처 의사결정 기록 (ADR)
@@ -190,7 +193,7 @@ src/main/java/com/wedit/backend/
 │   │   ├── entity/                       # 사용자/관리자 이벤트
 │   │   ├── repository/
 │   │   └── service/
-│   ├── tour/                             # 🎯 투어 관리
+│   ├── tour/                             # 🎯 드레스 투어 관리
 │   │   ├── controller/
 │   │   ├── dto/
 │   │   ├── entity/
@@ -270,16 +273,18 @@ http://localhost:8080/api/v3/api-docs
 
 | 도메인 | 엔드포인트 | 설명 |
 |--------|------------|------|
-| **회원** | `/api/auth/**` | 로그인, 회원가입, JWT 토큰 관리 |
-| **커플** | `/api/couple/**` | 커플 연동, 커플 코드 생성/연결 |
-| **업체** | `/api/vendor/**` | 업체 조회, 상품 조회 |
-| **예약** | `/api/reservation/**` | 예약 생성/조회/취소 |
-| **계약** | `/api/contract/**` | 계약서 관리, 견적서 처리 |
-| **리뷰** | `/api/review/**` | 리뷰 작성/조회/통계 |
-| **장바구니** | `/api/cart/**` | 장바구니 아이템 관리 |
+| **회원** | `/api/member/**` | 로그인, 회원가입, 인증/인가 |
+| **커플** | `/api/couple/**` | 커플 |
+| **업체** | `/api/vendor/**` | 업체/상품 |
+| **예약** | `/api/reservation/**` | 상담 예약 |
+| **계약** | `/api/contract/**` | 계약 |
+| **리뷰** | `/api/review/**` | 후기  |
+| **장바구니** | `/api/cart/**` | 장바구니/아이템 |
 | **투두** | `/api/todolist/**` | 웨딩 준비 체크리스트 |
-| **청첩장** | `/api/invitation/**` | 모바일 청첩장 생성/수정 |
-| **캘린더** | `/api/calendar/**` | 일정 관리 |
+| **청첩장** | `/api/invitation/**` | 모바일 청첩장 |
+| **캘린더** | `/api/calendar/**` | 개인/커플 일정 |
+| **드레스투어** | `/api/tour/**` | 드레스 투어 |
+| **드레스로망** | `/api/tour-romance/**` | 드레스 로망 |
 
 ---
 
@@ -295,12 +300,13 @@ http://localhost:8080/api/v3/api-docs
 
 ### **아키텍처 구성**
 
-1. **Load Balancer**: AWS Application Load Balancer
-2. **Application Server**: AWS EC2 (Auto Scaling Group)
-3. **Database**: AWS RDS (MySQL Multi-AZ)
+1. **Load Balancer**: Nginx (Reverse Proxy)
+2. **Application Server**: AWS EC2
+3. **Database**: AWS RDS (MySQL)
 4. **File Storage**: AWS S3 + CloudFront CDN
 5. **CI/CD**: GitHub Actions + Docker Hub
-6. **Monitoring**: Spring Actuator + Prometheus
+6. **Monitoring**: Spring Actuator + Prometheus + Grafana
+7. **DNS, TLS/SSL**: Cloudflare
 
 ---
 
@@ -371,12 +377,6 @@ docker run -d -p 8080:8080 \
 |---------|------|------------------------------------------------|------------------------|
 | **김현빈** | Backend Lead | [@Wien0128](https://github.com/wien0128)   | 아키텍처 설계, 인증/인가, CI/CD, 코어 API 개발 |
 | **오현우** | Backend Developer | [@HyunWoo9930](https://github.com/HyunWoo9930) | 업체/예약 API 개발, 소셜로그인, 검색 기능 |
-
----
-
-## 📜 라이센스
-
-이 프로젝트는 MIT 라이센스 하에 배포됩니다.
 
 ---
 
