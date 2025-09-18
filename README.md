@@ -7,6 +7,7 @@
   <img src="https://img.shields.io/badge/AWS-EC2%20%7C%20RDS%20%7C%20S3-orange?style=for-the-badge&logo=amazon-aws&logoColor=white" />
   <img src="https://img.shields.io/badge/Docker-Containerized-blue?style=for-the-badge&logo=docker&logoColor=white" />
   <img src="https://img.shields.io/badge/QueryDSL-5.0.0-purple?style=for-the-badge&logo=gradle&logoColor=white" />
+    <a href="./ADR.md"><img src="https://img.shields.io/badge/ADR-active-999999?style=for-the-badge" /></a>
 </div>
 
 <br />
@@ -111,6 +112,13 @@
    - CI 성공 시 자동으로 EC2에 배포
    - Blue-Green 방식의 무중단 배포
    - Docker Compose를 이용한 컨테이너 관리
+---
+
+## 🏛️ 아키텍처 의사결정 기록 (ADR)
+
+본 프로젝트의 주요 아키텍처 및 기술적 의사결정 과정을 상세히 문서화하였습니다.
+
+- **[➡️ 아키텍처 의사결정 기록 (ADR) 전문](./ADR.md)**
 
 ---
 
