@@ -107,10 +107,11 @@ public class Couple extends BaseTimeEntity {
 	}
 
 	public Member getOtherMember(Member member) {
-		if (this.groom.equals(member)) {
+		if (this.groom != null && this.groom.equals(member)) {
 			return this.bride;
-		} else {
+		} else if (this.bride != null && this.bride.equals(member)) {
 			return this.groom;
 		}
+		return null;
 	}
 }

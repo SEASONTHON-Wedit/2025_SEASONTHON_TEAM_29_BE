@@ -12,16 +12,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.wedit.backend.api.invitation.dto.InvitationCreateRequestDTO;
 import com.wedit.backend.api.invitation.dto.InvitationGetResponseDTO;
-import com.wedit.backend.api.invitation.entity.Invitation;
+import com.wedit.backend.api.invitation.dto.InvitationMyPageResponseDTO;
 import com.wedit.backend.api.invitation.service.InvitationService;
 import com.wedit.backend.common.response.ApiResponse;
 import com.wedit.backend.common.response.SuccessStatus;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +36,7 @@ public class InvitationController {
 	private final InvitationService invitationService;
 
 	@Operation(
-		summary = "청첩장 생성 API", 
+		summary = "청첩장 생성 API",
 		description = """
 			청첩장을 생성합니다. 사용자 인증이 필요합니다.
 			
@@ -67,14 +67,14 @@ public class InvitationController {
 	public ResponseEntity<ApiResponse<Void>> createInvitation(
 		@AuthenticationPrincipal UserDetails userDetails,
 		@Valid @RequestBody InvitationCreateRequestDTO createRequestDTO) {
-		
+
 		invitationService.createInvitation(userDetails.getUsername(), createRequestDTO);
 
 		return ApiResponse.successOnly(SuccessStatus.INVITATION_CREATE_SUCCESS);
 	}
 
 	@Operation(
-		summary = "청첩장 조회 API", 
+		summary = "청첩장 조회 API",
 		description = """
 			현재 사용자의 청첩장 정보를 조회합니다. 사용자 인증이 필요합니다.
 			
@@ -128,6 +128,74 @@ public class InvitationController {
 		@AuthenticationPrincipal UserDetails userDetails
 	) {
 		InvitationGetResponseDTO invitation = invitationService.getInvitation(userDetails.getUsername());
+		return ApiResponse.success(SuccessStatus.INVITATION_GET_SUCCESS, invitation);
+	}
+
+	@Operation(
+		summary = "마이페이지 청첩장 조회 API",
+		description = """
+			마이페이지에서 사용할 청첩장 정보를 조회합니다.
+			
+			**로직:**
+			1. 본인 청첩장이 있으면 → mainMediaUrl 반환 (source: "own")
+			2. 본인 청첩장 없음 + 커플 없음 → hasInvitation: false
+			3. 본인 청첩장 없음 + 커플 있음 + 커플의 청첩장 있음 → 커플의 mainMediaUrl 반환 (source: "couple")  
+			4. 본인 청첩장 없음 + 커플 있음 + 커플의 청첩장 없음 → hasInvitation: false
+			
+			**응답 예시 1 - 본인 청첩장 있음:**
+			```json
+			{
+			  "code": 200,
+			  "message": "청첩장 조회 성공", 
+			  "data": {
+			    "hasInvitation": true,
+			    "mainMediaUrl": "https://cdn.wedit.me/invitation/main_12345.jpg",
+			    "source": "own",
+			    "invitationId": 123
+			  }
+			}
+			```
+			
+			**응답 예시 2 - 커플 청첩장 있음:**
+			```json
+			{
+			  "code": 200,
+			  "message": "청첩장 조회 성공",
+			  "data": {
+			    "hasInvitation": true,
+			    "mainMediaUrl": "https://cdn.wedit.me/invitation/main_67890.jpg",
+			    "source": "couple",
+			    "invitationId": 456
+			  }
+			}
+			```
+			
+			**응답 예시 3 - 청첩장 없음:**
+			```json
+			{
+			  "code": 200,
+			  "message": "청첩장 조회 성공",
+			  "data": {
+			    "hasInvitation": false,
+			    "mainMediaUrl": null,
+			    "source": null,
+			    "invitationId": null
+			  }
+			}
+			```
+			
+			**source 값:**
+			- `"own"`: 본인의 청첩장
+			- `"couple"`: 커플의 청첩장 (파트너가 만든 청첩장)
+			- `null`: 청첩장 없음
+			""",
+		security = @SecurityRequirement(name = "Bearer Authentication")
+	)
+	@GetMapping("/myPage")
+	public ResponseEntity<ApiResponse<InvitationMyPageResponseDTO>> getMyInvitation(
+		@AuthenticationPrincipal UserDetails userDetails
+	) {
+		InvitationMyPageResponseDTO invitation = invitationService.getMyPageInvitation(userDetails.getUsername());
 		return ApiResponse.success(SuccessStatus.INVITATION_GET_SUCCESS, invitation);
 	}
 }
