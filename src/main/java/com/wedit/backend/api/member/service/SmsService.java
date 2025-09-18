@@ -51,6 +51,8 @@ public class SmsService {
 
     public void sendVerificationSms(String phoneNumber) {
 
+        log.info("SMS 인증 시작: {}", phoneNumber);
+
         // 핸드폰 번호 중복 검증
         if (memberRepository.findByPhoneNumber(phoneNumber).isPresent()) {
             throw new BadRequestException(ErrorStatus.BAD_REQUEST_DUPLICATE_PHONE.getMessage());
