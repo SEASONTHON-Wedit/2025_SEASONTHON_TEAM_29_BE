@@ -41,7 +41,7 @@ public class InvitationService {
 	@Transactional
 	public void createInvitation(String memberEmail, InvitationCreateRequestDTO createRequestDTO) {
 
-		log.info("초청장 생성 시작 - memberEmail: {}", memberEmail);
+		log.info("청첩장 생성 시작 - memberEmail: {}", memberEmail);
 
 		Member member = memberRepository.findByEmail(memberEmail)
 			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
@@ -50,14 +50,14 @@ public class InvitationService {
 		Optional<Couple> couple = coupleRepository.findByGroomOrBrideWithLock(member);
 
 		if (invitationRepository.existsByMember(member)) {
-			log.warn("초청장 생성 실패 - 이미 초청장 보유 중. memberId: {}", member.getId());
+			log.warn("청첩장 생성 실패 - 이미 청첩장 보유 중. memberId: {}", member.getId());
 			throw new BadRequestException(ErrorStatus.BAD_REQUEST_ALREADY_HAVE_INVITATION.getMessage());
 		}
 
 		if (couple.isPresent()) {
 			Member otherMember = couple.get().getOtherMember(member);
 			if (invitationRepository.existsByMember(otherMember)) {
-				log.warn("초청장 생성 실패 - 커플의 다른 멤버가 이미 보유 중. memberId: {}, otherMemberId: {}",
+				log.warn("청첩장 생성 실패 - 커플의 다른 멤버가 이미 보유 중. memberId: {}, otherMemberId: {}",
 					member.getId(), otherMember.getId());
 				throw new BadRequestException(
 					ErrorStatus.BAD_REQUEST_ALREADY_OTHER_MEMBER_HAVE_INVITATION.getMessage());
@@ -76,7 +76,7 @@ public class InvitationService {
 				.build();
 
 			Invitation saved = invitationRepository.save(invitation);
-			log.debug("초청장 기본 정보 저장 완료 - invitationId: {}", saved.getId());
+			log.debug("청첩장 기본 정보 저장 완료 - invitationId: {}", saved.getId());
 
 			// 메인 사진 저장
 			if (createRequestDTO.getMainMedia() != null) {
@@ -111,47 +111,47 @@ public class InvitationService {
 				log.debug("일반 미디어 저장 완료 - invitationId: {}, 개수: {}", saved.getId(), mediaToSave.size());
 			}
 
-			log.info("초청장 생성 완료 - memberId: {}, invitationId: {}", member.getId(), saved.getId());
+			log.info("청첩장 생성 완료 - memberId: {}, invitationId: {}", member.getId(), saved.getId());
 		} catch (Exception e) {
-			log.error("초청장 생성 실패 - memberEmail: {}", memberEmail, e);
+			log.error("청첩장 생성 실패 - memberEmail: {}", memberEmail, e);
 			throw e;
 		}
 	}
 
 	public InvitationGetResponseDTO getInvitation(String memberEmail) {
 
-		log.debug("초청장 조회 시작 - memberEmail: {}", memberEmail);
+		log.debug("청첩장 조회 시작 - memberEmail: {}", memberEmail);
 
 		Member member = memberRepository.findByEmail(memberEmail)
 			.orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_USER.getMessage()));
 
 		Optional<Couple> couple = coupleRepository.findByGroomOrBride(member);
 
-		// 본인의 초청장 먼저 확인
+		// 본인의 청첩장 먼저 확인
 		Optional<Invitation> invitation = invitationRepository.findByMember(member);
 		if (invitation.isPresent()) {
-			log.debug("본인 초청장 발견 - memberId: {}, invitationId: {}", member.getId(), invitation.get().getId());
+			log.debug("본인 청첩장 발견 - memberId: {}, invitationId: {}", member.getId(), invitation.get().getId());
 
 			InvitationGetResponseDTO response = buildInvitationResponse(invitation.get());
-			log.info("초청장 조회 완료 (본인) - memberId: {}, invitationId: {}", member.getId(), invitation.get().getId());
+			log.info("청첩장 조회 완료 (본인) - memberId: {}, invitationId: {}", member.getId(), invitation.get().getId());
 			return response;
 		}
 
-		// 커플의 다른 멤버 초청장 확인
+		// 커플의 다른 멤버 청첩장 확인
 		if (couple.isPresent()) {
 			Member otherMember = couple.get().getOtherMember(member);
 			invitation = invitationRepository.findByMember(otherMember);
 			if (invitation.isPresent()) {
-				log.debug("커플 상대방 초청장 발견 - memberId: {}, otherMemberId: {}, invitationId: {}",
+				log.debug("커플 상대방 청첩장 발견 - memberId: {}, otherMemberId: {}, invitationId: {}",
 					member.getId(), otherMember.getId(), invitation.get().getId());
 
 				InvitationGetResponseDTO response = buildInvitationResponse(invitation.get());
-				log.info("초청장 조회 완료 (커플) - memberId: {}, invitationId: {}", member.getId(), invitation.get().getId());
+				log.info("청첩장 조회 완료 (커플) - memberId: {}, invitationId: {}", member.getId(), invitation.get().getId());
 				return response;
 			}
 		}
 
-		log.info("초청장 없음 - memberEmail: {}", memberEmail);
+		log.info("청첩장 없음 - memberEmail: {}", memberEmail);
 		return null;
 	}
 
@@ -207,7 +207,7 @@ public class InvitationService {
 				.mediaUrls(mediaUrl)
 				.build();
 		} catch (Exception e) {
-			log.error("초청장 응답 생성 실패 - invitationId: {}", invitation.getId(), e);
+			log.error("청첩장 응답 생성 실패 - invitationId: {}", invitation.getId(), e);
 			throw e;
 		}
 	}

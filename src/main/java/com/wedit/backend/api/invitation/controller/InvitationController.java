@@ -36,9 +36,9 @@ public class InvitationController {
 	private final InvitationService invitationService;
 
 	@Operation(
-		summary = "초청장 생성 API", 
+		summary = "청첩장 생성 API", 
 		description = """
-			초청장을 생성합니다. 사용자 인증이 필요합니다.
+			청첩장을 생성합니다. 사용자 인증이 필요합니다.
 			
 			**요청 정보:**
 			- 기본 정보: 신랑/신부 이름, 결혼식 장소 및 날짜
@@ -59,8 +59,8 @@ public class InvitationController {
 		security = @SecurityRequirement(name = "Bearer Authentication")
 	)
 	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "초청장 생성 성공"),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "이미 초청장이 존재하거나 잘못된 요청", content = @Content),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "청첩장 생성 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "이미 청첩장이 존재하거나 잘못된 요청", content = @Content),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content)
 	})
 	@PostMapping
@@ -74,9 +74,9 @@ public class InvitationController {
 	}
 
 	@Operation(
-		summary = "초청장 조회 API", 
+		summary = "청첩장 조회 API", 
 		description = """
-			현재 사용자의 초청장 정보를 조회합니다. 사용자 인증이 필요합니다.
+			현재 사용자의 청첩장 정보를 조회합니다. 사용자 인증이 필요합니다.
 			
 			**응답 정보:**
 			- 신랑/신부 기본 정보
@@ -89,7 +89,7 @@ public class InvitationController {
 			```json
 			{
 			  "code": 200,
-			  "message": "초청장 조회 성공",
+			  "message": "청첩장 조회 성공",
 			  "data": {
 			    "marriagePlace": {
 			      "vendorName": "아펠가모 선릉",
@@ -119,9 +119,9 @@ public class InvitationController {
 		security = @SecurityRequirement(name = "Bearer Authentication")
 	)
 	@ApiResponses({
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "초청장 조회 성공"),
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "청첩장 조회 성공"),
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증되지 않은 사용자", content = @Content),
-		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "초청장을 찾을 수 없습니다", content = @Content)
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "청첩장을 찾을 수 없습니다", content = @Content)
 	})
 	@GetMapping
 	public ResponseEntity<ApiResponse<InvitationGetResponseDTO>> getInvitation(
