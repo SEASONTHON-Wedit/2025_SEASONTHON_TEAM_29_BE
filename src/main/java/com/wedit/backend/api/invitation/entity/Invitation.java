@@ -37,12 +37,6 @@ public class Invitation extends BaseTimeEntity {
 	private MarriagePlace marriagePlace;
 	@Embedded
 	private Gallery gallery;
-	@Embedded
-	private Ending ending;
-	@Embedded
-	private Account account;
-	@Embedded
-	private Background background;
 
 	@ManyToOne
 	@JoinColumn(name = "member_id", nullable = false)
@@ -50,17 +44,13 @@ public class Invitation extends BaseTimeEntity {
 
 	@Builder
 	public Invitation(Theme theme, BasicInformation basicInformation, Greetings greetings, MarriageDate marriageDate,
-		MarriagePlace marriagePlace, Gallery gallery, Ending ending, Account account, Background background,
-		Member member) {
+		MarriagePlace marriagePlace, Gallery gallery, Member member) {
 		this.theme = theme;
 		this.basicInformation = basicInformation;
 		this.greetings = greetings;
 		this.marriageDate = marriageDate;
 		this.marriagePlace = marriagePlace;
 		this.gallery = gallery;
-		this.ending = ending;
-		this.account = account;
-		this.background = background;
 		this.member = member;
 	}
 }

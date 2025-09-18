@@ -2,10 +2,7 @@ package com.wedit.backend.api.invitation.dto;
 
 import java.util.List;
 
-import com.wedit.backend.api.invitation.entity.Account;
-import com.wedit.backend.api.invitation.entity.Background;
 import com.wedit.backend.api.invitation.entity.BasicInformation;
-import com.wedit.backend.api.invitation.entity.Ending;
 import com.wedit.backend.api.invitation.entity.Gallery;
 import com.wedit.backend.api.invitation.entity.Greetings;
 import com.wedit.backend.api.invitation.entity.MarriageDate;
@@ -23,9 +20,6 @@ public class InvitationCreateRequestDTO {
 	private MarriageDate marriageDate;
 	private MarriagePlace marriagePlace;
 	private Gallery gallery;
-	private Ending ending;
-	private Account account;
-	private Background background;
 
 	private MediaRequestDTO mainMedia;
 	private List<MediaRequestDTO> filmMedia;

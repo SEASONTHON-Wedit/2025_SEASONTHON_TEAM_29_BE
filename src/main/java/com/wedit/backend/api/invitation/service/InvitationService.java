@@ -72,9 +72,6 @@ public class InvitationService {
 				.marriageDate(createRequestDTO.getMarriageDate())
 				.marriagePlace(createRequestDTO.getMarriagePlace())
 				.gallery(createRequestDTO.getGallery())
-				.ending(createRequestDTO.getEnding())
-				.account(createRequestDTO.getAccount())
-				.background(createRequestDTO.getBackground())
 				.member(member)
 				.build();
 
@@ -203,9 +200,6 @@ public class InvitationService {
 				.marriageDate(invitation.getMarriageDate())
 				.marriagePlace(marriagePlace)
 				.gallery(invitation.getGallery())
-				.ending(invitation.getEnding())
-				.account(invitation.getAccount())
-				.background(invitation.getBackground())
 				.memberId(invitation.getMember().getId())
 				.mainMediaUrl(mainMediaUrl)
 				.filmMediaUrl(filmMediaUrl)
