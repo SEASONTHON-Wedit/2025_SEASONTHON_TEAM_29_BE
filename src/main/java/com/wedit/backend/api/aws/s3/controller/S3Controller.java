@@ -52,7 +52,7 @@ public class S3Controller {
                 **도메인별 사용:**
                 - REVIEW: 후기 이미지/동영상
                 - VENDOR: 업체 로고/대표 이미지  
-                - INVITATION: 초청장 갤러리 이미지
+                - INVITATION: 청첩장 갤러리 이미지
                 """,
             security = @SecurityRequirement(name = "Bearer Authentication"))
     @ApiResponses({

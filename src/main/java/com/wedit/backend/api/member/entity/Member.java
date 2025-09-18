@@ -95,10 +95,9 @@ public class Member extends BaseTimeEntity {
 	@Builder.Default
 	private List<Reservation> reservations = new ArrayList<>();
 
-	// Member - Reservation, 1:N on Member perspective
-	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
-	@Builder.Default
-	private List<Invitation> invitations = new ArrayList<>();
+	// 🎯 Member - Invitation, 1:1 관계로 다시 복원
+	@OneToOne(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Invitation invitation;
 
 	// Member - Review, 1:N on Member perspective
 	@OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -146,5 +145,10 @@ public class Member extends BaseTimeEntity {
 	public Member update(String name) {
 		this.name = name;
 		return this;
+	}
+
+	// 🎯 커플 정보 편의 메서드
+	public Couple getCouple() {
+		return asGroom != null ? asGroom : asBride;
 	}
 }

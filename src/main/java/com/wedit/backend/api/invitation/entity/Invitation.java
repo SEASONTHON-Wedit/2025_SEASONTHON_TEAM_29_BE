@@ -9,10 +9,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -37,30 +36,21 @@ public class Invitation extends BaseTimeEntity {
 	private MarriagePlace marriagePlace;
 	@Embedded
 	private Gallery gallery;
-	@Embedded
-	private Ending ending;
-	@Embedded
-	private Account account;
-	@Embedded
-	private Background background;
 
-	@ManyToOne
+	// 🎯 Member와 1:1 관계로
+	@OneToOne
 	@JoinColumn(name = "member_id", nullable = false)
 	private Member member;
 
 	@Builder
 	public Invitation(Theme theme, BasicInformation basicInformation, Greetings greetings, MarriageDate marriageDate,
-		MarriagePlace marriagePlace, Gallery gallery, Ending ending, Account account, Background background,
-		Member member) {
+		MarriagePlace marriagePlace, Gallery gallery, Member member) {
 		this.theme = theme;
 		this.basicInformation = basicInformation;
 		this.greetings = greetings;
 		this.marriageDate = marriageDate;
 		this.marriagePlace = marriagePlace;
 		this.gallery = gallery;
-		this.ending = ending;
-		this.account = account;
-		this.background = background;
 		this.member = member;
 	}
 }
