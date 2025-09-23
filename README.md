@@ -62,7 +62,7 @@
 
 ### **Security & Authentication**
 - **Spring Security** - 보안 프레임워크
-- **JWT (JJWT 0.11.5)** - 토큰 기반 인증
+- **JWT (JJWT)** - 토큰 기반 인증
 - **OAuth2 Client** - 소셜 로그인 (카카오, 구글, 네이버)
 
 ### **Cloud & Infrastructure**
