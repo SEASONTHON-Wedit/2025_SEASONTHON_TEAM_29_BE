@@ -64,7 +64,7 @@ public class JwtAuthenticationProcessingFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String requestURI = request.getRequestURI();
 
-        log.info("JwtFilter shouldNotFilter 프로세싱 요청: {}", requestURI);
+//        log.info("JwtFilter shouldNotFilter 프로세싱 요청: {}", requestURI);
 
         for (String url : NOT_FILTER_URLS) {
             if (requestURI.startsWith(url)) {
