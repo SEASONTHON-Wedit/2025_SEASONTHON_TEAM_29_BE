@@ -70,7 +70,7 @@ public enum NotificationType {
     @RequiredArgsConstructor
     public enum NotificationChannel {
 
-        PUSH_ONLY("푸신 전용"),
+        PUSH_ONLY("푸시 전용"),
         IN_APP_ONLY("인앱 전용");
 
         private final String description;
