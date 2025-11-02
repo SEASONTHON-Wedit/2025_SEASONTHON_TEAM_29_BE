@@ -71,7 +71,8 @@ public enum SuccessStatus {
     NOTIFICATION_LIST_GET_SUCCESS(HttpStatus.OK, "알림 목록 조회 성공"),
     NOTIFICATION_UNREAD_COUNT_GET_SUCCESS(HttpStatus.OK, "안 읽은 알림 개수 조회 성공"),
     NOTIFICATION_READ_SUCCESS(HttpStatus.OK, "알림 읽음 처리 성공"),
-
+    MEMBER_DEVICE_FCM_TOKEN_REGISTER_SUCCESS(HttpStatus.OK, "FCM 토큰 등록 성공"),
+    
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),
     REVIEW_CREATE_SUCCESS(HttpStatus.CREATED, "리뷰 작성 성공"),
