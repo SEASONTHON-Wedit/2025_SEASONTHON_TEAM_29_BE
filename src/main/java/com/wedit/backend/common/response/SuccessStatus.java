@@ -67,6 +67,10 @@ public enum SuccessStatus {
     CALENDAR_EVENTS_GET_SUCCESS(HttpStatus.OK, "캘린더 월별 일정 조회 성공"),
     CALENDAR_UPDATE_SUCCESS(HttpStatus.OK, "캘린더 일정 수정 성공"),
     VENDOR_ADDRESS_GET_SUCCESS(HttpStatus.OK, "업체 주소 조회 성공"),
+    SSE_CONNECTION_SUCCESS(HttpStatus.OK, "SSE 연결 수립 성공"),
+    NOTIFICATION_LIST_GET_SUCCESS(HttpStatus.OK, "알림 목록 조회 성공"),
+    NOTIFICATION_UNREAD_COUNT_GET_SUCCESS(HttpStatus.OK, "안 읽은 알림 개수 조회 성공"),
+    NOTIFICATION_READ_SUCCESS(HttpStatus.OK, "알림 읽음 처리 성공"),
 
     /// 201 CREATED
     MEMBER_SIGNUP_SUCCESS(HttpStatus.CREATED, "회원가입 성공"),
