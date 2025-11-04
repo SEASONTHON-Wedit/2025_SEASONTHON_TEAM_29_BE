@@ -47,7 +47,7 @@ jobs:
           echo "${{ secrets.APPLICATION_YML }}" | base64 --decode > src/main/resources/application.yml
           
           echo "Firebase Key 생성 시작..."
-          echo "${{ secrets.FIREBASE_ADMIN_SDK_JSON }}" | base64 --decode > src/main/resources/wedit-18c49-firebase-adminsdk-fbsvc-ecf8cc15e4.json
+          echo "${{ secrets.FIREBASE_SECRET }}" | base64 --decode > src/main/resources/wedit-18c49-firebase-adminsdk-fbsvc-ecf8cc15e4.json
           
           find src
 
