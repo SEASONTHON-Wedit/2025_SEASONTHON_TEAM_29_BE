@@ -41,7 +41,8 @@ jobs:
       # 4. application.yml 생성
       - name: Create application.yml
         run: |
-          mkdir -p src/main/resources
+          mkdir -p src/main/resources/firebase
+          
           echo "application.yml 생성 시작..."
           echo "${{ secrets.APPLICATION_YML }}" | base64 --decode > src/main/resources/application.yml
           find src
