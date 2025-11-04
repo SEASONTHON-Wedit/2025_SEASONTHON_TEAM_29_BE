@@ -391,15 +391,19 @@ public class VendorService {
 	}
 
 	private ProductResponseDTO convertToProductResponseDTO(Vendor vendor, Long minPrice) {
-		return ProductResponseDTO.builder()
-			.basePrice(minPrice)
-			.vendorId(vendor.getId())
-			.vendorName(vendor.getName())
-			.averageRating(vendor.getAverageRating())
-			.reviewCount(vendor.getReviewCount())
-			.logoMediaUrl(vendor.getLogoMedia() != null ?
-				s3Service.toCdnUrl(vendor.getLogoMedia().getMediaKey()) : null)
-			.build();
+        return ProductResponseDTO.builder()
+                .basePrice(minPrice)
+                .vendorId(vendor.getId())
+                .vendorName(vendor.getName())
+                .averageRating(vendor.getAverageRating())
+                .reviewCount(vendor.getReviewCount())
+                .logoMediaUrl(vendor.getLogoMedia() != null ?
+                        s3Service.toCdnUrl(vendor.getLogoMedia().getMediaKey()) : null)
+                .fullAddress(vendor.getFullAddress())
+                .addressDetail(vendor.getAddressDetail())
+                .latitude(vendor.getLatitude())
+                .longitude(vendor.getLongitude())
+                .build();
 	}
 
 	@Transactional(readOnly = true)
