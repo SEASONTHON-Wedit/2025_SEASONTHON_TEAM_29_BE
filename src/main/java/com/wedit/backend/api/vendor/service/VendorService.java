@@ -398,12 +398,12 @@ public class VendorService {
                 .averageRating(vendor.getAverageRating())
                 .reviewCount(vendor.getReviewCount())
                 .logoMediaUrl(vendor.getLogoMedia() != null ?
-                    s3Service.toCdnUrl(vendor.getLogoMedia().getMediaKey()) : null)
+                        s3Service.toCdnUrl(vendor.getLogoMedia().getMediaKey()) : null)
                 .fullAddress(vendor.getFullAddress())
-                    .addressDetail(vendor.getAddressDetail())
+                .addressDetail(vendor.getAddressDetail())
                 .latitude(vendor.getLatitude())
                 .longitude(vendor.getLongitude())
-                    .build();
+                .build();
 	}
 
 	@Transactional(readOnly = true)

@@ -40,8 +40,7 @@ public class NotificationController {
     @Operation(
             summary = "SSE 연결 구독 (In-App 실시간 알림)",
             description = "클라이언트가 실시간 In-App 알림을 받기 위해 SSE 연결을 생성합니다. <br>" +
-                    "이 엔드포인트는 `text/event-stream`을 반환하며, 일반적인 JSON 응답과 다릅니다. <br>" +
-                    "연결이 끊겼을 경우, 마지막으로 수신한 이벤트의 ID를 `Last-Event-ID` 헤더에 담아 보내면 유실된 데이터를 받을 수 있습니다."
+                    "이 엔드포인트는 `text/event-stream`을 반환하며, 일반적인 JSON 응답과 다릅니다."
     )
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "SSE 스트림 연결 성공",

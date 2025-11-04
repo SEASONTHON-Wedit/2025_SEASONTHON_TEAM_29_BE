@@ -17,6 +17,7 @@ import java.util.Optional;
 public class FcmService implements NotificationSender {
 
     private final MemberDeviceRepository memberDeviceRepository;
+    private final FirebaseMessaging firebaseMessaging;
 
     @Override
     public void send(Notification notification) {
@@ -44,7 +45,7 @@ public class FcmService implements NotificationSender {
                 .build();
 
         try {
-            String response = FirebaseMessaging.getInstance().send(message);
+            String response = firebaseMessaging.send(message);
             log.info("FCM 푸시 알림 발송 성공. 알림ID: {}, 응답: {}",  notification.getId(), response);
         } catch (FirebaseMessagingException e) {
             log.error("FCM 푸시 알림 발송 실패. 알림ID: {}, 에러코드: {}", notification.getId(), e.getErrorCode(), e);

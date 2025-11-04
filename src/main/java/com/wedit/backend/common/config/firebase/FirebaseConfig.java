@@ -20,7 +20,7 @@ public class FirebaseConfig {
     private String SERVICE_ACCOUNT_PATH;
 
     @Bean
-    public FirebaseApp firebaseApp() {
+    public FirebaseApp firebaseApp() throws IOException {
         try {
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(
@@ -32,7 +32,7 @@ public class FirebaseConfig {
             return FirebaseApp.initializeApp(options);
         } catch (IOException e) {
             log.error("Firebase 초기화 실패. app: {}", e.getMessage());
-            return null;
+            throw e;
         }
     }
 
