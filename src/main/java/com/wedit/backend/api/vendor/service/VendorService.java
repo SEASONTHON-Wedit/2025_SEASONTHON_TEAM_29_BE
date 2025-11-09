@@ -126,7 +126,7 @@ public class VendorService {
 	@Transactional(readOnly = true)
 	public Page<VendorBannerResponseDTO> getVendorsForBanner(VendorType vendorType, Pageable pageable) {
 
-		LocalDateTime twoWeeksAgo = LocalDateTime.now().minusWeeks(2);
+		LocalDateTime twoWeeksAgo = LocalDateTime.now().minusWeeks(12);
 
 		Page<Vendor> vendorPage = vendorRepository.findByVendorTypeOrderByRecentReviews(vendorType, twoWeeksAgo,
 			pageable);
