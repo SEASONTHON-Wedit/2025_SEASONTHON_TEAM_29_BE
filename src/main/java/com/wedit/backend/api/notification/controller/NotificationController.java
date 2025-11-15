@@ -37,26 +37,26 @@ public class NotificationController {
     private final SseService sseService;
 
 
-    @Operation(
-            summary = "SSE 연결 구독 (In-App 실시간 알림)",
-            description = "클라이언트가 실시간 In-App 알림을 받기 위해 SSE 연결을 생성합니다. <br>" +
-                    "이 엔드포인트는 `text/event-stream`을 반환하며, 일반적인 JSON 응답과 다릅니다."
-    )
-    @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "SSE 스트림 연결 성공",
-                    content = @Content(mediaType = "text/event-stream")),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패 (유효하지 않은 토큰)",
-                    content = @Content)
-    })
-    @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<SseEmitter> subscribe(
-            @Parameter(hidden = true) @AuthenticationPrincipal SecurityMember securityMember,
-            @RequestHeader(value = "Last-Event-ID", required = false, defaultValue = "") String lastEventId
-    ) {
-        SseEmitter emitter = sseService.subscribe(securityMember.getMember().getId(), lastEventId);
-
-        return ResponseEntity.ok(emitter);
-    }
+//    @Operation(
+//            summary = "SSE 연결 구독 (In-App 실시간 알림)",
+//            description = "클라이언트가 실시간 In-App 알림을 받기 위해 SSE 연결을 생성합니다. <br>" +
+//                    "이 엔드포인트는 `text/event-stream`을 반환하며, 일반적인 JSON 응답과 다릅니다."
+//    )
+//    @ApiResponses({
+//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "SSE 스트림 연결 성공",
+//                    content = @Content(mediaType = "text/event-stream")),
+//            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "인증 실패 (유효하지 않은 토큰)",
+//                    content = @Content)
+//    })
+//    @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+//    public ResponseEntity<SseEmitter> subscribe(
+//            @Parameter(hidden = true) @AuthenticationPrincipal SecurityMember securityMember,
+//            @RequestHeader(value = "Last-Event-ID", required = false, defaultValue = "") String lastEventId
+//    ) {
+//        SseEmitter emitter = sseService.subscribe(securityMember.getMember().getId(), lastEventId);
+//
+//        return ResponseEntity.ok(emitter);
+//    }
 
 
     @Operation(
